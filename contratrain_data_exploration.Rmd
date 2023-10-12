@@ -1,0 +1,109 @@
+---
+title: "Contratrain_exploratory_data_analyses"
+author: "Chidimma Echebiri"
+date: "2023-10-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##
+
+
+```{r Library and funcions}
+source("./R/libraries.R")
+source("./R/Trainome_functions.R") 
+```
+
+
+
+```{r Load data, echo=FALSE}
+contratrain_data <- readRDS("./data/contratrain_splicing_data.RDS") %>%
+  drop_na()
+
+#Load the metadata
+metadata <- readr::read_csv("./data/contratrain_metadata.csv")%>%
+  #drop the "MidExc rows 
+  #subset(study == "ct") %>%
+  mutate(time = factor(time, levels = c("t1",  "t4")), 
+         condition = factor(condition, levels = c("set0", "set3", "set6")),
+         sex = factor (sex, levels = c("male", "female"))) %>%
+  dplyr::select(participant, sample_id,group, condition, time, sex, age )
+```
+````{r check distribution of conditions}
+plot(metadata$condition)
+````
+
+
+````{r check distribution of time}
+plot(metadata$time)
+````
+
+
+
+
+
+
+
+````{r match the splice and metadata intersects}
+#get the sample_ids that exist in both splicing data and metadata
+ct_intersect <- (intersect(colnames(contratrain_data),
+                               metadata$sample_id))
+
+#subset the splicing data to only include the intersects
+splice_data <- contratrain_data %>%
+  subset( select = c("transcript_ID", ct_intersect))
+
+
+#select only metadata that intersect
+meta_df <- metadata %>%
+  dplyr::filter(sample_id %in% c(ct_intersect)) 
+````
+
+
+
+````{r Convert splice data to long form and merge with metadata}
+#convert the splicing data to a longer form and merge with metadat
+full_splice_df <- splice_data %>%
+  pivot_longer(names_to = "sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID) )
+
+full_splice_df <-  merge(meta_df, full_splice_df, by= "sample_id")
+
+````
+
+
+````{r Visualisation}
+full_splice_df %>%  dplyr::mutate(n = n(),
+                                          bins = cut(SE, 100, labels = FALSE)) %>%
+  group_by(time,condition, transcript_ID, bins) %>%
+  dplyr::summarise(freq = n() / mean(n)) %>%
+  #dplyr::filter(bins < 50)%>%
+  ggplot(aes(bins, freq, fill = time)) +
+  geom_col(position = "dodge",  size = 8, width = 1.5) + 
+  facet_wrap(~condition)+
+  ggtitle("Splicing efficiency in contratrain data")+
+  theme(axis.text = element_text(size = 15), text = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5))
+
+````
+
+
+
+
+````{r Visualization by group}
+full_splice_df %>%  dplyr::mutate(n = n(),
+                                          bins = cut(SE, 100, labels = FALSE)) %>%
+  group_by(time,condition, transcript_ID, group, bins) %>%
+  dplyr::summarise(freq = n() / mean(n)) %>%
+  #dplyr::filter(bins < 50)%>%
+  ggplot(aes(bins, freq, fill = time)) +
+  geom_col(position = "dodge",  size = 8, width = 1.5) + 
+  facet_wrap(~group)+
+  ggtitle("Splicing efficiency in contratrain data")+
+  theme(axis.text = element_text(size = 15), text = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5))
+````

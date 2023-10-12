@@ -2,6 +2,7 @@
 title: "Impact of age and exercise on intron retention"
 format: html
 editor: visual
+path: science.csl 
 ---
 
 ## Quarto
