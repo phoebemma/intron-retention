@@ -1,17 +1,29 @@
 ---
 title: "Impact of age and exercise on intron retention"
-format: html
+format: docx
+output:
+  bookdown::word_document2: default
+  bookdown::pdf_documents: default
 editor: visual
-path: science.csl 
+csl: science.csl
+bibliography: My_Library.bib
+target_journal: 
+prefer-html: true
 ---
 
-## Quarto
+```{r, setup, include=FALSE}
+getwd()
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+knitr::opts_knit$set(root.dir = "C:/projects/Impact-of-age-and-exercise-on-intron-retention/")
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
-## Running Code
+```
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## Abstract
+
+## Introduction
+
+:
 
 ```{r}
 1 + 1
@@ -30,4 +42,4 @@ The `echo: false` option disables the printing of code (only output is displayed
 
 # Introduction
 
-# Methodology 
+# Methodology

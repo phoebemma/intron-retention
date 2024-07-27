@@ -8,6 +8,7 @@ source("R/Trainome_functions.R")
 #Load the full splicing_data
 all_splice_df <- readRDS("./data/Full_splice_data.RDS")
 
+
 #Load metadata
 
 all_metadata <- readr::read_csv("./data/all_metadata.csv")%>%
@@ -23,6 +24,7 @@ plot(all_metadata$age)
 #distribution time
 plot(all_metadata$time)
 
+
 #plot distrribution study
 plot(table(all_metadata$study))
 
@@ -34,7 +36,8 @@ splice_intersect <- (intersect(colnames(all_splice_df),
 #subset the splicing data to only include the intersects
 splice_data <- all_splice_df %>%
   subset( select = c("transcript_ID", splice_intersect))
-colnames(splice_data)
+
+print(colnames(splice_data))
 
 
 
@@ -49,7 +52,7 @@ plot(meta_df$time, main = "Distribution of sampling time")
 
 
 #convert the splicing data to a longer form and merge with metadat
-full_splice_df <- all_splice_df %>%
+full_splice_df <- splice_data %>%
   pivot_longer(names_to = "sample_id",
                values_to = "SE",
                cols = -(transcript_ID) )
@@ -71,6 +74,7 @@ Post_ex_df <- full_splice_df %>%
   subset(time == "PostExc")
 
 
+#get the intersect of the pre and post exercise data based on participants
 int_both <- (intersect(Pre_exc_df$participant,
                                            Post_ex_df$participant))
 
@@ -86,7 +90,9 @@ splice_df_full <- rbind(Pre_Exc_in, Post_exc_int)
 
 
 
-plot(splice_df_full$age, main = "Distribution of datapoints across age groups")
+plot(unique(splice_df_full$age), main = "Distribution of datapoints across age groups")
+
+
 
 
 #Plot the full dataframe
@@ -102,6 +108,7 @@ splice_df_full %>%  dplyr::mutate(n = n(),
   ggtitle("Splicing efficiency old versus young")+
   theme(axis.text = element_text(size = 15), text = element_text(size = 15),
         plot.title = element_text(hjust = 0.5))
+
 
 
 
@@ -149,28 +156,13 @@ splice_df_full %>%  dplyr::mutate(n = n(),
   theme(axis.text = element_text(size = 15), text = element_text(size = 15),
         plot.title = element_text(hjust = 0.5))
 
+ 
 
 
 
 
-#Plot the full dataframe
-#Line plot
 
-# splice_df_full %>%  dplyr::mutate(n = n(),
-#                                   bins = cut(SE, 100, labels = FALSE)) %>%
-#   group_by(age, time, transcript_ID, bins) %>%
-#   dplyr::summarise(freq = n() / mean(n)) %>%
-#   #dplyr::filter(bins < 50)%>%
-#   ggplot(aes(bins, freq, fill = time)) +
-#   #geom_col(position = "dodge",  size = 8, width = 1.5) + 
-#   geom_line()+
-#   geom_point()+
-#   facet_wrap(~age)+
-#   ggtitle("Splicing efficiency old versus young")+
-#   theme(axis.text = element_text(size = 15), text = element_text(size = 15),
-#         plot.title = element_text(hjust = 0.5))
-# 
-# 
+
 
 
 
@@ -178,12 +170,12 @@ splice_df_full %>%  dplyr::mutate(n = n(),
 #and post exercise
 
 
-introns_both <- (intersect(Pre_exc_df$transcript_ID,
-                       Post_ex_df$transcript_ID))
+introns_both <- (intersect(Pre_Exc_in$transcript_ID,
+                       Post_exc_int$transcript_ID))
 
-Pre_Exc_introns <- Pre_exc_df[Pre_exc_df$transcript_ID %in% introns_both,]
+Pre_Exc_introns <- Pre_Exc_in[Pre_Exc_in$transcript_ID %in% introns_both,]
 
-Post_exc_introns <- Post_ex_df[Post_ex_df$transcript_ID %in% introns_both,]
+Post_exc_introns <- Post_exc_int[Post_ex_int$transcript_ID %in% introns_both,]
 
 #How many unique introns do we have i the pre exercise data
 length(unique(Pre_Exc_introns$transcript_ID))
@@ -207,6 +199,34 @@ length(unique(Post_exc_introns$participant))
 
 length(unique(Post_exc_int$participant))
 
+
+
+
+length(unique(splice_df_full$participant))
+
+length(unique(full_splice_df$participant))
+
+table(splice_df_full$time)
+
+
+#Plot the full dataframe
+
+full_splice_df %>%  dplyr::mutate(n = n(),
+                                  bins = cut(SE, 100, labels = FALSE)) %>%
+  group_by(age, time, transcript_ID, bins) %>%
+  print()
+  dplyr::summarise(freq = n() / mean(n)) %>%
+  
+  #dplyr::filter(bins < 50)%>%
+  ggplot(aes(bins, freq, fill = time)) +
+  geom_col(position = "dodge",  size = 8, width = 1.5) + 
+  facet_wrap(~age)+
+  ggtitle("Splicing efficiency old versus young")+
+  theme(axis.text = element_text(size = 15), text = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5))
+
+print
+table(splice_df_full$time)
 
 # Plot the postexercise data
 
