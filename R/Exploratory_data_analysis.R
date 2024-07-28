@@ -1,6 +1,9 @@
 #Load the file with libraries
-source("R/libraries.R")
+#source("R/libraries.R")
 
+library(dplyr)
+library(ggplot2)
+library(tidyr)
 #Load the trainome functions file
 source("R/Trainome_functions.R")
 
