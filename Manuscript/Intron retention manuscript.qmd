@@ -23,13 +23,11 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ## Introduction
 
-Eukaryotic genes are composed of components with
-coding potentials called exons and, components without coding potentials known
-as introns. Introns are generally removed during a post-transcriptional process called "splicing". In most cases, introns are fully spliced out. Sometimes, these introns are retained in a situation described as intron retention (IR).
+Eukaryotic genes are composed of components with coding potentials called exons and, components without coding potentials known as introns. Introns are generally removed during a post-transcriptional process called "splicing". In most cases, introns are fully spliced out. Sometimes, these introns are retained in a situation described as intron retention (IR).
 
 Eukaryotes are said to have two distinct pre-mRNA splicing machinery; the major spliceosome and the minor spliceosome . The major spliceosome is said to remove over 99% of introns while the minor spliceosome removes evolutionarily conserved introns @inoue2021
 
-IR is a type of alternative splicing where a full intron, or parts of an intron in a mature messenger RNA (mRNA) is retained during splicing. Other types of alternative exon skipping, mutually exclusive exons, alternative 5' splice sites and alternative 3' splice sites @zheng2020 . Alternative splicing regulates life and death decisions @schwerk2005. mRNAs with retained introns play roles in normal physiology and in disease conditions @wong_intron_2016. It is a potential biomarker or driver of the aging process [@baralle2023 ; @adusumalli_increased_2019 ]. Tissues and organs are altered differently by aging and aging-related processes @baralle2023. IR can be said to be a regulator of gene expression in a variety of cellular processes as it could subject mRNA molecules that contain them to nonsense-mediated mRNA decay (NMD) thereby eliminating the affected genes, or lead to frameshifts that make specific genes in response to particular signals [@baralle2023, @zheng2020, @mauger2016, @wong2022 ]. IRs in untranslated regions would influence gene expression differently from those in protein-coding regions. Each differential splicing event is expected to influence the function, location or expression level of a protein and thus would likely impact cell function
+IR is a type of alternative splicing where a full intron, or parts of an intron in a mature messenger RNA (mRNA) is retained during splicing. Other types of alternative exon skipping, mutually exclusive exons, alternative 5' splice sites and alternative 3' splice sites @zheng2020 . Alternative splicing regulates life and death decisions @schwerk2005. mRNAs with retained introns play roles in normal physiology and in disease conditions @wong_intron_2016. It is a potential biomarker or driver of the aging process [@baralle2023 ; @adusumalli_increased_2019 ]. Tissues and organs are altered differently by aging and aging-related processes @baralle2023. IR can be said to be a regulator of gene expression in a variety of cellular processes as it could subject mRNA molecules that contain them to nonsense-mediated mRNA decay (NMD) thereby eliminating the affected genes, or lead to frameshifts that make specific genes in response to particular signals [@baralle2023, @zheng2020, @mauger2016, @wong2022]. IRs in untranslated regions would influence gene expression differently from those in protein-coding regions. Each differential splicing event is expected to influence the function, location or expression level of a protein and thus would likely impact cell function
 
 R used to be considered a result of mis-splicing which render transcripts non-functional @wong_intron_2016 but is increasingly being viewed as a mechanism of gene regulation. IR is deregulated in disease conditions @ge2014
 
@@ -49,18 +47,17 @@ advancing age goes with decrease in muscle strength @frontera_aging_2000
 
 Age is said to be positively correlated with missplicing @garcía-ruiz
 
-Aging is associated with the induction of
-different stress response pathways in different cell, tissue and specie types @stegeman2017 30 percent of
-alternative splicing changes in an organism occur during the aging process
-which is likely due to a decline in the expression of splicing factors @stegeman2017 Certain genes are
-said to be more prone to intron retention @stegeman2017 . Splicing damage
-increases with age and incidence of diseases @mariotti_deterioration_2022 . The effects of
-retained introns could be varied depending on protein coding ability of the
-transcript
+Aging is associated with the induction of different stress response pathways in different cell, tissue and specie types @stegeman2017 30 percent of alternative splicing changes in an organism occur during the aging process which is likely due to a decline in the expression of splicing factors @stegeman2017 Certain genes are said to be more prone to intron retention @stegeman2017 . Splicing damage increases with age and incidence of diseases [@mariotti_deterioration_2022 ; @stegeman2017]. The effects of retained introns could be varied depending on protein coding ability of the transcript
 
 splicing effiociency of 0.99 might as well be several nucleotides unspliced
 
 if aging is associated with decline in splicing efficiency, activities that improve splicing efficiency are potential targets of extending healthy lifespan and improving qualiry of life.
+
+Aging is the progressive transformation of young organisms into aged ones. It involves changes across several physiological processes and is characterised by a progressive decline in most biological functions, and results to reduced vitality, increased risk of diseases and eventually death [@keshavarz2023; @gyenis_genome-wide_2023] . It is the greatest cause of disease and death worldwide @schaum_ageing_2020 . Aging and its processes can be targeted with therapeutics and measures aimed at slowing it down.
+
+The concept of the "biological clock" is organ, system and sex specific @nie2022
+
+The hallmarks of aging are said to include genomic instability, telomere attrition, epigenetic alterations, loss of prosteostatsis, dysregulated nutrient sensing, mitochondrial dysfunction, cellular senescence, stem cell exhaustion, and altered intercellular communication @lópez-otín2013
 
 Monitoring IR in *vastula lateralis* in young and old and how they are impacted by RT could offer valuable insights into not just how age affects IR, but how RT could impact it too
 
