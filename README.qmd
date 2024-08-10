@@ -1,5 +1,5 @@
 ---
-title: "Impact of progressive resistance exercise training on splicing efficiency in young and old"
+title: "Impact of progressive resistance exercise training on splicing efficiency"
 format: gfm
 editor: visual
 ---
