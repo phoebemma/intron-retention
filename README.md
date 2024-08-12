@@ -1,5 +1,5 @@
 # Impact of progressive resistance exercise training on splicing
-efficiency in young and old
+efficiency
 
 
 ## Authors
