@@ -19,6 +19,7 @@ unique(copd_metadata$time)
 
 PreEXC_copd_meta <- copd_metadata %>%
   subset(time == "PreExc") %>%
+  select(study, seq_sample_id, participant) %>%
   drop_na()
 
 #saveRDS(PreEXC_copd_meta, "data/preexercise_data/preexc_copd_metadata.RDS")
@@ -35,6 +36,7 @@ unique(volume_metadata$time)
 
 PreExc_vol_meta <- volume_metadata %>%
   subset(time == "w0") %>%
+  select(study, seq_sample_id, participant)%>%
   drop_na()
 
 #saveRDS(PreExc_vol_meta, "data/preexercise_data/preexc_volume_metadata.RDS")
@@ -48,8 +50,10 @@ unique(ct_metadata$time)
 
 PreExc_ct_meta <- ct_metadata %>%
   subset(time == "t1") %>%
+  select(study, seq_sample_id, participant) %>%
   drop_na()
 
+#saveRDS(PreExc_ct_meta, "data/preexercise_data/preexc_contratrain_metadata.RDS")
 #SRP280348 
 
 SRP280348_meta <- readRDS("data/processed_data/SRP280348_metadata.RDS")
@@ -59,7 +63,8 @@ colnames(SRP280348_meta)
 #This is the biopsy data 1 for old participants, and 0 for young participants
 
 PreExc_SRP280348_meta <- SRP280348_meta %>%
-  subset(biopsy == 1 | biopsy == 0)
+  subset(biopsy == 1 | biopsy == 0) %>%
+  select(study, seq_sample_id, participant, age_group)
 
 #saveRDS(PreExc_SRP280348_meta, "data/preexercise_data/preexc_SRP280348_metadata.RDS")
 
@@ -67,28 +72,113 @@ PreExc_SRP280348_meta <- SRP280348_meta %>%
 
 #SRP043368 is baseline data alone, would be loaded from the processed data folder
 
-SRP043368 <- readRDS("data/processed_data/SRP043368_metadata.RDS")
+SRP043368 <- readRDS("data/processed_data/SRP043368_metadata.RDS")%>%
+  select(study, seq_sample_id, participant)
 
 
+colnames(SRP043368)
 
 #SRP102542
 
 SRP102542_meta <- readRDS("data/processed_data/SRP102542_metadata.RDS")
 
-PreExc_SRP102542_meta <- SRP102542 %>%
+PreExc_SRP102542_meta <- SRP102542_meta %>%
   subset(biopsy_timepoint == "PreTraining")%>%
-  drop_na()
+  select(study, seq_sample_id, participant, age_group)
 
 #saveRDS(PreExc_SRP102542_meta, "data/preexercise_data/preexc_SRP102542_metadata.RDS")
 
-# Post_ex_df <- full_splice_df %>%
+
+#combine all metadata into one
+
+
+#The first three datasets do not have a column called "age_group".
+#They will be merged and the column created
+
+
+all_metadata <- rbind(PreEXC_copd_meta, PreExc_vol_meta)%>%
+  rbind(SRP043368) %>%
+  #create the age_group_column
+  mutate(age_group = case_when(study == "copd" ~ "Old", 
+                               study == "vol" ~ "Young",
+                               study == "SRP043368" ~ "Young" ))%>%
+  #add the dataframes that originally have the age_group information
+  rbind(PreExc_SRP102542_meta)%>%
+  rbind(PreExc_SRP280348_meta)
+  
+#create a new column to extract the age_group data
+unique(all_metadata$age_group)
+
+#saveRDS(all_metadata, "data/preexercise_data/all_metadata.RDS")
+
+# Post_ex_df <- fullage_group# Post_ex_df <- full_splice_df %>%
 #   subset(time == "PostExc")
+ggplot(all_metadata, aes(age_group)) +
+  geom_bar()
 
 
+#Load each of the splicing data
+
+copd_data <- readRDS("data/copd_splicing_data.RDS")
+
+#get the preexercise data
+splice_intersect <- (intersect(colnames(copd_data),
+                               PreEXC_copd_meta$seq_sample_id))
+
+#subset the splicing data to only include the intersects
+pre_copd_data <- copd_data %>%
+  subset( select = c("transcript_ID", splice_intersect))
+
+#saveRDS(pre_copd_data, "data/preexercise_data/preexc_copd_data.RDS")
+
+
+volume_data <- readRDS("data/processed_data/volume_splicing_data.RDS")
+
+splice_intersect <- (intersect(colnames(volume_data),
+                               PreExc_vol_meta$seq_sample_id))
+
+#subset the splicing data to only include the intersects
+pre_vol_data <- volume_data %>%
+  subset( select = c("transcript_ID", splice_intersect))
+
+#saveRDS(pre_vol_data, "data/preexercise_data/prexc_vol_data.RDS")
+
+
+SRP043368_data <- readRDS("data/processed_data/SRP043368_splicing_data.RDS")
+SRP102542_data <- readRDS("data/processed_data/SRP102542_splicing_data.RDS")
+
+
+splice_intersect <- (intersect(colnames(SRP102542_data),
+                               PreExc_SRP102542_meta$seq_sample_id))
+
+pre_SRP102542_data <- SRP102542_data %>%
+  subset( select = c("transcript_ID", splice_intersect))
+
+#saveRDS(pre_SRP102542_data, "data/preexercise_data/pre_SRP102542_data.RDS")
+
+
+SRP280348_data <- readRDS("data/processed_data/SRP280348_splicing_data.RDS")
+splice_intersect <- (intersect(colnames(SRP280348_data),
+                               PreExc_SRP280348_meta$seq_sample_id))
+
+pre_SRP280348_data <- SRP280348_data %>%
+  subset( select = c("transcript_ID", splice_intersect))
+
+#saveRDS(pre_SRP280348_data, "data/preexercise_data/pre_SRP280348_data.RDS")
+
+#merge all the 5 splicing data
+all_splice_df <- pre_copd_data%>%
+  inner_join(pre_vol_data, by = "transcript_ID") %>%
+  inner_join(pre_SRP102542_data, by = "transcript_ID") %>%
+  inner_join(pre_SRP280348_data, by = "transcript_ID")%>%
+  inner_join(SRP043368_data, by = "transcript_ID") %>%
+  drop_na()
+
+#saveRDS(all_splice_df, "data/preexercise_data/all_splice_data.RDS")
 
 #Subset only the introns wih SE 0
 
-fully_retained_ints <- full_splice_df %>%
+fully_retained_ints <- all_splice_df  %>%
   subset(SE == 0)
 
 

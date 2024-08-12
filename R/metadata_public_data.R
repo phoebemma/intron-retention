@@ -17,17 +17,23 @@ SRP102542 <- read_csv("data/SRP102542.txt") %>%
 #This also contains inormation that could be used as participant_id
 SRP102542_1 <- read_csv("public_data/sra_result-SRP102542.csv") %>%
   select("Experiment Accession", "Experiment Title", "Sample Accession") %>%
-  separate("Experiment Title", c("GEO_Accession (exp)", "Group", "age_group", "Exercise", "Time"))
+  separate("Experiment Title", c("GEO_Accession (exp)", "Group", "age_group", "Exercise", "biopsy_timepoint"))
 
 #JOIN the SRP102542 metadata together
 SRP102542 <- SRP102542 %>%
-  inner_join(SRP102542_1, by = c("Experiment" = "Experiment Accession", "GEO_Accession (exp)"))
+  inner_join(SRP102542_1, by = c("Experiment" = "Experiment Accession", "GEO_Accession (exp)", "biopsy_timepoint"))
 colnames(SRP102542)[colnames(SRP102542) == "SRA Study"] <- "study"
+#rename "Run" to "seq_sample_id"
+#This aligns it to the column name in the mtadata
+colnames(SRP102542)[colnames(SRP102542) == "Run"] <- "seq_sample_id"
+
 
 #Extract the participant from the dataframe
 SRP102542$participant <- parse_number(SRP102542$Group)
 
-#saveRDS(SRP102542, "./data/SRP102542_metadata.RDS")
+
+
+#saveRDS(SRP102542, "./data/processed_data/SRP102542_metadata.RDS")
 
 colnames(SRP102542)
 
@@ -44,8 +50,9 @@ SRP043368 <- read_csv("data/SRP043368.txt")%>%
 #Rename the Experiment to participant and SRA to study
 colnames(SRP043368)[colnames(SRP043368) == "SRA Study"] <- "study"
 colnames(SRP043368)[colnames(SRP043368) == "Experiment"] <- "participant"
+colnames(SRP043368)[colnames(SRP043368) == "Run"] <- "seq_sample_id"
 
-#saveRDS(SRP043368, "data/SRP043368_metadata.RDS")
+#saveRDS(SRP043368, "data/processed_data/SRP043368_metadata.RDS")
 
 
 colnames(SRP043368)
@@ -73,10 +80,12 @@ SRP280348_1 <- read_csv("public_data/sra_result-SRP280348.csv")%>%
 
 SRP280348 <- SRP280348 %>%
   inner_join(SRP280348_1, by = c( "Experiment" = "Experiment Accession")) %>%
-  mutate(age_group = case_when(biopsy == 0 ~ "young", biopsy == 1 ~ "old",biopsy == 3 ~ "old" ))
+  mutate(age_group = case_when(biopsy == 0 ~ "Young", biopsy == 1 ~ "Old",biopsy == 3 ~ "Old" ))
 
 colnames(SRP280348)[colnames(SRP280348) == "Study Accession"] <- "study"
-#saveRDS(SRP280348, "data/SRP280348_metadata.RDS")
+colnames(SRP280348)[colnames(SRP280348) == "Run"] <- "seq_sample_id"
+colnames(SRP280348)[colnames(SRP280348) == "Sample Accession"] <- "participant"
+#saveRDS(SRP280348, "data/processed_data/SRP280348_metadata.RDS")
 
 colnames(SRP280348)
 
