@@ -1,6 +1,7 @@
 library(dplyr)
 library(tidyverse)
 library(readr)
+library(plotly)
 
 
 #Load and clean the first public data
@@ -16,7 +17,7 @@ SRP102542 <- read_csv("data/SRP102542.txt") %>%
 #This also contains inormation that could be used as participant_id
 SRP102542_1 <- read_csv("public_data/sra_result-SRP102542.csv") %>%
   select("Experiment Accession", "Experiment Title", "Sample Accession") %>%
-  separate("Experiment Title", c("GEO_Accession (exp)", "Group", "Age", "Exercise", "Time"))
+  separate("Experiment Title", c("GEO_Accession (exp)", "Group", "age_group", "Exercise", "Time"))
 
 #JOIN the SRP102542 metadata together
 SRP102542 <- SRP102542 %>%
@@ -66,12 +67,14 @@ SRP280348 <- read_csv("data/SRP280348.txt")%>%
 #Source ENA
 SRP280348_1 <- read_csv("public_data/sra_result-SRP280348.csv")%>%
   select("Experiment Accession", "Experiment Title", "Sample Accession", "Study Accession") %>%
-  separate("Experiment Title", c("Title", "Group", "Age"), sep = " ") #%>%
+  separate("Experiment Title", c("Title", "Group", "Category"), sep = " ") #%>%
   #separate("Group", c("x", "participant", "y" ), remove = FALSE) %>%
   #subset(select = (-c(x, y)))
 
 SRP280348 <- SRP280348 %>%
-  inner_join(SRP280348_1, by = c( "Experiment" = "Experiment Accession")) 
+  inner_join(SRP280348_1, by = c( "Experiment" = "Experiment Accession")) %>%
+  mutate(age_group = case_when(biopsy == 0 ~ "young", biopsy == 1 ~ "old",biopsy == 3 ~ "old" ))
+
 colnames(SRP280348)[colnames(SRP280348) == "Study Accession"] <- "study"
 #saveRDS(SRP280348, "data/SRP280348_metadata.RDS")
 
