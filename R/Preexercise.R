@@ -104,7 +104,8 @@ all_metadata <- rbind(PreEXC_copd_meta, PreExc_vol_meta)%>%
                                study == "SRP043368" ~ "Young" ))%>%
   #add the dataframes that originally have the age_group information
   rbind(PreExc_SRP102542_meta)%>%
-  rbind(PreExc_SRP280348_meta)
+  rbind(PreExc_SRP280348_meta) %>%
+  mutate(age_group = factor(age_group, levels = c("Young", "Old")))
   
 #create a new column to extract the age_group data
 unique(all_metadata$age_group)
@@ -176,15 +177,93 @@ all_splice_df <- pre_copd_data%>%
 
 #saveRDS(all_splice_df, "data/preexercise_data/all_splice_data.RDS")
 
+
+all_splice_df[all_splice_df == 1 ] <- 0.999
+
+
+
+
+long_splice_df <- all_splice_df %>%
+  pivot_longer(names_to = "sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID) )
+
+hist(long_splice_df$SE)
+long_splice_df %>%
+  subset(SE == 0.00)
+
 #Subset only the introns wih SE 0
+colnames(all_splice_df)
+#invert the data to make it suitable for zero inflated analyses
+splice_df_inverted <- all_splice_df %>%
+  mutate(across(X144PreExcVLL198:SRR1424756, function(x)1-x))
 
-fully_retained_ints <- all_splice_df  %>%
-  subset(SE == 0)
+#Relace all the 1s in the dataframe to 0.99
+
+splice_df_inverted[splice_df_inverted == 1 ] <- 0.995
 
 
-table(fully_retained_ints$age)
-table(fully_retained_ints$time)
+#ziformula of 1 suggests there is zero inflation
+
+args<- list(formula = y ~  age_group + (1|study) +(1|participant), 
+            ziformula = ~1,
+            family = glmmTMB::beta_family())
 
 
-#Plot the data
-plot(fully_retained_ints$time)
+args_2<- list(formula = y ~  age_group + (1|study) +(1|participant), 
+            ziformula = ~1,
+            family = glmmTMB::beta_family())
+
+
+SE_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                         arguments = args,
+                         data = splice_df_inverted,
+                         metadata = all_metadata,
+                         samplename = "seq_sample_id",
+                         summary_fun = sum_fun,
+                         eval_fun = eval_mod,
+                         exported = list(),
+                         save_models = FALSE,
+                         return_models = FALSE,
+                         cores = ncores-2)
+
+
+SE_model_2 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                    arguments = args_2,
+                    data = all_splice_df,
+                    metadata = all_metadata,
+                    samplename = "seq_sample_id",
+                    summary_fun = sum_fun,
+                    eval_fun = eval_mod,
+                    exported = list(),
+                    save_models = FALSE,
+                    return_models = FALSE,
+                    cores = ncores-2)
+
+
+#excl <- names(which(SE_model_2$summaries == "NULL"))
+
+bind_rows(SE_model_2$summaries) %>%
+  mutate(target = rep(names(SE_model_2$summaries), each = 2))%>%
+  subset(!coef == "(Intercept)") %>%
+  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))
+
+
+
+length(SE_model_2$summaries)
+
+
+
+# fully_retained_ints <- all_splice_df  %>%
+#   subset(SE == 0)
+# 
+# 
+# table(fully_retained_ints$age)
+# table(fully_retained_ints$time)
+# 
+# 
+# #Plot the data
+# plot(fully_retained_ints$time)
