@@ -23,7 +23,9 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ## Introduction
 
-Eukaryotic genes are composed of components with coding potentials called exons and, components without coding potentials known as introns. Introns are generally removed during a post-transcriptional process called "splicing". In most cases, introns are fully spliced out. Sometimes, these introns are retained in a situation described as intron retention (IR).
+Eukaryotic genes are composed of components with coding potentials called exons and, components without coding potentials known as introns. Introns are generally removed during a post-transcriptional process called "splicing". In most cases, introns are fully spliced out. Sometimes, these introns are retained in a situation described as intron retention (IR). Splicing efficiency for individual introns vary across cells and tissues. differential splicing efficiency .
+
+Short genes with high mRNA levels tend to be inefficiently spliced compared to long genes with low mRNA levels. IE, there is a positive correlaation between gene length ans SE @sánchez-escabias2022. Splicing efficiency of introns in the same gene have a lower variance than when compared to introns in different genes @sánchez-escabias2022. This suggests that a fair study of intron retention should be comparing same introns in same genes across the subjects of interest. Aging and aging-like phenotypes are associated with splicing alterations [@angarola2021, @garcía-ruiz]
 
 Eukaryotes are said to have two distinct pre-mRNA splicing machinery; the major spliceosome and the minor spliceosome . The major spliceosome is said to remove over 99% of introns while the minor spliceosome removes evolutionarily conserved introns @inoue2021
 
