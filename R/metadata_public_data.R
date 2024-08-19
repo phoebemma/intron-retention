@@ -29,9 +29,9 @@ colnames(SRP102542)[colnames(SRP102542) == "Run"] <- "seq_sample_id"
 
 
 #Extract the participant from the dataframe
-SRP102542$participant <- parse_number(SRP102542$Group)
+#SRP102542$participant <- parse_number(SRP102542$Group)
 
-
+colnames(SRP102542)[colnames(SRP102542) == "Experiment"] <- "participant"
 
 #saveRDS(SRP102542, "./data/processed_data/SRP102542_metadata.RDS")
 
@@ -61,7 +61,7 @@ colnames(SRP043368)
 
 #Bothe baseline and post-14 weeks training of old adults. To be selected only those with placebo and 
 #RT
-#Contains only baseline of young individuals
+
 
 #see article https://pubmed.ncbi.nlm.nih.gov/33071237/
 #metadata downloaded from https://www.ncbi.nlm.nih.gov/Traces/study/?page=2&acc=GSE157585&o=acc_s%3Aa
