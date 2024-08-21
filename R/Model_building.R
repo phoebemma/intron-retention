@@ -33,23 +33,13 @@ source("R/Trainome_functions.R")
 
 
 
-#SRP280348
-#To be extracted from this metadata are the old participants who recieved placebo
-#and the young participants
+# SRP280348
+# To be extracted from this metadata are the old participants who recieved placebo
+# and the young participants
 SRP280348_metadata <- readRDS("data/processed_data/SRP280348_metadata.RDS") %>%
   #select only the placebo adults and the young adults
   subset(study_arm == "plaPRT" | study_arm  == "Young") %>%
-  select(study, seq_sample_id, participant, biopsy, age_group)
-colnames(SRP280348_metadata)[colnames(SRP280348_metadata) == "biopsy"] <- "time"
-
-SRP280348_metadata$time <- as.character(SRP280348_metadata$time)
-
-SRP280348_metadata["time"][SRP280348_metadata["time"] == 1 ] <- "PreExc"
-
-SRP280348_metadata["time"][SRP280348_metadata["time"] == 0 ] <- "PreExc"
-SRP280348_metadata["time"][SRP280348_metadata["time"] == 3 ] <- "PostExc"
-
-unique(SRP280348_metadata$time)
+  select(study, seq_sample_id, participant, biopsy, age_group, time)
 
 
 
@@ -58,8 +48,8 @@ SRP102542_metadata <- readRDS("data/processed_data/SRP102542_metadata.RDS")%>%
   subset(exercise_type == "Resistance") %>%
   select(study, seq_sample_id, participant, time, age_group)
 
-SRP102542_metadata["time"][SRP102542_metadata["time"] == "PreTraining" ] <- "PreExc"
-SRP102542_metadata["time"][SRP102542_metadata["time"] == "PostTraining" ] <- "PostExc"
+# SRP102542_metadata["time"][SRP102542_metadata["time"] == "PreTraining" ] <- "PreExc"
+# SRP102542_metadata["time"][SRP102542_metadata["time"] == "PostTraining" ] <- "PostExc"
 
 
 unique(SRP102542_metadata$time)
@@ -67,8 +57,7 @@ unique(SRP102542_metadata$time)
 
 #SRP043368
 SRP043368_metadata <- readRDS("data/processed_data/SRP043368_metadata.RDS")
-colnames(SRP043368_metadata)[colnames(SRP043368_metadata) == "exercise_status"] <- "time"
-SRP043368_metadata["time"][SRP043368_metadata["time"] == "untrained" ] <- "PreExc"
+
 SRP043368_metadata  <- SRP043368_metadata %>%
   select(study, seq_sample_id, participant, time)
   
