@@ -8,27 +8,28 @@ source("R/Trainome_functions.R")
 #The impact of age and of RT will be modeled
 
 #COPD metadata
-copd_metadata <- readRDS("data/processed_data/copd_metadata.RDS")%>%
-  select(study, seq_sample_id, participant, time)%>%
-  subset(time == "PreExc" | time == "PostExc")%>%
-  drop_na()
-  
-#hist(copd_metadata$age)
-unique(copd_metadata$time)
-
-
-#Volume_data
-Vol_metadata <- readRDS("data/processed_data/volume_metadata.RDS")%>%
-  select(study, seq_sample_id, participant, time)%>%
-  #pre exercise and post exercise are refered to as w0 and w12 respectively
-  subset(time == "w0"| time == "w12") %>%
-  drop_na()
-
-#change the time variables to PreExc and PostExc
-Vol_metadata["time"][Vol_metadata["time"] == "w0"] <- "PreExc"
-Vol_metadata["time"][Vol_metadata["time"] == "w12"] <- "PostExc"
-
-unique(Vol_metadata$time)
+# copd_metadata <- readRDS("data/processed_data/copd_metadata.RDS")%>%
+#   dplyr::select(study, seq_sample_id, participant, time, age)%>%
+#   subset(time == "PreExc" | time == "PostExc")%>%
+#   drop_na()
+#   
+# hist(copd_metadata$age)
+# max(copd_metadata$age)
+# unique(copd_metadata$time)
+# 
+# 
+# #Volume_data
+# Vol_metadata <- readRDS("data/processed_data/volume_metadata.RDS")%>%
+#   dplyr::select(study, seq_sample_id, participant, time, age)%>%
+#   #pre exercise and post exercise are refered to as w0 and w12 respectively
+#   subset(time == "w0"| time == "w12") %>%
+#   drop_na()
+# max(Vol_metadata$age)
+# #change the time variables to PreExc and PostExc
+# Vol_metadata["time"][Vol_metadata["time"] == "w0"] <- "PreExc"
+# Vol_metadata["time"][Vol_metadata["time"] == "w12"] <- "PostExc"
+# 
+# unique(Vol_metadata$time)
 
 
 
@@ -55,9 +56,8 @@ unique(SRP280348_metadata$time)
 #SRP102542
 SRP102542_metadata <- readRDS("data/processed_data/SRP102542_metadata.RDS")%>%
   subset(exercise_type == "Resistance") %>%
-  select(study, seq_sample_id, participant, biopsy_timepoint, age_group)
+  select(study, seq_sample_id, participant, time, age_group)
 
-colnames(SRP102542_metadata)[colnames(SRP102542_metadata) == "biopsy_timepoint"] <- "time"
 SRP102542_metadata["time"][SRP102542_metadata["time"] == "PreTraining" ] <- "PreExc"
 SRP102542_metadata["time"][SRP102542_metadata["time"] == "PostTraining" ] <- "PostExc"
 
@@ -94,6 +94,16 @@ unique(full_metadata$age_group)
 
 #saveRDS(full_metadata, "data/model/full_metadata.RDS")
 
+#full_metadata <- readRDS("data/model/full_metadata.RDS")
+
+
+
+
+ggplot(full_metadata, aes(time)) +
+  geom_bar()+
+  labs(x = "time")+
+  ggtitle("Distribution of biopsy timepoints")+
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 #LOAD ALL THE SPLICING DATA

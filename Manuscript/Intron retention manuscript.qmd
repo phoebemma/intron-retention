@@ -23,13 +23,21 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ## Introduction
 
-Eukaryotic genes are composed of components with coding potentials called exons and, components without coding potentials known as introns. Introns are generally removed during a post-transcriptional process called "splicing". In most cases, introns are fully spliced out. Sometimes, these introns are retained in a situation described as intron retention (IR). Splicing efficiency for individual introns vary across cells and tissues. differential splicing efficiency .
+Eukaryotic genes are composed of components with coding potentials called exons and, components without coding potentials known as introns. Introns are generally removed during a post-transcriptional process called "splicing" while the exons are joined together to form mRNAs. Several occurences could disrupt what could be regarded as the "normal" splicing process to either yield a different isoform of a mature mRNA , or disrupt the process entirely by initiating a premature stop in transcription. These occurences that disrupt the normal splicing process are called "Alternative Splicing" In most cases, introns are fully spliced out. Sometimes, these introns are retained in a situation described as intron retention (IR).
 
-Short genes with high mRNA levels tend to be inefficiently spliced compared to long genes with low mRNA levels. IE, there is a positive correlaation between gene length ans SE @sánchez-escabias2022. Splicing efficiency of introns in the same gene have a lower variance than when compared to introns in different genes @sánchez-escabias2022. This suggests that a fair study of intron retention should be comparing same introns in same genes across the subjects of interest. Aging and aging-like phenotypes are associated with splicing alterations [@angarola2021, @garcía-ruiz]
+Intron retention events increase with aging @mariotti_deterioration_2022
 
-Eukaryotes are said to have two distinct pre-mRNA splicing machinery; the major spliceosome and the minor spliceosome . The major spliceosome is said to remove over 99% of introns while the minor spliceosome removes evolutionarily conserved introns @inoue2021
+There are three broad types of alternative splicing; exon skipping, alternative use of splice sites, and intron retention @nishida2015. IR is believed to control gene expression by either inserting a premature stop codon in a mature mRNA, or causing the expression of different mRNA isoform
 
 IR is a type of alternative splicing where a full intron, or parts of an intron in a mature messenger RNA (mRNA) is retained during splicing. Other types of alternative exon skipping, mutually exclusive exons, alternative 5' splice sites and alternative 3' splice sites @zheng2020 . Alternative splicing regulates life and death decisions @schwerk2005. mRNAs with retained introns play roles in normal physiology and in disease conditions @wong_intron_2016. It is a potential biomarker or driver of the aging process [@baralle2023 ; @adusumalli_increased_2019 ]. Tissues and organs are altered differently by aging and aging-related processes @baralle2023. IR can be said to be a regulator of gene expression in a variety of cellular processes as it could subject mRNA molecules that contain them to nonsense-mediated mRNA decay (NMD) thereby eliminating the affected genes, or lead to frameshifts that make specific genes in response to particular signals [@baralle2023, @zheng2020, @mauger2016, @wong2022]. IRs in untranslated regions would influence gene expression differently from those in protein-coding regions. Each differential splicing event is expected to influence the function, location or expression level of a protein and thus would likely impact cell function
+
+Splicing efficiency for individual introns is cell and tissue specific @nishida2015 differential splicing efficiency . As an individual ages, mis-splicing increases @garcía-ruiz
+
+Short genes with high mRNA levels tend to be inefficiently spliced compared to long genes with low mRNA levels. IE, there is a positive correlaation between gene length ans SE @sánchez-escabias2022. Splicing efficiency of introns in the same gene have a lower variance than when compared to introns in different genes @sánchez-escabias2022. This suggests that a fair study of intron retention should be comparing same introns in same genes across the subjects of interest. Aging and aging-like phenotypes are associated with splicing alterations [@angarola2021, @garcía-ruiz, @nishida2015, @mariotti_deterioration_2022]
+
+Exercise is said to be an anti-aging intervention targeted at maintaining not just muscle health, but general well-being
+
+Eukaryotes are said to have two distinct pre-mRNA splicing machinery; the major spliceosome and the minor spliceosome . The major spliceosome is said to remove over 99% of introns while the minor spliceosome removes evolutionarily conserved introns @inoue2021
 
 R used to be considered a result of mis-splicing which render transcripts non-functional @wong_intron_2016 but is increasingly being viewed as a mechanism of gene regulation. IR is deregulated in disease conditions @ge2014
 
@@ -73,6 +81,32 @@ What impact does RT have on that phenomenon
 
 what genes are particularly more retained and more spliced out in young versus adults
 
-## Methodology
+## Materials and methods
+
+Five datasets were included in the study. Selection criteria for the dataset were that the data had to paired-end Illumina RNA-Seq data from vastus lateralis muscle of human subjects below 40 years old for the young subjects, and above 50 for the old subjects
+
++--------------+--------------------+----------------------+----------------------+
+| Dataset name | Number of subjects | Age range (in years) | Linked Publication   |
++==============+====================+======================+======================+
+| COPD         | 53                 | 56-79                | @molmen_chronic_2021 |
++--------------+--------------------+----------------------+----------------------+
+| Volume       |                    | 20-37                | @khan_increased_2020 |
++--------------+--------------------+----------------------+----------------------+
+| SRP280348    |                    | 19-27 (Young cohort) | @kulkarni2020        |
+|              |                    |                      |                      |
+|              |                    | =\> 65 (Old cohort)  |                      |
++--------------+--------------------+----------------------+----------------------+
+|              |                    |                      |                      |
++--------------+--------------------+----------------------+----------------------+
+|              |                    |                      |                      |
++--------------+--------------------+----------------------+----------------------+
+|              |                    |                      |                      |
++--------------+--------------------+----------------------+----------------------+
+
+: Summary of included datastes
+
+Volume dataset @khan_increased_2020
+
+COPD dataset @molmen_chronic_2021 subjects aged
 
 Splice-Q @demelocosta2021 was used to quantify splicing efficiency

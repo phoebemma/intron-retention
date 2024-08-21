@@ -8,7 +8,7 @@ library(ggfortify)
 #https://tavareshugo.github.io/data-carpentry-rnaseq/03_rnaseq_pca.html
 #Load preexercise splicing data
 
-pre_sp <- readRDS("data/model/full_splice_data.RDS")
+pre_sp <- readRDS("data/preexercise_data/all_splice_data.RDS")
 pca_matrix <- pre_sp %>%
   column_to_rownames("transcript_ID") %>% 
   as.matrix() %>%
@@ -108,7 +108,7 @@ top_loadings <- pc_loadings %>%
 autoplot(sample_pca)
 
 #Load the meatadata
-met_df <- readRDS("data/model/full_metadata.RDS") 
+met_df <- readRDS("data/preexercise_data/all_metadata.RDS") 
 
 unique(met_df$study)
-autoplot(sample_pca, data = met_df, colour = "time", shape ="study" )
+autoplot(sample_pca, data = met_df, colour = "study", shape ="age_group" )

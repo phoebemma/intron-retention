@@ -1,0 +1,73 @@
+library(dplyr)
+library(tidyverse)
+library(readr)
+
+
+#This details the extractions and EDA fror the dataset with SRA number SRP102542
+#Load and clean the publicly available data
+#This contains pre and postexercise (RT) data
+#see article https://pubmed.ncbi.nlm.nih.gov/28273480/
+#Metadata downloaded from https://www.ncbi.nlm.nih.gov/Traces/study/?page=2&acc=gse97084&o=acc_s%3Aa
+SRP102542 <- read_csv("data/SRP102542.txt") %>%
+  dplyr::select("Run", "AGE", "biopsy_timepoint", "exercise_type", "Experiment", "GEO_Accession (exp)", "SRA Study") 
+
+
+#Load the metadata file downloaded from ENA
+#This would be used to match the prexercise to the postexercise data
+#This also contains inormation that could be used as participant_id
+SRP102542_1 <- read_csv("public_data/sra_result-SRP102542.csv") %>%
+  dplyr::select("Experiment Accession", "Experiment Title", "Sample Accession") %>%
+  separate("Experiment Title", c("GEO_Accession (exp)", "Group", "age_group", "Exercise", "biopsy_timepoint"))
+
+#JOIN the SRP102542 metadata together
+SRP102542 <- SRP102542 %>%
+  inner_join(SRP102542_1, by = c("Experiment" = "Experiment Accession", "GEO_Accession (exp)", "biopsy_timepoint"))
+colnames(SRP102542)[colnames(SRP102542) == "SRA Study"] <- "study"
+#rename "Run" to "seq_sample_id"
+#This aligns it to the column name in the mtadata
+colnames(SRP102542)[colnames(SRP102542) == "Run"] <- "seq_sample_id"
+colnames(SRP102542)[colnames(SRP102542) == "Experiment"] <- "participant"
+colnames(SRP102542)[colnames(SRP102542) == "biopsy_timepoint"] <- "time"
+SRP102542["time"][SRP102542["time"] == "PreTraining" ] <- "PreExc"
+SRP102542["time"][SRP102542["time"] == "PostTraining" ] <- "PostExc"
+
+
+unique(SRP102542$time)
+
+#saveRDS(SRP102542, "./data/processed_data/SRP102542_metadata.RDS")
+
+
+#Select pre-exercise data for the pre-exercise model
+
+SRP102542_pre <- SRP102542 %>%
+  subset(time == "PreExc")
+#saveRDS(SRP102542_pre, "data/preexercise_data/SRP102542_preExc_metadata.RDS")
+
+
+
+
+#Load the SpliceQ data
+SRP102542_data <- extract_splice_q("./data/SRP102542_GSE97084_SpliceQ_outputs/")
+
+idx <- sapply(SRP102542_data, class)== "numeric"
+SRP102542_data[, idx] <- lapply(SRP102542_data[, idx], round, 2)
+
+
+
+
+#select only the splicing samples captured in the metadata
+SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542$seq_sample_id)
+
+SRP102542_data <- SRP102542_data %>%
+  subset(select = c("transcript_ID", SRP102542_intersect))
+#saveRDS(SRP102542_data, "./data/processed_data/SRP102542_splicing_data.RDS")
+
+
+
+#Repeat for pre-exercise data
+#select only the splicing samples captured in the metadata
+SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542_pre$seq_sample_id)
+
+SRP102542_pre_data <- SRP102542_data %>%
+  subset(select = c("transcript_ID", SRP102542_intersect))
+#saveRDS(SRP102542_pre_data, "./data/preexercise_data//SRP102542_preExc_splicing_data.RDS")

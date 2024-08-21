@@ -189,12 +189,6 @@ all_splice_df[all_splice_df == 1 ] <- 0.999
 
 
 
-long_splice_df <- all_splice_df %>%
-  pivot_longer(names_to = "sample_id",
-               values_to = "SE",
-               cols = -(transcript_ID) )
-
-hist(long_splice_df$SE)
 
 
 #Subset only the introns wih SE 0
@@ -271,13 +265,8 @@ unique(model_full$Estimate)
 
 #saveRDS(model_full, "data/model/filtered_presercise_model.RDS")
 
-# fully_retained_ints <- all_splice_df  %>%
-#   subset(SE == 0)
-# 
-# 
-# table(fully_retained_ints$age)
-# table(fully_retained_ints$time)
-# 
-# 
-# #Plot the data
-# plot(fully_retained_ints$time)
+
+
+
+
+

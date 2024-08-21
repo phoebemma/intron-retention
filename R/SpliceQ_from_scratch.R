@@ -14,35 +14,10 @@ contratrain_data[, idx] <- lapply(contratrain_data[, idx], round, 2)
 
 
 
-#Load Volume data
-volume_data <- extract_splice_q("./data/Volume_SpliceQ_outputs/")
-idx <- sapply(volume_data, class)== "numeric"
-volume_data[, idx] <- lapply(volume_data[, idx], round, 2)
-
-#remove everything before the . in sample_id. 
-colnames(volume_data) <- gsub(".*?\\.", "", colnames(volume_data) )
-#saveRDS(volume_data, "./data/volume_splicing_data.RDS")
 
 
 
 
-#Load COPD data
-copd_data <- extract_splice_q("./data/COPD_spliceQ_outputs/")
-#Rename the ccolumn names by removing everything after the second underscore
- colnames(copd_data) <- gsub("_.*", "", colnames(copd_data) )
- #COPD sequence data contains duplicates. The code below should remove duplicate columns
-copd_data <-   copd_data[, !duplicated(colnames(copd_data))]
-
-#the gsub functio above also removed the underscore in "transcript_ID, replace it
-colnames(copd_data)[1] <- "transcript_ID"
-#remove everything before the . in sample_id. 
-colnames(copd_data) <- gsub(".*?\\.", "", colnames(copd_data) )
-#Add an X before the sample_ID. This makes it match to the naming in metadata
-colnames(copd_data)[-1] <- paste0("X", colnames(copd_data)[-1] )
-
-idx <- sapply(copd_data, class)== "numeric"
-copd_data[, idx] <- lapply(copd_data[, idx], round, 2)
-#saveRDS(copd_data, "./data/copd_splicing_data.RDS")
 
 
 
