@@ -8,3 +8,7 @@
 /old_repo/
 /public_data/
 /Manuscript/
+
+# Do not track big ome data (added by trainomeMetaData)
+/ome-data/
+

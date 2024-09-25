@@ -5,9 +5,9 @@ output:
   bookdown::word_document2: default
   bookdown::pdf_documents: default
 editor: visual
-csl: science.csl
+csl: rna.csl
 bibliography: My_Library.bib
-target_journal: 
+target_journal: https://rnajournal.cshlp.org/site/misc/about.xhtml 
 prefer-html: true
 ---
 
@@ -85,25 +85,25 @@ what genes are particularly more retained and more spliced out in young versus a
 
 Five datasets were included in the study. Selection criteria for the dataset were that the data had to paired-end Illumina RNA-Seq data from vastus lateralis muscle of human subjects below 40 years old for the young subjects, and above 50 for the old subjects
 
-+--------------+--------------------+----------------------+----------------------+
-| Dataset name | Number of subjects | Age range (in years) | Linked Publication   |
-+==============+====================+======================+======================+
-| COPD         | 53                 | 56-79                | @molmen_chronic_2021 |
-+--------------+--------------------+----------------------+----------------------+
-| Volume       |                    | 20-37                | @khan_increased_2020 |
-+--------------+--------------------+----------------------+----------------------+
-| SRP280348    |                    | 19-27 (Young cohort) | @kulkarni2020        |
-|              |                    |                      |                      |
-|              |                    | =\> 65 (Old cohort)  |                      |
-+--------------+--------------------+----------------------+----------------------+
-|              |                    |                      |                      |
-+--------------+--------------------+----------------------+----------------------+
-|              |                    |                      |                      |
-+--------------+--------------------+----------------------+----------------------+
-|              |                    |                      |                      |
-+--------------+--------------------+----------------------+----------------------+
++---------------+-------------------+----------------------+----------------------+
+| Dataset name  | Number of samples | Age range (in years) | Linked Publication   |
++===============+===================+======================+======================+
+| COPD          | 65                | 56-79                | @molmen_chronic_2021 |
++---------------+-------------------+----------------------+----------------------+
+| Volume        | 50                | 20-37                | @khan_increased_2020 |
++---------------+-------------------+----------------------+----------------------+
+| SRP280348     | 86                | 19-27 (Young cohort) | @kulkarni2020        |
+|               |                   |                      |                      |
+|               |                   | =\> 65 (Old cohort)  |                      |
++---------------+-------------------+----------------------+----------------------+
+| SRP043368     | 26                | 22-33                | @lindholm2014        |
++---------------+-------------------+----------------------+----------------------+
+| SRP102542     | 52                | 18-30 (Young cohort) | @robinson2017        |
+|               |                   |                      |                      |
+|               |                   | 65-60 (Old cohort)   |                      |
++---------------+-------------------+----------------------+----------------------+
 
-: Summary of included datastes
+: 2188 introns were used in the first model.These were the introns captured across all datasets
 
 Volume dataset @khan_increased_2020
 

@@ -26,11 +26,13 @@ and \[SRP280348\] (<https://pubmed.ncbi.nlm.nih.gov/33071237/>)
 
 This contains the scripts with codes used for data analyses.
 
-1.  \`SpliceQ_from_scratch.R\` details the steps in processing the
+1.  \`/Data_extraction\` A folder containing five different R scripts
+    that show how the five different datasets were processed
+2.  \`SpliceQ_from_scratch.R\` details the steps in processing the
     SpliceQ data generated from RNA Seq data
-2.  \`metadata_extraction.R\` shows how metadata from the Trainome files
+3.  \`metadata_extraction.R\` shows how metadata from the Trainome files
     are generated and processed
-3.  \`metadata_public_data.R\` shows how the metadata from the publicly
+4.  \`metadata_public_data.R\` shows how the metadata from the publicly
     available RNA-Seq data were generated  
 
 <div id="refs" class="references csl-bib-body hanging-indent"

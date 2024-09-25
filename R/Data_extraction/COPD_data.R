@@ -10,19 +10,21 @@ source("R/Trainome_functions.R")
 
 
 #COPD metadata
-data("copd_samples")
-data("copd_participants")
+data(copd_samples)
+data(copd_participants)
+
+
 
 copd_metadata <- copd_samples %>%
   inner_join(copd_participants, by = c("study", "participant", "sex", "treatment"))%>%
-  dplyr::select(study, seq_sample_id, participant, time, age)%>%
+  dplyr::select(study, participant, sex, condition, time, seq_sample_id, age)%>%
   #select only thesubset we are interested in
   subset(time == "PreExc" | time == "PostExc")%>%
-  drop_na()
+  drop_na() 
 
 hist(copd_metadata$age)
 length(unique(copd_metadata$participant))
-#saveRDS(copd_metadata, "data/processed_data/copd_metadata.RDS")
+# saveRDS(copd_metadata, "data/processed_data/copd_metadata.RDS")
 
 #Load the COPD splicing data
 
@@ -44,27 +46,27 @@ copd_data[, idx] <- lapply(copd_data[, idx], round, 2)
 
 
 
-#select only the splicing samples captured in the metadata
+# select only the splicing samples captured in the metadata
 copd_intersect <- intersect(colnames(copd_data), copd_metadata$seq_sample_id)
 
 copd_data <- copd_data %>%
   subset(select = c("transcript_ID", copd_intersect))
 
 
-#saveRDS(copd_data, "./data/processed_data/copd_splicing_data.RDS")
+# saveRDS(copd_data, "./data/processed_data/copd_splicing_data.RDS")
 
 
 
-#Extract the pre-exercise data
+# Extract the pre-exercise data
 
 copd_metadata_pre <- copd_metadata %>%
   subset(time == "PreExc")
 
-#saveRDS(copd_metadata_pre, "data/preexercise_data/copd_preExc_metadata.RDS")
+# saveRDS(copd_metadata_pre, "data/preexercise_data/copd_preExc_metadata.RDS")
 
 copd_intersect <- intersect(colnames(copd_data), copd_metadata_pre$seq_sample_id)
 
 copd_data_pre <- copd_data %>%
   subset(select = c("transcript_ID", copd_intersect))
 
-#saveRDS(copd_data_pre, "data/preexercise_data/copd_preExc_splicing_data.RDS")
+# saveRDS(copd_data_pre, "data/preexercise_data/copd_preExc_splicing_data.RDS")
