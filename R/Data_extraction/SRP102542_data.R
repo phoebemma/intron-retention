@@ -1,6 +1,7 @@
 library(dplyr)
 library(tidyverse)
 library(readr)
+library(stringr)
 
 
 #This details the extractions and EDA fror the dataset with SRA number SRP102542
@@ -26,15 +27,17 @@ colnames(SRP102542)[colnames(SRP102542) == "SRA Study"] <- "study"
 #rename "Run" to "seq_sample_id"
 #This aligns it to the column name in the mtadata
 colnames(SRP102542)[colnames(SRP102542) == "Run"] <- "seq_sample_id"
-colnames(SRP102542)[colnames(SRP102542) == "Experiment"] <- "participant"
+#colnames(SRP102542)[colnames(SRP102542) == "Experiment"] <- "participant"
 colnames(SRP102542)[colnames(SRP102542) == "biopsy_timepoint"] <- "time"
 SRP102542["time"][SRP102542["time"] == "PreTraining" ] <- "PreExc"
 SRP102542["time"][SRP102542["time"] == "PostTraining" ] <- "PostExc"
+# Extract the participant number which is unique to each participant
+SRP102542["participant"] <- as.character(str_extract(SRP102542$Group, "[0-9]+"))
 
 
 unique(SRP102542$time)
 
-#saveRDS(SRP102542, "./data/processed_data/SRP102542_metadata.RDS")
+# saveRDS(SRP102542, "./data/processed_data/SRP102542_metadata.RDS")
 
 
 #Select pre-exercise data for the pre-exercise model

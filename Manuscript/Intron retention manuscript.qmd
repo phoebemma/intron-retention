@@ -21,11 +21,13 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ## Abstract
 
+We profiled the skeletal muscle transcriptome of young and old individuals and observed a relative increase in IR in aged individuals. We further explored the impact of RT on IR . Genes with differential IR belonged to ontologies ...... and exhibited ..... differential expression levels
+
 ## Introduction
 
-Eukaryotic genes are composed of components with coding potentials called exons and, components without coding potentials known as introns. Introns are generally removed during a post-transcriptional process called "splicing" while the exons are joined together to form mRNAs. Several occurences could disrupt what could be regarded as the "normal" splicing process to either yield a different isoform of a mature mRNA , or disrupt the process entirely by initiating a premature stop in transcription. These occurences that disrupt the normal splicing process are called "Alternative Splicing" In most cases, introns are fully spliced out. Sometimes, these introns are retained in a situation described as intron retention (IR).
-
 Intron retention events increase with aging @mariotti_deterioration_2022
+
+Splicing accuracy is likely under-estimated @garcía-ruiz
 
 There are three broad types of alternative splicing; exon skipping, alternative use of splice sites, and intron retention @nishida2015. IR is believed to control gene expression by either inserting a premature stop codon in a mature mRNA, or causing the expression of different mRNA isoform
 
@@ -46,6 +48,8 @@ Poor splicing efficiency is related to human diseases like alpha thalassemia @ne
 IR could serve as biomarkers for neurodegenerative diseases @sznajder2018, and various cancers [@dvinge2015, @inoue2021]
 
 IR could occur in response to specific developmental cues and serve as a strategy for rapid mobilization of some mRNAs for protein translation @ong2020
+
+missplicing occurs more in non-protein coding genes than in protein-coding genes @garcía-ruiz
 
 @won
 
@@ -109,4 +113,6 @@ Volume dataset @khan_increased_2020
 
 COPD dataset @molmen_chronic_2021 subjects aged
 
-Splice-Q @demelocosta2021 was used to quantify splicing efficiency
+Splice-Q @demelocosta2021 was used to quantify splicing efficiency. Default seetings were used where there has to be a minimum of 10 reads spanning each splice junstion.
+
+## Discusion

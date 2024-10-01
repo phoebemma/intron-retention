@@ -8,30 +8,24 @@ source("R/Trainome_functions.R")
 #The impact of age and of RT will be modeled
 
 #COPD metadata
-# copd_metadata <- readRDS("data/processed_data/copd_metadata.RDS")%>%
-#   dplyr::select(study, seq_sample_id, participant, time, age)%>%
-#   subset(time == "PreExc" | time == "PostExc")%>%
-#   drop_na()
-#   
+copd_metadata <- readRDS("data/processed_data/copd_metadata.RDS")%>%
+  dplyr::select(study, participant,time, seq_sample_id)
+
 # hist(copd_metadata$age)
 # max(copd_metadata$age)
 # unique(copd_metadata$time)
 # 
 # 
-# #Volume_data
-# Vol_metadata <- readRDS("data/processed_data/volume_metadata.RDS")%>%
-#   dplyr::select(study, seq_sample_id, participant, time, age)%>%
-#   #pre exercise and post exercise are refered to as w0 and w12 respectively
-#   subset(time == "w0"| time == "w12") %>%
-#   drop_na()
-# max(Vol_metadata$age)
-# #change the time variables to PreExc and PostExc
-# Vol_metadata["time"][Vol_metadata["time"] == "w0"] <- "PreExc"
-# Vol_metadata["time"][Vol_metadata["time"] == "w12"] <- "PostExc"
-# 
+# Volume_data
+Vol_metadata <- readRDS("data/processed_data/volume_metadata.RDS")%>%
+  dplyr::select(study, participant,time, seq_sample_id)
+
+  
 # unique(Vol_metadata$time)
 
 
+ct_metadata <- readRDS("data/processed_data/contratrain_metadata.RDS")%>%
+  dplyr::select(study, participant,time, seq_sample_id)
 
 # SRP280348
 # To be extracted from this metadata are the old participants who recieved placebo
@@ -39,37 +33,42 @@ source("R/Trainome_functions.R")
 SRP280348_metadata <- readRDS("data/processed_data/SRP280348_metadata.RDS") %>%
   #select only the placebo adults and the young adults
   subset(study_arm == "plaPRT" | study_arm  == "Young") %>%
-  select(study, seq_sample_id, participant, biopsy, age_group, time)
+  select(study, participant,time, seq_sample_id, age_group)
+
+unique(SRP280348_metadata$time)
+
 
 
 
 #SRP102542
+
 SRP102542_metadata <- readRDS("data/processed_data/SRP102542_metadata.RDS")%>%
   subset(exercise_type == "Resistance") %>%
-  select(study, seq_sample_id, participant, time, age_group)
-
-# SRP102542_metadata["time"][SRP102542_metadata["time"] == "PreTraining" ] <- "PreExc"
-# SRP102542_metadata["time"][SRP102542_metadata["time"] == "PostTraining" ] <- "PostExc"
+  select(study, participant,time, seq_sample_id, age_group)
 
 
-unique(SRP102542_metadata$time)
+
+unique(SRP102542_metadata$participant)
 
 
 #SRP043368
-SRP043368_metadata <- readRDS("data/processed_data/SRP043368_metadata.RDS")
+# As it is only baseline, it is contained in the preexercise data
+SRP043368_metadata <- readRDS("data/preexercise_data/SRP043368_metadata.RDS")
 
 SRP043368_metadata  <- SRP043368_metadata %>%
-  select(study, seq_sample_id, participant, time)
+  select(study, participant,time, seq_sample_id)
   
 
 
 # merge the 5 datasets
 
 full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
+  rbind(ct_metadata) %>%
   rbind(SRP043368_metadata) %>%
   #create the age_group_column
   mutate(age_group = case_when(study == "copd" ~ "Old", 
                                study == "vol" ~ "Young",
+                               study == "ct" ~ "Young",
                                study == "SRP043368" ~ "Young" ))%>%
   #add the dataframes that originally have the age_group information
   rbind(SRP102542_metadata)%>%
@@ -79,7 +78,7 @@ full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
 
 #create a new column to extract the age_group data
 unique(full_metadata$age_group)
-
+unique(full_metadata$study)
 
 #saveRDS(full_metadata, "data/model/full_metadata.RDS")
 
@@ -88,20 +87,21 @@ unique(full_metadata$age_group)
 
 
 
-ggplot(full_metadata, aes(time)) +
+ggplot(full_metadata, aes(time, fill = time)) +
   geom_bar()+
   labs(x = "time")+
-  ggtitle("Distribution of biopsy timepoints")+
-  theme(plot.title = element_text(hjust = 0.5))
-
+  ggtitle("Distribution of biopsy timepoints for full model")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5)
 
 #LOAD ALL THE SPLICING DATA
 
 copd_splice_df <- readRDS("data/processed_data/copd_splicing_data.RDS")
 
 vol_splice_df <- readRDS("data/processed_data/volume_splicing_data.RDS")
+ct_splice_df <- readRDS("data/processed_data/contratrain_splicing_data.RDS")
 
-SRP043368_splice_df <- readRDS("data/processed_data/SRP043368_splicing_data.RDS")
+SRP043368_splice_df <- readRDS("data/preexercise_data/SRP043368_splicing_data.RDS")
 
 SRP102542_splice_df <- readRDS("data/processed_data/SRP102542_splicing_data.RDS")
 
@@ -110,10 +110,35 @@ SRP280348_splice_df <- readRDS("data/processed_data/SRP280348_splicing_data.RDS"
 
 full_splice_df <- copd_splice_df%>%
   inner_join(vol_splice_df, by = "transcript_ID") %>%
+  inner_join(ct_splice_df, by = "transcript_ID") %>%
   inner_join(SRP043368_splice_df, by = "transcript_ID") %>%
   inner_join(SRP102542_splice_df, by = "transcript_ID")%>%
   inner_join(SRP280348_splice_df, by = "transcript_ID") %>%
   drop_na()
+
+# Visualisation
+
+vis_df <- full_splice_df %>%
+  pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID) )%>%
+  inner_join(full_metadata, by = "seq_sample_id")
+
+
+
+# Plot the relationship between age and splicing efficiency
+vis_df %>%
+  group_by( time, age_group)%>%
+  summarise(avg = mean(SE)) %>%
+  ggplot(aes(avg, age_group))+
+  geom_point(mapping = aes(colour = age_group, shape = time))+ 
+  #geom_smooth()+
+  ggtitle("Relationship between age and splicing efficiency") +
+  xlab(" Average splicing efficiency")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+
 
 
 
@@ -149,71 +174,33 @@ full_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                       cores = ncores-2)
 full_model$summaries$ENST00000164139.4_11_11
 
-#The model with ziformula =1
-#saveRDS(full_model, "data/model/full_model_with_zero_inflation.RDS")
 
 
 
-#The model without ziformula
-#saveRDS(full_model, "data/model/full_model.RDS")
-
-#determine the models that raised errors
-# temp <-  full_model$errors %>%
-#   
-#   mutate(err = unlist(errors_fit)) %>%
-#   
-#   
-#   
-#   pivot_longer(cols = errors_fit:warn_eval) %>%
-#   
-#   filter(name == "err_sum") %>%
-#   print()
-# 
-# unlist(temp$value)
-# 
-# 
-# x = temp %>%
-#   subset(value != "NULL")
-# b <- as.list(x$target)
-# 
-#   select(target) %>%
-#   tolist()
-
-
-  
-
-#x = as.list(x)
 
 excl <- names(which(full_model$summaries == "NULL"))
 
+geneids <- names(which(full_model$summaries != "NULL"))
 
-#Remove all that have output NULL
-full_model$summaries[which(names(full_model$summaries) %in% (excl))] <- NULL
 
-#Remove all that have output NULL
-full_model$evaluations[which(names(full_model$evaluations) %in% (excl))] <- NULL
-
-mod_sum <- bind_rows(full_model$summaries) %>%
-   mutate(target = rep(names(full_model$summaries), each = 4)) %>%
+mod_sum <- bind_rows(within(full_model$summaries, rm(excl))) %>%
+  mutate(target = rep(geneids, each = 4)) %>%
   subset(coef != "(Intercept)")%>%
-  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"))
+  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
 
 
 
-mod_eval <- bind_rows(full_model$evaluations)%>%
-  mutate(target = names(full_model$evaluations))
-
+mod_eval <- bind_rows(within(full_model$evaluations, rm(excl)))%>%
+  mutate(target = geneids)
 
 #merge the model evaluation and summary dataframes
 
 model_full <- mod_sum %>%
-  inner_join(mod_eval, by = "target")%>%
-  filter(Pr...z.. <= 0.05 )%>%
-  filter(Estimate >= 0.1 | Estimate <= -0.1)
-
-
+  inner_join(mod_eval, by = "target")
 hist(model_full$pval.disp)
 hist(model_full$Estimate)
 
-#saveRDS(model_full, "data/model/filtered_zero_inflated_model.RDS")
+saveRDS(model_full, "data/re_models/all_full_group_model.RDS")
  

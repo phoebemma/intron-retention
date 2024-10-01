@@ -18,10 +18,11 @@ SRP043368 <- read_csv("data/SRP043368.txt")%>%
 colnames(SRP043368)[colnames(SRP043368) == "SRA Study"] <- "study"
 colnames(SRP043368)[colnames(SRP043368) == "Experiment"] <- "participant"
 colnames(SRP043368)[colnames(SRP043368) == "Run"] <- "seq_sample_id"
+colnames(SRP043368)[colnames(SRP043368) == "gender"] <- "sex"
 
 colnames(SRP043368)[colnames(SRP043368) == "exercise_status"] <- "time"
 SRP043368["time"][SRP043368["time"] == "untrained" ] <- "PreExc"
-#saveRDS(SRP043368, "data/preexercise_data/SRP043368_metadata.RDS")
+# saveRDS(SRP043368, "data/preexercise_data/SRP043368_metadata.RDS")
 
 
 colnames(SRP043368)

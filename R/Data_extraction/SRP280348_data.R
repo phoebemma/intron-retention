@@ -22,8 +22,9 @@ SRP280348 <- read_csv("data/SRP280348.txt")%>%
 #Source ENA
 SRP280348_1 <- read_csv("public_data/sra_result-SRP280348.csv")%>%
   dplyr::select("Experiment Accession", "Experiment Title", "Sample Accession", "Study Accession") %>%
-  separate("Experiment Title", c("Title", "Group", "Category"), sep = " ") #%>%
-#separate("Group", c("x", "participant", "y" ), remove = FALSE) %>%
+  separate("Experiment Title", c("Title", "Group", "Category"), sep = " ") %>%
+  # seperate the category by an underscore to get the participant_ID
+separate("Category", c("x", "participant", "biopsy_timepoint" ), sep = "_")
 #subset(select = (-c(x, y)))
 
 SRP280348 <- SRP280348 %>%
@@ -32,7 +33,7 @@ SRP280348 <- SRP280348 %>%
 
 colnames(SRP280348)[colnames(SRP280348) == "Study Accession"] <- "study"
 colnames(SRP280348)[colnames(SRP280348) == "Run"] <- "seq_sample_id"
-colnames(SRP280348)[colnames(SRP280348) == "Sample Accession"] <- "participant"
+#colnames(SRP280348)[colnames(SRP280348) == "Sample Accession"] <- "participant"
 colnames(SRP280348)[colnames(SRP280348) == "biopsy"] <- "time"
 
 SRP280348$time <- as.character(SRP280348$time)
