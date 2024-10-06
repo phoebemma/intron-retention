@@ -99,7 +99,7 @@ all_splice_df[all_splice_df == 1 ] <- 0.999
 
 
 
-args<- list(formula = y ~  age + time + sex + (1|study) +(1|participant), 
+args<- list(formula = y ~  age*time + sex + (1|study) +(1|participant), 
             #ziformula = ~1,
             family = glmmTMB::beta_family())
 
@@ -115,7 +115,7 @@ full_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                       save_models = FALSE,
                       return_models = FALSE,
                       cores = ncores-2)
-full_model$summaries$ENST00000639077.1_5_11
+full_model$summaries$ENST00000342232.5_5_8
 
 excl <- names(which(full_model$summaries == "NULL"))
 
@@ -123,7 +123,7 @@ geneids <- names(which(full_model$summaries != "NULL"))
 
 
 mod_sum <- bind_rows(within(full_model$summaries, rm(excl))) %>%
-  mutate(target = rep(geneids, each = 4)) %>%
+  mutate(target = rep(geneids, each = 5)) %>%
   subset(coef != "(Intercept)")%>%
   mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
          log2fc = Estimate/log(2),
@@ -184,4 +184,4 @@ mod_eval_group <- bind_rows(within(full_group_model$evaluations, rm(excl)))%>%
 model_full_group <- mod_sum_group %>%
   inner_join(mod_eval_group, by = "target")
 
-saveRDS(model_full_group, "data/primary_full_group_unfiltered_model.RDS")
+saveRDS(model_full_group, "data/re_models/primary_full_group_unfiltered_model.RDS")

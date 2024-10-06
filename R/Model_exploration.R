@@ -3,21 +3,68 @@
 library(dplyr)
 library(ggplot2)
 library(biomaRt)
-library(clusterProfiler)
-library(org.Hs.eg.db)
+library(tmod)
 #library(plotrix)
 
 #Load the  model
 
-pre_model <- readRDS("data/model/filtered_presercise_model.RDS") %>%
-  dplyr::select(coef, Estimate, target, Pr...z..) %>%
-  mutate(SE_status = case_when( Estimate > 0 ~ "Improved_SE",
-                    Estimate < 0 ~ "Reduced_SE"))
-  
-hist(pre_model$Estimate)
-hist(pre_model$Pr...z..)
-ggplot(pre_model, aes(x = SE_status, fill = SE_status))+
-  geom_bar()
+#These are models from the primary data
+
+Full_group_model <- readRDS("data/re_models/primary_full_group_unfiltered_model.RDS")%>%
+  subset(coef != "(Intercept)") %>% 
+  drop_na()
+
+
+
+Full_count_model <- readRDS("data/re_models/primary_full_count_model.RDS")%>%
+  subset(coef != "(Intercept)") %>% 
+  drop_na()
+
+
+
+
+# Filter the results for those different in old versus young
+age_coef <- Full_group_model %>%
+  subset(coef == "age_groupOld")%>%
+  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) %>%
+  filter(fcthreshold == "s" & adj.p <= 0.05 )
+saveRDS(age_coef, "data/re_models/primary_model_extracts/age_group_grouped_model.RDS")
+
+
+
+# Filter for time, ie impact of RT
+
+time_coef <- Full_group_model %>%
+  subset(coef == "timePostExc")%>%
+  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) %>%
+  filter(fcthreshold == "s" & Pr...z..<= 0.05 )
+
+
+
+
+
+sex_coef <- Full_group_model %>%
+  subset(coef == "sexmale")%>%
+  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) %>%
+  filter(fcthreshold == "s" & adj.p <= 0.05 )
+
+
+
+
+# Interaction age and RT
+
+int_coef <- Full_group_model %>%
+  subset(coef == "age_groupOld:timePostExc")%>%
+  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) %>%
+  filter(fcthreshold == "s" & adj.p <= 0.05 )
 
 #The target contains the transcript_id, intron_id and chromosome in thats order.
 
@@ -76,35 +123,3 @@ ggplot(x, aes(x = "", y = perc, fill = transcript_biotype)) +
 #       radius = 1, theta = pi/1)
 
 
-#Geneontology
-ego_df <- enrichGO(gene = annotation$ensembl_gene_id,
-                   keyType = "ENSEMBL",
-                   OrgDb = org.Hs.eg.db,
-                   ont = "bp",
-                   pAdjustMethod = "BH",
-                   qvalueCutoff = 0.05,
-                   readable = T)
-
-dotplot(ego_df, showCategory = 15,
-        
-        font.size = 5, title = "15 top biological processes of genes containing DR introns in baseline data") +
-  theme(axis.text = element_text(size = 8), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 8), 
-        plot.title = element_text(hjust = 0.5))
-
-
-
-#Enrichment analyses
-
-#get the entrezid of the unique genes
-entrez_ids <- bitr(annotation$ensembl_gene_id,"ENSEMBL", "ENTREZID", org.Hs.eg.db)
-
-kegg_df <- enrichKEGG(gene = entrez_ids$ENTREZID,,
-                      organism = "hsa",
-                      keyType = "kegg",
-                      # OrgDb = org.Hs.eg.db, 
-                      #ont = "MF", 
-                      pAdjustMethod = "BH", 
-                      qvalueCutoff = 0.05)
-barplot(kegg_df, showCategory = 15, title = "15 most enriched pathways of genes containing DR introns at baseline")+
-  theme(axis.text = element_text(size = 8), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 8), 
-        plot.title = element_text(hjust = 0.5))

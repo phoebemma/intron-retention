@@ -41,6 +41,7 @@ mutate(age_group = case_when(study == "copd" ~ "Old",
   mutate(sex = factor(sex, levels = c("female", "male")),
          age_group = factor(age_group, levels= c("Young", "Old"))) 
 
+ unique(all_pre_metadata$time)
 ggplot(all_pre_metadata, aes(age)) +
   geom_bar()+
   ggtitle("Distribution of baseline data")+
@@ -93,12 +94,12 @@ all_pre_splice_reordered <- all_pre_splice_cont[,  c("transcript_ID",all_pre_met
 
 colnames(all_pre_splice_reordered)
 
-#Check if everything matches except the transcript_id
+# Check if everything matches except the transcript_id
 match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
 
-#invert the data to create a dataframe suitable for zero inflated analyses
-splice_df_inverted <- all_pre_splice_reordered %>%
-  mutate(across(X102PreExcVLR12:X134.subj8sample4, function(x)1-x))
+# invert the data to create a dataframe suitable for zero inflated analyses
+# splice_df_inverted <- all_pre_splice_reordered %>%
+#   mutate(across(X102PreExcVLR12:X134.subj8sample4, function(x)1-x))
 
 
 
@@ -106,7 +107,7 @@ splice_df_inverted <- all_pre_splice_reordered %>%
 all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
 
-args<- list(formula = y ~  age + sex + (1|study) +(1|participant), 
+args<- list(formula = y ~  age*sex + (1|study) +(1|participant), 
             family = glmmTMB::beta_family())
 
 SE_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
@@ -121,25 +122,22 @@ SE_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                     return_models = FALSE,
                     cores = ncores-2)
 
-SE_model$summaries$ENST00000612480.2_41_1
+SE_model$summaries$ENST00000366528.3_3_1
 
 
 excl <- names(which(SE_model$summaries == "NULL"))
 geneids <- names(which(SE_model$summaries != "NULL"))
 
 #Remove all that have output NULL
-SE_model$summaries[which(names(SE_model$summaries) %in% (excl))] <- NULL
 
-#Remove all that have output NULL
-SE_model$evaluations[which(names(SE_model$evaluations) %in% (excl))] <- NULL
 
 
 mod_sum <- bind_rows(within(SE_model$summaries, rm(excl))) %>%
-  mutate(target = rep(geneids, each = 3)) %>%
-  subset(coef != "(Intercept)")%>%
-  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
-log2fc = Estimate/log(2),
-fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
+  mutate(target = rep(geneids, each = 4)) %>%
+  subset(coef != "(Intercept)") # %>%
+#   mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+# log2fc = Estimate/log(2),
+# fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
 
 
 
@@ -150,7 +148,9 @@ mod_eval <- bind_rows(within(SE_model$evaluations, rm(excl)))%>%
 model_cont <- mod_sum %>%
   inner_join(mod_eval, by = "target")
 
-saveRDS(model_cont, "data/re_models/primary_preExc_count_model.RDS")
+hist(model_cont$Pr...z..)
+
+ saveRDS(model_cont, "data/re_models/primary_preExc_count_interaction_model.RDS")
 
 
 
@@ -158,7 +158,7 @@ saveRDS(model_cont, "data/re_models/primary_preExc_count_model.RDS")
 # Model using age_group
 
 
-args<- list(formula = y ~  age_group + sex + (1|study) +(1|participant), 
+args<- list(formula = y ~  age_group*sex + (1|study) +(1|participant), 
             family = glmmTMB::beta_family())
 
 SE_count_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
@@ -173,16 +173,18 @@ SE_count_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                     return_models = FALSE,
                     cores = ncores-2)
 
+SE_count_model$summaries$ENST00000007516.8_2_16
+
 excl <- names(which(SE_count_model$summaries == "NULL"))
 geneids <- names(which(SE_count_model$summaries != "NULL"))
 
 
 mod_sum_group <- bind_rows(within(SE_count_model$summaries, rm(excl))) %>%
-  mutate(target = rep(geneids, each = 3)) %>%
-  subset(coef != "(Intercept)")%>%
-  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
-         log2fc = Estimate/log(2),
-         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
+  mutate(target = rep(geneids, each = 4))  %>%
+  subset(coef != "(Intercept)") #%>%
+  # mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+  #        log2fc = Estimate/log(2),
+  #        fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
 
 
 
@@ -193,4 +195,9 @@ mod_eval_group <- bind_rows(within(SE_count_model$evaluations, rm(excl)))%>%
 model_cont_group <- mod_sum_group %>%
   inner_join(mod_eval_group, by = "target")
 
-saveRDS(model_cont_group, "data/re_models/primary_preExc_group_model.RDS")
+# This contains the interaction between age-group and sex
+saveRDS(model_cont_group, "data/re_models/primary_model_extracts/primary_preExc_interaction_group_model.RDS")
+
+
+# This one contained only age_group and sex, without interaction
+#saveRDS(model_cont_group, "data/re_models/primary_model_extracts/primary_preExc_group_model.RDS")
