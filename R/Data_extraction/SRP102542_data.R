@@ -35,16 +35,27 @@ SRP102542["time"][SRP102542["time"] == "PostTraining" ] <- "PostExc"
 SRP102542["participant"] <- as.character(str_extract(SRP102542$Group, "[0-9]+"))
 
 
+
+# Load the data obtained from the owners that include age and sex information. 
+
+extra_data <- readxl::read_xlsx("public_data/Robinson Nair Exercise Tissue Code for Hammarstrom.xlsx")%>%
+  dplyr::select("Tissue Code", "Age Group", "Sex", "Age")
+extra_data$`Tissue Code` <- as.character(extra_data$`Tissue Code`)
+
+SRP102542<- SRP102542 %>%
+  inner_join(extra_data, by = c( "participant" = "Tissue Code" ))
 unique(SRP102542$time)
+
+length(unique(extra_data$`Tissue Code`))
 
 # saveRDS(SRP102542, "./data/processed_data/SRP102542_metadata.RDS")
 
-
+length(unique(SRP102542$participant))
 #Select pre-exercise data for the pre-exercise model
 
 SRP102542_pre <- SRP102542 %>%
   subset(time == "PreExc")
-#saveRDS(SRP102542_pre, "data/preexercise_data/SRP102542_preExc_metadata.RDS")
+# saveRDS(SRP102542_pre, "data/preexercise_data/SRP102542_preExc_metadata.RDS")
 
 
 
