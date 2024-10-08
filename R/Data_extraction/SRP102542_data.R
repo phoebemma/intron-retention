@@ -44,9 +44,17 @@ extra_data$`Tissue Code` <- as.character(extra_data$`Tissue Code`)
 
 SRP102542<- SRP102542 %>%
   inner_join(extra_data, by = c( "participant" = "Tissue Code" ))
+
+# Rename the columns to match those in the primary data
+colnames(SRP102542)[colnames(SRP102542) == "Age"] <- "age"
+colnames(SRP102542)[colnames(SRP102542) == "Sex"] <- "sex"
+colnames(SRP102542)[colnames(SRP102542) == "exercise_type"] <- "condition"
+colnames(SRP102542)
 unique(SRP102542$time)
 
 length(unique(extra_data$`Tissue Code`))
+SRP102542 <- SRP102542 %>%
+  dplyr::select(study, participant, sex, condition, time, seq_sample_id, age, age_group)
 
 # saveRDS(SRP102542, "./data/processed_data/SRP102542_metadata.RDS")
 

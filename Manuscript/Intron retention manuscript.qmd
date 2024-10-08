@@ -25,7 +25,7 @@ We profiled the skeletal muscle transcriptome of young and old individuals and o
 
 ## Introduction
 
-Alternative splicing is a mechanism in mRNA processing in which protein-coding and non-protein coding parts of the RNA are alternatively skipped. This results in transcriptomic and proteomic diversity as different end-products of the same RNA are produced . There are three broad types of alternative splicing; exon skipping, alternative use of splice sites, and intron retention [@nishida2015; @zheng2020 ]. Intron retention (IR) occurs when a full intron, or parts of an intron in a mature messenger RNA (mRNA)(mRNA) is retained during splicing, resulting in the presence of an unprocessed sequence in the mRNA. It affects about 80% of human protein-coding genes [@middleton2017; @braunschweig2014] .IR could either lead to the degradation of the IR-containing transcripts through nonsense-mediated decay or the action of nucleases; or it could lead to the generation of alternative protein isoforms. @monteuuis2019. IR is a physiological mechanism that controls gene expression @wong2013. IR occurs mostly at the 3\` end of transcripts [@wong2013; @braunschweig2014]
+Alternative splicing is a mechanism in mRNA processing in which protein-coding and non-protein coding parts of the RNA are alternatively skipped. Alternative splicing is said to regulate life and death decisions @schwerk2005 as it results in transcriptomic and proteomic diversity that could regulate different mechanisms . There are three broad types of alternative splicing; exon skipping, alternative use of splice sites, and intron retention [@nishida2015; @zheng2020 ]. Intron retention (IR) occurs when a full intron, or parts of an intron in a mature messenger RNA (mRNA)(mRNA) is retained during splicing, resulting in the presence of an unprocessed sequence in the mRNA. It affects about 80% of human protein-coding genes [@middleton2017; @braunschweig2014] .IR could either lead to the degradation of the IR-containing transcripts through nonsense-mediated decay or the action of nucleases; or it could lead to frameshifts that cause the generation of alternative protein isoforms[@baralle2023, @zheng2020, @mauger2016, @wong2022; @monteuuis2019] . IR is a physiological mechanism that controls gene expression @wong2013 . IR occurs mostly at the 3\` end of transcripts [@wong2013; @braunschweig2014]. mRNAs with retained introns play roles in normal physiology and in disease conditions @wong_intron_2016.
 
 High IR levels correlate with downregulation of correctly spliced mRNA transcripts and low levels of protein expression @wong2013, moreso those that lack physiological relevance in cells or tissues they are detected in @braunschweig2014
 
@@ -33,11 +33,11 @@ Intron retention events increase with aging @mariotti_deterioration_2022
 
 Splicing accuracy is likely under-estimated @garcía-ruiz
 
-regulated IR could occur in response of
+It is a potential biomarker or driver of the aging process [@baralle2023 ; @adusumalli_increased_2019 ].
 
-IR is believed to control gene expression by either inserting a premature stop codon in a mature mRNA, or causing the expression of different mRNA isoform
+#### Aging
 
-. Alternative splicing regulates life and death decisions @schwerk2005. mRNAs with retained introns play roles in normal physiology and in disease conditions @wong_intron_2016. It is a potential biomarker or driver of the aging process [@baralle2023 ; @adusumalli_increased_2019 ]. Tissues and organs are altered differently by aging and aging-related processes @baralle2023. IR can be said to be a regulator of gene expression in a variety of cellular processes as it could subject mRNA molecules that contain them to nonsense-mediated mRNA decay (NMD) thereby eliminating the affected genes, or lead to frameshifts that make specific genes in response to particular signals [@baralle2023, @zheng2020, @mauger2016, @wong2022]. IRs in untranslated regions would influence gene expression differently from those in protein-coding regions. Each differential splicing event is expected to influence the function, location or expression level of a protein and thus would likely impact cell function
+Tissues and organs are altered differently by aging and aging-related processes @baralle2023.
 
 Splicing efficiency for individual introns is cell and tissue specific @nishida2015 differential splicing efficiency . As an individual ages, mis-splicing increases @garcía-ruiz
 
@@ -135,7 +135,7 @@ The differentially spliced introns based on age of preexercise data was filtered
 
 # Results
 
-At baseline, using the filter characteristics of adjusted p.values =\< 0.05, only age had differentially spliced introns, sex and interaction between sex and age showed no ds introns. age alone revealed 1801 out of 20353 introns were differentially spliced between old and young participants. When this data was further queried to detected those with absolute log2fc of 1, it showed that 514 were significantly spliced differently between old and young participants.
+At baseline, using the filter characteristics of adjusted p.values =\< 0.05, only age had differentially spliced introns, sex and interaction between sex and age showed no ds introns. age alone revealed 1787 out of 18541 introns were differentially spliced between old and young participants. When this data was further queried to detected those with absolute log2fc of 1, it showed that 511 were significantly spliced differently between old and young participants. 3 introns were differentially sploiced by sex
 
 Seven introns were shown to be differentially expressed by age when used as a continous variable
 

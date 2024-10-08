@@ -15,7 +15,7 @@ source("R/Trainome_functions.R")
 #Copd 
 copd_metadata <- readRDS("data/preexercise_data/copd_preExc_metadata.RDS") 
 unique(copd_metadata$time)
-
+colnames(copd_metadata)
 
 
 
@@ -23,31 +23,40 @@ unique(copd_metadata$time)
 
 volume_metadata <- readRDS("data/preexercise_data/vol_preExc_metadata.RDS")
 
-
+colnames(volume_metadata)
 unique(volume_metadata$time)
 
 
 # Contratratrain
 Contratrain_metadata <- readRDS("data/preexercise_data/ct_PreExc_metadata.RDS")
 
+# SRP102542
+SRP102542_metadata <- readRDS("data/preexercise_data/SRP102542_preExc_metadata.RDS")
+
+#
 # Merge all in one
 all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
   rbind(Contratrain_metadata) %>%
-  #Copd and volume has data in decimal
-  mutate(across(c("age"), round, 0)) %>%
+
 mutate(age_group = case_when(study == "copd" ~ "Old", 
                                study == "vol" ~ "Young",
                                study == "ct" ~ "Young")) %>%
+  rbind(SRP102542_metadata) %>%
+  
+  #Copd and volume and SRP102542 have age data in decimal
+  mutate(across(c("age"), round, 0)) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
          age_group = factor(age_group, levels= c("Young", "Old"))) 
 
  unique(all_pre_metadata$time)
+ 
+ 
 ggplot(all_pre_metadata, aes(age)) +
   geom_bar()+
   ggtitle("Distribution of baseline data")+
   theme(plot.title = element_text(hjust = 0.5))
 
-ggplot(all_pre_metadata, aes(age_group, fill = study)) +
+ggplot(all_pre_metadata, aes(age_group, fill = age_group)) +
   geom_bar()+
   ggtitle("Distribution of baseline data")+
   theme(plot.title = element_text(hjust = 0.5))+
@@ -60,12 +69,13 @@ copd_data <- readRDS("data/preexercise_data/copd_preExc_splicing_data.RDS")
 volume_data <- readRDS("data/preexercise_data/vol_preExc_splicing_data.RDS")
 
 contratrain_data <- readRDS("data/preexercise_data/ct_PreExc_splicing_data.RDS")
-
+SRP102542_data <- readRDS("data/preexercise_data/SRP102542_preExc_splicing_data.RDS")
 
 
 all_pre_splice_cont <- copd_data%>%
   inner_join(volume_data, by = "transcript_ID") %>%
   inner_join(contratrain_data, by = "transcript_ID")%>%
+  inner_join(SRP102542_data, by = "transcript_ID") %>%
   drop_na()
 
 long_df <- all_pre_splice_cont %>%
@@ -78,9 +88,9 @@ long_df <- all_pre_splice_cont %>%
 
 # Plot the relationship between age and splicing efficiency
 long_df %>%
-  group_by( age, age_group)%>%
+  group_by( age_group)%>%
   summarise(avg = mean(SE)) %>%
-  ggplot(aes(avg, age))+
+  ggplot(aes(avg, age_group))+
   geom_point(mapping = aes(colour = age_group))+ 
   geom_smooth()+
   ggtitle("Relationship between age and splicing efficiency") +
