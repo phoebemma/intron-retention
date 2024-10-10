@@ -2,23 +2,24 @@
 efficiency
 
 
-## Authors
-
-Chidimma Phoebe Echebiri, Daniel Hammarström,
-
 ## Introduction
 
 This study is aimed at investigating splicing efficiency (SE)
-differences between the young and old, and the potential impact
+differences between the young and old, and the potential impact of
 progressive resistance exercise could have on SE. It uses SpliceQ Melo
-Costa et al. (2021) to quantify splicing efficiency in five datasets;
+Costa et al. (2021) to quantify splicing efficiency in four datasets;
+
 the \[COPD dataset\]
-(<https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8261934/>), \[Volume
-dataset\] (<https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7708234/>),
+(<https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8261934/>),
+
+\[Volume dataset\]
+(<https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7708234/>),
+
+Contratrain dataset
+
+and
+
 \[SRP102542\] (<https://pubmed.ncbi.nlm.nih.gov/28273480/>),
-\[SRP043368\]
-(<https://faseb.onlinelibrary.wiley.com/doi/epdf/10.1096/fj.14-255000>)
-and \[SRP280348\] (<https://pubmed.ncbi.nlm.nih.gov/33071237/>)
 
 ## Repository Organisation
 

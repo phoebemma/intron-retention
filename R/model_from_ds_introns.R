@@ -5,6 +5,7 @@ library(tidyverse)
 library(seqwrap)
 library(gridExtra)
 library(ggpubr)
+library(biomaRt)
 
 #COPD metadata
 copd_metadata <- readRDS("data/processed_data/copd_metadata.RDS")
@@ -94,7 +95,7 @@ mutate(adj.p = p.adjust(Pr...z.., method = "fdr")) %>%
 
 
 
-mod_eval_group <- bind_rows(within(full_group_model$evaluations, rm(excl)))%>%
+mod_eval_group <- bind_rows(within(full_group_model$evaluations, rm(excl_group)))%>%
   mutate(target = geneids_group)
 
 #merge the model evaluation and summary dataframes
@@ -109,10 +110,10 @@ saveRDS(model_full_group, "data/re_models/primary_model_extracts/filtered_model_
 
 hist(model_full_group$Estimate)
 
-
+# model_full_group <- readRDS("data/re_models/primary_model_extracts/filtered_model_from_ds_intronsAge_at_baseline.RDS")
 
 ds_time <- model_full_group%>%
-  dplyr::select(target,Pr...z.., adj.p) %>%
+  dplyr::select(target,Estimate, Std..Error, Pr...z.., adj.p) %>%
   separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") 
 #Use the ensemble database to get the annotation of the transcripts
 listMarts()

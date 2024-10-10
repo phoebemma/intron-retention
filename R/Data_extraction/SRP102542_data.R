@@ -4,30 +4,31 @@ library(readr)
 library(stringr)
 
 
-#This details the extractions and EDA fror the dataset with SRA number SRP102542
-#Load and clean the publicly available data
-#This contains pre and postexercise (RT) data
-#see article https://pubmed.ncbi.nlm.nih.gov/28273480/
-#Metadata downloaded from https://www.ncbi.nlm.nih.gov/Traces/study/?page=2&acc=gse97084&o=acc_s%3Aa
+# This details the extractions and EDA fror the dataset with SRA number SRP102542
+# Load and clean the publicly available data
+# This contains pre and postexercise (RT) data
+# see article https://pubmed.ncbi.nlm.nih.gov/28273480/
+# Sequence data downloaded from https://www.ebi.ac.uk/ena/browser/view/PRJNA380649
+# Metadata downloaded from https://www.ncbi.nlm.nih.gov/Traces/study/?page=2&acc=gse97084&o=acc_s%3Aa
 SRP102542 <- read_csv("data/SRP102542.txt") %>%
   dplyr::select("Run", "AGE", "biopsy_timepoint", "exercise_type", "Experiment", "GEO_Accession (exp)", "SRA Study") 
 
 
-#Load the metadata file downloaded from ENA
-#This would be used to match the prexercise to the postexercise data
-#This also contains inormation that could be used as participant_id
+# Load the metadata file downloaded from ENA
+# This would be used to match the prexercise to the postexercise data
+# This also contains inormation that could be used as participant_id
 SRP102542_1 <- read_csv("public_data/sra_result-SRP102542.csv") %>%
   dplyr::select("Experiment Accession", "Experiment Title", "Sample Accession") %>%
   separate("Experiment Title", c("GEO_Accession (exp)", "Group", "age_group", "Exercise", "biopsy_timepoint"))
 
-#JOIN the SRP102542 metadata together
+# Join the SRP102542 metadata together
 SRP102542 <- SRP102542 %>%
   inner_join(SRP102542_1, by = c("Experiment" = "Experiment Accession", "GEO_Accession (exp)", "biopsy_timepoint"))
 colnames(SRP102542)[colnames(SRP102542) == "SRA Study"] <- "study"
-#rename "Run" to "seq_sample_id"
-#This aligns it to the column name in the mtadata
+# rename "Run" to "seq_sample_id"
+# This aligns it to the column name in the mtadata
 colnames(SRP102542)[colnames(SRP102542) == "Run"] <- "seq_sample_id"
-#colnames(SRP102542)[colnames(SRP102542) == "Experiment"] <- "participant"
+# colnames(SRP102542)[colnames(SRP102542) == "Experiment"] <- "participant"
 colnames(SRP102542)[colnames(SRP102542) == "biopsy_timepoint"] <- "time"
 SRP102542["time"][SRP102542["time"] == "PreTraining" ] <- "PreExc"
 SRP102542["time"][SRP102542["time"] == "PostTraining" ] <- "PostExc"

@@ -1,5 +1,4 @@
 #This script shows and details the extraction of the COPD data
-#It also does basic EDA of the dataset. 
 # Full details about the data is published in https://pubmed.ncbi.nlm.nih.gov/34229714/
 
 

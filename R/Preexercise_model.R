@@ -1,14 +1,15 @@
-#Load the file with libraries
-#source("R/libraries.R")
+# Load the file with libraries
+# source("R/libraries.R")
 library(dplyr)
 library(tidyverse)
 library(seqwrap)
 library(gridExtra)
 library(ggpubr)
 
-#Load the trainome functions file
-source("R/Trainome_functions.R")
 
+# Load the Trainome functions
+# Contains functions needed for model building
+source("R/Trainome_functions.R")
 
 #Load the metadata of the the datasets
 
@@ -51,7 +52,7 @@ mutate(age_group = case_when(study == "copd" ~ "Old",
  unique(all_pre_metadata$time)
  
  
-ggplot(all_pre_metadata, aes(age)) +
+ggplot(all_pre_metadata, aes(age, fill = age_group)) +
   geom_bar()+
   ggtitle("Distribution of baseline data")+
   theme(plot.title = element_text(hjust = 0.5))

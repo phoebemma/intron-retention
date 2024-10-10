@@ -1,9 +1,10 @@
 ---
 title: "Impact of age and exercise on intron retention"
-format: docx
-output:
-  bookdown::word_document2: default
-  bookdown::pdf_documents: default
+format:
+  docx:
+    reference-doc: custom_reference.docx
+author:
+  - "Chidimma Phoebe Echebiri^a,b^, Kristian Lian^b^, H&aring;vard Hamarsland^b^, Knut Sindre M&#248;lmen^b^, Rafi Ahmad^a^, Stian Ellefsen^b^, and Daniel Hammarstr&ouml;m^b^"
 editor: visual
 csl: rna.csl
 bibliography: My_Library.bib
@@ -21,7 +22,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ## Abstract
 
-We profiled the skeletal muscle transcriptome of young and old individuals and observed a relative increase in IR in aged individuals. We further explored the impact of RT on IR . Genes with differential IR belonged to ontologies ...... and exhibited ..... differential expression levels. We found .... differentially retained introns in young versus old at baseline. These were contained in ....... genes
+We profiled the skeletal muscle transcriptome of young and old individuals and observed a relative increase in IR in aged individuals. We further explored the impact of RT on IR . Genes with differential IR belonged to ontologies ...... and exhibited ..... differential expression levels. We found .... differentially retained introns in young versus old at baseline. These were contained in ....... genes.
 
 ## Introduction
 
@@ -81,6 +82,8 @@ The hallmarks of aging are said to include genomic instability, telomere attriti
 
 Monitoring IR in *vastula lateralis* in young and old and how they are impacted by RT could offer valuable insights into not just how age affects IR, but how RT could impact it too
 
+Available literature suggests that intron retention increases with age
+
 ### Research questions
 
 We hypothesize that intron retention is a mechanism by which the cells modify gene expression in response to muscular stress
@@ -95,27 +98,21 @@ Any enrichment of specific gene ontologies?
 
 ## Materials and methods
 
-Five datasets were included in the study. Selection criteria for the dataset were that the data had to paired-end Illumina RNA-Seq data from vastus lateralis muscle of human subjects below 40 years old for the young subjects, and above 50 for the old subjects
+Four datasets were included in the study. Three datasets were from the TrainOme group and had either young, or old individuals. A publicly available dataset from @robinson2017 was obtained which fitted the criteria of paired-end Illumina RNA-Seq data from vastus lateralis muscle of human subjects . It contained both young and old participants.
 
-+---------------+-------------------+----------------------+----------------------+
-| Dataset name  | Number of samples | Age range (in years) | Linked Publication   |
-+===============+===================+======================+======================+
-| COPD          | 65                | 56-79                | @molmen_chronic_2021 |
-+---------------+-------------------+----------------------+----------------------+
-| Volume        | 50                | 20-37                | @khan_increased_2020 |
-+---------------+-------------------+----------------------+----------------------+
-| SRP280348     | 86                | 19-27 (Young cohort) | @kulkarni2020        |
-|               |                   |                      |                      |
-|               |                   | =\> 65 (Old cohort)  |                      |
-+---------------+-------------------+----------------------+----------------------+
-| SRP043368     | 26                | 22-33                | @lindholm2014        |
-+---------------+-------------------+----------------------+----------------------+
-| SRP102542     | 52                | 18-30 (Young cohort) | @robinson2017        |
-|               |                   |                      |                      |
-|               |                   | 65-60 (Old cohort)   |                      |
-+---------------+-------------------+----------------------+----------------------+
-
-: 2188 introns were used in the first model.These were the introns captured across all datasets
++--------------+------------------------+-------------------+----------------------+----------------------+
+| Dataset name | Number of participants | Number of samples | Age range (in years) | Linked Publication   |
++==============+========================+===================+======================+======================+
+| COPD         | 53                     | 65                | 56-79                | @molmen_chronic_2021 |
++--------------+------------------------+-------------------+----------------------+----------------------+
+| Volume       | 25                     | 50                | 20-37                | @khan_increased_2020 |
++--------------+------------------------+-------------------+----------------------+----------------------+
+| Contratrain  | 26                     |                   | 19-34                | Hamarsland et al     |
++--------------+------------------------+-------------------+----------------------+----------------------+
+| SRP102542    | 52                     | 52                | 19-30 (Young cohort) | @robinson2017        |
+|              |                        |                   |                      |                      |
+|              |                        |                   | 65-78 (Old cohort)   |                      |
++--------------+------------------------+-------------------+----------------------+----------------------+
 
 Volume dataset @khan_increased_2020
 
@@ -135,10 +132,18 @@ The differentially spliced introns based on age of preexercise data was filtered
 
 # Results
 
-At baseline, using the filter characteristics of adjusted p.values =\< 0.05, only age had differentially spliced introns, sex and interaction between sex and age showed no ds introns. age alone revealed 1787 out of 18541 introns were differentially spliced between old and young participants. When this data was further queried to detected those with absolute log2fc of 1, it showed that 511 were significantly spliced differently between old and young participants. 3 introns were differentially sploiced by sex
+To investigate the impact of age and RT on intron retention, we investigated intron retention in RNA sequence data from vastus lateralis of 141 individuals from four different RT studies . The participants were divided into two age groups with young comprising 65 individuals aged between 19 to 37 , the old age group consisted of 76 participants aged between 57 and 79 .
+
+We measured intron retention as splicing efficiency using SpliceQ @demelocosta2021. The tool
+
+detect differentially spliced introns between young and old participants, At baseline, using the filter characteristics of adjusted p.values =\< 0.05, only age had differentially spliced introns, sex and interaction between sex and age showed no ds introns. age alone revealed 1787 out of 18541 introns were differentially spliced between old and young participants. When this data was further queried to detected those with absolute log2fc of 1, it showed that 511 were significantly spliced differently between old and young participants. 3 introns were differentially sploiced by sex
 
 Seven introns were shown to be differentially expressed by age when used as a continous variable
 
 Of the 1693 ds introns captured in the full dataset, 135 were changed postexercise. Based on the Estimate values, they were all improvements
 
-## Discusion
+## Discussion
+
+### Shortcoming
+
+This study did not group RT into conditions of volume of exercise done. The benefits of RT are known to be volume-dependent and the 4 studies involved varying RT conditions
