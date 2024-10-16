@@ -4,11 +4,9 @@
 .Ruserdata
 /data/
 /plots/
-/Manuscript/
 /old_repo/
 /public_data/
-/Manuscript/
-
+/Man/
 # Do not track big ome data (added by trainomeMetaData)
 /ome-data/
 

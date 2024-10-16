@@ -98,8 +98,8 @@ long_df %>%
   xlab(" Average splicing efficiency")+
   theme(plot.title = element_text(hjust = 0.5))
 
-#reorder the column name to match how they occur in the metadata
-#Not certain it has an impact though
+# reorder the column name to match how they occur in the metadata
+# Not certain it has an impact though
 
 all_pre_splice_reordered <- all_pre_splice_cont[,  c("transcript_ID",all_pre_metadata$seq_sample_id)]
 
@@ -114,9 +114,10 @@ match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
 
 
 
-#convert the 1.0 to 0.999. This is becasue beta-model accepts only values between 0 and one
+# convert the 1.0 to 0.999. This is becasue beta-model accepts only values between 0 and one
 all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
+# This argument models for age as a continous variable
 
 args<- list(formula = y ~  age*sex + (1|study) +(1|participant), 
             family = glmmTMB::beta_family())
@@ -210,5 +211,4 @@ model_cont_group <- mod_sum_group %>%
 saveRDS(model_cont_group, "data/re_models/primary_model_extracts/primary_preExc_interaction_group_model.RDS")
 
 
-# This one contained only age_group and sex, without interaction
-#saveRDS(model_cont_group, "data/re_models/primary_model_extracts/primary_preExc_group_model.RDS")
+
