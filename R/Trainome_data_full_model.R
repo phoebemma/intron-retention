@@ -30,7 +30,10 @@ ct_metadata <- readRDS("data/processed_data/contratrain_metadata.RDS")
 range(ct_metadata$age)
 length(unique(ct_metadata$participant))
 
-SRP102542_metadata <- readRDS("data/processed_data/SRP102542_metadata.RDS")
+SRP102542_metadata <- readRDS("data/processed_data/SRP102542_metadata.RDS")%>%
+  # For the full data, only those who performed RT should be selected
+  subset(condition == "Resistance")
+
 
 length(unique(SRP102542_metadata$participant))
 srpYoung <- SRP102542_metadata %>%

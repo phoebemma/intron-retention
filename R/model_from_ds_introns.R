@@ -22,6 +22,11 @@ Vol_metadata <- readRDS("data/processed_data/volume_metadata.RDS")
 
 ct_metadata <- readRDS("data/processed_data/contratrain_metadata.RDS")
 
+SRP102542_metadata <- readRDS("data/processed_data/SRP102542_metadata.RDS")%>%
+  # For the full data, only those who performed RT should be selected
+  subset(condition == "Resistance")
+
+
 all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
   rbind(ct_metadata) %>%
   #Copd and volume has data in decimal
