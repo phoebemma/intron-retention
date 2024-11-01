@@ -3,7 +3,7 @@ library(tidyverse)
 library(readr)
 library(stringr)
 
-
+source("R/Trainome_functions.R")
 # This details the extractions and EDA fror the dataset with SRA number SRP102542
 # Load and clean the publicly available data
 # This contains pre and postexercise (RT) data
@@ -70,7 +70,7 @@ SRP102542_pre <- SRP102542 %>%
 
 
 #Load the SpliceQ data
-SRP102542_data <- extract_splice_q("./data/SRP102542_GSE97084_SpliceQ_outputs/")
+SRP102542_data <- extract_splice_q("./data/spliceQ_SRP102542/")
 
 idx <- sapply(SRP102542_data, class)== "numeric"
 SRP102542_data[, idx] <- lapply(SRP102542_data[, idx], round, 2)
@@ -84,7 +84,8 @@ SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542$seq_sample_
 SRP102542_data <- SRP102542_data %>%
   subset(select = c("transcript_ID", SRP102542_intersect))
 #saveRDS(SRP102542_data, "./data/processed_data/SRP102542_splicing_data.RDS")
-
+# The one extracted from the TSD server
+# saveRDS(SRP102542_data, "data/processed_data/TSD_SRP102542_splicing_data.RDS")
 
 
 #Repeat for pre-exercise data
@@ -94,3 +95,5 @@ SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542_pre$seq_sam
 SRP102542_pre_data <- SRP102542_data %>%
   subset(select = c("transcript_ID", SRP102542_intersect))
 #saveRDS(SRP102542_pre_data, "./data/preexercise_data//SRP102542_preExc_splicing_data.RDS")
+
+# saveRDS(SRP102542_pre_data, "./data/preexercise_data/TSD_SRP102542_preExc_splicing_data.RDS")

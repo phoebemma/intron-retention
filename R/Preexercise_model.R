@@ -14,7 +14,8 @@ source("R/Trainome_functions.R")
 #Load the metadata of the the datasets
 
 #Copd 
-copd_metadata <- readRDS("data/preexercise_data/copd_preExc_metadata.RDS") 
+copd_metadata <- readRDS("data/preexercise_data/copd_preExc_metadata.RDS") %>%
+  select(study, participant, sex, time, seq_sample_id, age)
 unique(copd_metadata$time)
 colnames(copd_metadata)
 
@@ -22,18 +23,31 @@ colnames(copd_metadata)
 
 #Volume
 
-volume_metadata <- readRDS("data/preexercise_data/vol_preExc_metadata.RDS")
+volume_metadata <- readRDS("data/preexercise_data/vol_preExc_metadata.RDS")%>%
+  select(study, participant, sex, time, seq_sample_id, age)
 
 colnames(volume_metadata)
 unique(volume_metadata$time)
 
 
 # Contratratrain
-Contratrain_metadata <- readRDS("data/preexercise_data/ct_PreExc_metadata.RDS")
+Contratrain_metadata <- readRDS("data/preexercise_data/ct_PreExc_metadata.RDS")%>%
+  select(study, participant, sex, time, seq_sample_id, age)
+colnames(Contratrain_metadata)
+unique(Contratrain_metadata$time)
 
 # SRP102542
-SRP102542_metadata <- readRDS("data/preexercise_data/SRP102542_preExc_metadata.RDS")
+SRP102542_metadata <- readRDS("data/preexercise_data/SRP102542_preExc_metadata.RDS")%>%
+  select(study, participant, sex, time, seq_sample_id, age, age_group)
+colnames(SRP102542_metadata)
+unique(SRP102542_metadata$time)
 
+
+
+SRP280348_metadata <- readRDS("data/preexercise_data/SRP280348_preExc_metadata.RDS")%>%
+  select(study, participant, sex, time, seq_sample_id, age, age_group)
+colnames(SRP280348_metadata)
+unique(SRP280348_metadata$time)
 #
 # Merge all in one
 all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
@@ -43,6 +57,7 @@ mutate(age_group = case_when(study == "copd" ~ "Old",
                                study == "vol" ~ "Young",
                                study == "ct" ~ "Young")) %>%
   rbind(SRP102542_metadata) %>%
+  rbind(SRP280348_metadata) %>%
  
   #Copd and volume and SRP102542 have age data in decimal
   mutate(across(c("age"), round, 0)) %>%
@@ -51,38 +66,41 @@ mutate(age_group = case_when(study == "copd" ~ "Old",
   # group 3 those above 50 but below 71
   # group 4 is those above 70
   
-  mutate(group = case_when(age <=25 ~ "group_1" ,
-                           age > 25 & age <= 50 ~ "group_2", 
-                           age > 50 & age <= 70 ~ "group_3",
-                           age > 70 ~ "group_4")) %>%
+  mutate(group = case_when(age <=25 ~ "<=25" ,
+                           age > 25 & age <= 50 ~ ">25 & <=50", 
+                           age > 50 & age <= 70 ~ ">50 & <=70",
+                           age > 70 ~ ">70")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
          age_group = factor(age_group, levels= c("Young", "Old")),
-         group = factor(group, levels = c("group_1", "group_2", "group_3", "group_4"))) 
+         group = factor(group, levels = c("<=25", ">25 & <=50", ">50 & <=70", ">70"))) 
 
  unique(all_pre_metadata$time)
  
  
-ggplot(all_pre_metadata, aes(age, fill = age_group)) +
+ggplot(all_pre_metadata, aes(age, fill = age_group )) +
   geom_bar()+
   ggtitle("Distribution of baseline data")+
   theme(plot.title = element_text(hjust = 0.5))
 
 
-ggplot(all_pre_metadata, aes(age, fill = group)) +
+ggplot(all_pre_metadata, aes(group, fill = group)) +
   geom_bar()+
   ggtitle("Distribution of baseline data")+
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5))+
+  xlab("Age range of participants")+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
 
 
 ggplot(all_pre_metadata, aes(age_group, fill = age_group)) +
   geom_bar()+
   ggtitle("Distribution of baseline data")+
   theme(plot.title = element_text(hjust = 0.5))+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
+  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)+
+  xlab("Age group of participants")
 
 
 
-ggplot(all_pre_metadata, aes(group, fill = group)) +
+ggplot(all_pre_metadata, aes(study, fill = group)) +
   geom_bar()+
   ggtitle("Distribution of baseline data")+
   theme(plot.title = element_text(hjust = 0.5))+
@@ -94,7 +112,7 @@ copd_data <- readRDS("data/preexercise_data/copd_preExc_splicing_data.RDS")
 volume_data <- readRDS("data/preexercise_data/vol_preExc_splicing_data.RDS")
 
 contratrain_data <- readRDS("data/preexercise_data/ct_PreExc_splicing_data.RDS")
-SRP102542_data <- readRDS("data/preexercise_data/SRP102542_preExc_splicing_data.RDS")
+SRP102542_data <- readRDS("data/preexercise_data/TSD_SRP102542_preExc_splicing_data.RDS")
 
 
 all_pre_splice_cont <- copd_data%>%
@@ -127,12 +145,25 @@ long_df %>%
 # reorder the column name to match how they occur in the metadata
 # Not certain it has an impact though
 
-all_pre_splice_reordered <- all_pre_splice_cont[,  c("transcript_ID",all_pre_metadata$seq_sample_id)]
+# Filter to remove missing values
+all_pre_metadata <- all_pre_metadata %>%
+  filter((seq_sample_id %in% colnames(all_pre_splice_cont[,-1]))) %>%
+  print()
+
+
+all_pre_splice_reordered <- all_pre_splice_cont[ , c("transcript_ID",all_pre_metadata$seq_sample_id)]
 
 colnames(all_pre_splice_reordered)
+rownames(all_pre_metadata)
 
 # Check if everything matches except the transcript_id
-match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
+ match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
+
+
+
+
+
+
 
 # invert the data to create a dataframe suitable for zero inflated analyses
 # splice_df_inverted <- all_pre_splice_reordered %>%
@@ -148,9 +179,11 @@ all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 args<- list(formula = y ~  age*sex + (1|study) +(1|participant), 
             family = glmmTMB::beta_family())
 
+ 
+
 SE_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                     arguments = args,
-                    data = all_pre_splice_reordered,
+                    data = all_pre_splice_cont,
                     metadata = all_pre_metadata,
                     samplename = "seq_sample_id",
                     summary_fun = sum_fun,
@@ -158,7 +191,10 @@ SE_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                     exported = list(),
                     save_models = FALSE,
                     return_models = FALSE,
+                   # subset = 1:10,
                     cores = ncores-2)
+
+SE_model$summaries
 
 SE_model$summaries$ENST00000366528.3_3_1
 
