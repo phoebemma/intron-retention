@@ -29,7 +29,8 @@ separate("Category", c("x", "participant", "biopsy_timepoint" ), sep = "_")
 
 SRP280348 <- SRP280348 %>%
   inner_join(SRP280348_1, by = c( "Experiment" = "Experiment Accession")) %>%
-  mutate(age_group = case_when(biopsy == 0 ~ "Young", biopsy == 1 ~ "Old",biopsy == 3 ~ "Old" ))
+  mutate(age_group = case_when(biopsy == 0 ~ "Young", biopsy == 1 ~ "Old",biopsy == 3 ~ "Old" ),
+         )
 
 colnames(SRP280348)[colnames(SRP280348) == "Study Accession"] <- "study"
 colnames(SRP280348)[colnames(SRP280348) == "Run"] <- "seq_sample_id"
@@ -68,9 +69,9 @@ SRP280348_pre_met <- SRP280348_pre_met %>%
 colnames(SRP280348_pre_met)[colnames(SRP280348_pre_met) == "Age"] <- "age"
 colnames(SRP280348_pre_met)[colnames(SRP280348_pre_met) == "Sex"] <- "sex"
 
-SRP280348_pre_met["sex"][SRP280348_pre_met["sex"] == "Male" ] <- "M"
+SRP280348_pre_met["sex"][SRP280348_pre_met["sex"] == "Male" ] <- "male"
 
-SRP280348_pre_met["sex"][SRP280348_pre_met["sex"] == "Female" ] <- "F"
+SRP280348_pre_met["sex"][SRP280348_pre_met["sex"] == "Female" ] <- "female"
 
 unique(SRP280348_pre_met$time)
 # saveRDS(SRP280348_pre_met, "data/preexercise_data/SRP280348_preExc_metadata.RDS")

@@ -9,15 +9,19 @@ data(vol_samples)
 Vol_metadata <- vol_samples %>%
   inner_join(vol_participants, by = c("study", "participant", "sex"))%>%
   dplyr::select(study, participant, sex, condition, time, seq_sample_id, age )%>%
+  mutate(volume = ifelse(condition == "single", 1, 3))%>%
   #pre exercise and post exercise are refered to as w0 and w12 respectively
   subset(time == "w0"| time == "w12") %>%
   drop_na()
 
+unique(Vol_metadata$Volume)
 #change the time variables to PreExc and PostExc
 Vol_metadata["time"][Vol_metadata["time"] == "w0"] <- "PreExc"
 Vol_metadata["time"][Vol_metadata["time"] == "w12"] <- "PostExc"
-
+# Make the conditions all RM10 as that is what they are
+Vol_metadata["condition"] <- "RM10"
 unique(Vol_metadata$time)
+unique(Vol_metadata$condition)
 # saveRDS(Vol_metadata, "data/processed_data/volume_metadata.RDS") 
 
 

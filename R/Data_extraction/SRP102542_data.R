@@ -57,6 +57,10 @@ length(unique(extra_data$`Tissue Code`))
 SRP102542 <- SRP102542 %>%
   dplyr::select(study, participant, sex, condition, time, seq_sample_id, age, age_group)
 
+SRP102542["sex"][SRP102542["sex"] == "M" ] <- "male"
+
+SRP102542["sex"][SRP102542["sex"] == "F" ] <- "female"
+
 # saveRDS(SRP102542, "./data/processed_data/SRP102542_metadata.RDS")
 
 length(unique(SRP102542$participant))

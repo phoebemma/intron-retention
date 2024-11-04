@@ -21,6 +21,8 @@ copd_metadata <- copd_samples %>%
   subset(time == "PreExc" | time == "PostExc")%>%
   drop_na() 
 
+
+copd_metadata["volume"] <- 3
 hist(copd_metadata$age)
 length(unique(copd_metadata$participant))
 # saveRDS(copd_metadata, "data/processed_data/copd_metadata.RDS")

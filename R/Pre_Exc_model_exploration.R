@@ -107,10 +107,12 @@ ggplot(age_df_sig, aes(chr)) +
 
 
 #Use the ensemble database to get the annotation of the transcripts
-listMarts()
-ensembl=useMart("ENSEMBL_MART_ENSEMBL")
-datasets <- listDatasets(ensembl)
-ensembl=useDataset("hsapiens_gene_ensembl",mart=ensembl)
+# The vversion should correspond to the annotation version of the reference genome used
+ensembl <- useMart(biomart = "ENSEMBL_MART_ENSEMBL",
+                   dataset = "hsapiens_gene_ensembl",
+                   host = "https://apr2022.archive.ensembl.org", 
+                   verbose = TRUE)
+
 attributes <- listAttributes(ensembl)
 
 # #extract GENE biotypes and  names
