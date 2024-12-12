@@ -42,7 +42,7 @@ SRP102542_metadata <- readRDS("data/preexercise_data/SRP102542_preExc_metadata.R
 colnames(SRP102542_metadata)
 unique(SRP102542_metadata$sex)
 
-
+range(SRP102542_metadata$age)
 
 SRP280348_metadata <- readRDS("data/preexercise_data/SRP280348_preExc_metadata.RDS")%>%
   select(study, participant, sex, time, seq_sample_id, age, age_group)
@@ -66,13 +66,16 @@ mutate(age_group = case_when(study == "copd" ~ "Old",
   # group 3 those above 50 but below 71
   # group 4 is those above 70
   
-  mutate(group = case_when(age <=25 ~ "<=25" ,
-                           age > 25 & age <= 50 ~ ">25 & <=50", 
-                           age > 50 & age <= 70 ~ ">50 & <=70",
+  mutate(group = case_when(age <=30 ~ "<=30" ,
+                           age > 30 & age <= 40 ~ ">30 & <=40", 
+                           age > 40 & age <= 50 ~ ">40 & <=50",
+                           age > 50 & age <= 60 ~ ">50 & <=60",
+                           age > 60 & age <= 70 ~ ">60 & <=70",
                            age > 70 ~ ">70")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
          age_group = factor(age_group, levels= c("Young", "Old")),
-         group = factor(group, levels = c("<=25", ">25 & <=50", ">50 & <=70", ">70"))) 
+         group = factor(group, levels = c("<=30" , ">30 & <=40", ">40 & <=50",
+                                          ">50 & <=60",">60 & <=70", ">70"))) 
 
  unique(all_pre_metadata$sex)
  
@@ -127,7 +130,7 @@ all_pre_splice_cont <- copd_data%>%
   inner_join(volume_data, by = "transcript_ID") %>%
   inner_join(contratrain_data, by = "transcript_ID")%>%
   inner_join(SRP102542_data, by = "transcript_ID") %>%
-  # inner_join(SRP280348_data, by = "transcript_ID") %>%
+   inner_join(SRP280348_data, by = "transcript_ID") %>%
   drop_na()
 
 long_df <- all_pre_splice_cont %>%

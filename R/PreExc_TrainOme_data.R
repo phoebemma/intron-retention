@@ -47,14 +47,17 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
   # group 3 those above 50 but below 71
   # group 4 is those above 70
   
-  mutate(group = case_when(age <=25 ~ "<=25" ,
-                           age > 25 & age <= 50 ~ ">25 & <=50", 
-                           age > 50 & age <= 70 ~ ">50 & <=70",
+  mutate(group = case_when(age <=20 ~ "<=20" ,
+                           age > 20 & age <= 30 ~ ">20 & <=30",
+                           age > 30 & age <= 40 ~ ">30 & <=40", 
+                           age > 40 & age <= 50 ~ ">40 & <=50",
+                           age > 50 & age <= 60 ~ ">50 & <=60",
+                           age > 60 & age <= 70 ~ ">60 & <=70",
                            age > 70 ~ ">70")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
          age_group = factor(age_group, levels= c("Young", "Old")),
-         group = factor(group, levels = c("<=25", ">25 & <=50", ">50 & <=70", ">70"))) 
-
+         group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
+                                          ">50 & <=60",">60 & <=70", ">70"))) 
 unique(all_pre_metadata$sex)
 
 ggplot(all_pre_metadata, aes(age, fill = age_group )) +
@@ -122,22 +125,22 @@ long_df %>%
 long_df %>%
   group_by(age, sex)%>%
   summarise(avg = mean(SE)) %>%
-  ggplot(aes(avg, age))+
+  ggplot(aes(age, avg))+
   geom_point(mapping = aes(colour = sex ,  size = 5))+ 
   geom_smooth()+
   ggtitle("Relationship between age, gender and splicing efficiency") +
-  xlab(" Average splicing efficiency")+
+  ylab(" Average splicing efficiency")+
   theme(plot.title = element_text(hjust = 0.5))+
   theme_cowplot()
 
 long_df %>%
   group_by(age, age_group)%>%
   summarise(avg = mean(SE)) %>%
-  ggplot(aes(avg, age))+
+  ggplot(aes(age, avg))+
   geom_point(mapping = aes(colour = age_group , size = 5))+ 
   geom_smooth()+
   ggtitle("Relationship between age and splicing efficiency") +
-  xlab(" Average splicing efficiency")+
+  ylab(" Average splicing efficiency")+
   theme(plot.title = element_text(hjust = 0.5))+
   theme_cowplot()
 
@@ -174,7 +177,7 @@ all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
 # This argument models for age as a continous variable
 
-args<- list(formula = y ~  age*sex + (1|study) +(1|participant), 
+args<- list(formula = y ~  age*sex + (1+age|study) +(1|participant), 
             family = glmmTMB::beta_family())
 
 
@@ -237,7 +240,7 @@ SE_model_age_group <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                           summary_fun = sum_fun,
                           eval_fun = eval_mod,
                           exported = list(),
-                          save_models = FALSE,
+                          save_models = FALSE, 
                           return_models = FALSE,
                           cores = ncores-2)
 
