@@ -14,7 +14,7 @@ Vol_metadata <- vol_samples %>%
   subset(time == "w0"| time == "w12") %>%
   drop_na()
 
-unique(Vol_metadata$Volume)
+unique(Vol_metadata$volume)
 #change the time variables to PreExc and PostExc
 Vol_metadata["time"][Vol_metadata["time"] == "w0"] <- "PreExc"
 Vol_metadata["time"][Vol_metadata["time"] == "w12"] <- "PostExc"
@@ -22,12 +22,12 @@ Vol_metadata["time"][Vol_metadata["time"] == "w12"] <- "PostExc"
 Vol_metadata["condition"] <- "RM10"
 unique(Vol_metadata$time)
 unique(Vol_metadata$condition)
-# saveRDS(Vol_metadata, "data/processed_data/volume_metadata.RDS") 
+# saveRDS(Vol_metadata, "data_new/processed_data/volume_metadata.RDS") 
 
 
 
 # Load Volume splicing data
-volume_data <- extract_splice_q("./data/Volume_SpliceQ_outputs/")
+volume_data <- extract_splice_q("./data_new/Volume_spliceq_outputs_new/")
 idx <- sapply(volume_data, class)== "numeric"
 volume_data[, idx] <- lapply(volume_data[, idx], round, 2)
 
@@ -41,7 +41,7 @@ volume_intersect <- intersect(colnames(volume_data), Vol_metadata$seq_sample_id)
 volume_data <- volume_data %>%
   subset(select = c("transcript_ID", volume_intersect))
 
-#saveRDS(volume_data, "./data/processed_data/volume_splicing_data.RDS")
+# saveRDS(volume_data, "./data_new/processed_data/volume_splicing_data.RDS")
 
 
 
@@ -50,7 +50,7 @@ Vol_metadata_pre <- Vol_metadata %>%
   subset(time == "PreExc")
 
 
-# saveRDS(Vol_metadata_pre, "data/preexercise_data/vol_preExc_metadata.RDS")
+ saveRDS(Vol_metadata_pre, "data_new/Pre_Exercise/vol_preExc_metadata.RDS")
 
 #select only the splicing samples captured in the metadata
 volume_intersect <- intersect(colnames(volume_data), Vol_metadata_pre$seq_sample_id)
@@ -58,4 +58,4 @@ volume_intersect <- intersect(colnames(volume_data), Vol_metadata_pre$seq_sample
 volume_pre_data <- volume_data %>%
   subset(select = c("transcript_ID", volume_intersect))
 
-# saveRDS(volume_pre_data, "data/preexercise_data/vol_preExc_splicing_data.RDS")
+ saveRDS(volume_pre_data, "data_new/Pre_Exercise/vol_preExc_splicing_data.RDS")

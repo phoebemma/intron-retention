@@ -10,3 +10,4 @@
 # Do not track big ome data (added by trainomeMetaData)
 /ome-data/
 
+/data_new/

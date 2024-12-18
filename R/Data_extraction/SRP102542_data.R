@@ -68,13 +68,13 @@ length(unique(SRP102542$participant))
 
 SRP102542_pre <- SRP102542 %>%
   subset(time == "PreExc")
-# saveRDS(SRP102542_pre, "data/preexercise_data/SRP102542_preExc_metadata.RDS")
+ saveRDS(SRP102542_pre, "data_new/Pre_Exercise/SRP102542_preExc_metadata.RDS")
 
 
 
 
 #Load the SpliceQ data
-SRP102542_data <- extract_splice_q("./data/spliceQ_SRP102542/")
+SRP102542_data <- extract_splice_q("./data_new/SRP102542_SpliceQ_outputs/")
 
 idx <- sapply(SRP102542_data, class)== "numeric"
 SRP102542_data[, idx] <- lapply(SRP102542_data[, idx], round, 2)
@@ -87,17 +87,15 @@ SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542$seq_sample_
 
 SRP102542_data <- SRP102542_data %>%
   subset(select = c("transcript_ID", SRP102542_intersect))
-#saveRDS(SRP102542_data, "./data/processed_data/SRP102542_splicing_data.RDS")
-# The one extracted from the TSD server
-# saveRDS(SRP102542_data, "data/processed_data/TSD_SRP102542_splicing_data.RDS")
+# saveRDS(SRP102542_data, "./data_new/processed_data/SRP102542_splicing_data.RDS")
 
 
 #Repeat for pre-exercise data
-#select only the splicing samples captured in the metadata
+#select only the splicing samples captured in the preexercise metadata
 SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542_pre$seq_sample_id)
 
 SRP102542_pre_data <- SRP102542_data %>%
   subset(select = c("transcript_ID", SRP102542_intersect))
-#saveRDS(SRP102542_pre_data, "./data/preexercise_data//SRP102542_preExc_splicing_data.RDS")
+# saveRDS(SRP102542_pre_data, "./data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS")
 
-# saveRDS(SRP102542_pre_data, "./data/preexercise_data/TSD_SRP102542_preExc_splicing_data.RDS")
+
