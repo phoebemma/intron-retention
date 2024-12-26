@@ -6,6 +6,7 @@ library(seqwrap)
 library(gridExtra)
 library(ggpubr)
 library(cowplot)
+library(trainomeMetaData)
 
 
 # Load the Trainome functions
@@ -32,7 +33,7 @@ unique(volume_metadata$time)
 
 
 # Contratratrain
-Contratrain_metadata <- readRDS("data/preexercise_data/ct_PreExc_metadata.RDS")%>%
+Contratrain_metadata <- readRDS("data_new/Pre_Exercise/ct_PreExc_metadata.RDS")%>%
   select(study, participant, sex, time, seq_sample_id, age)
 colnames(Contratrain_metadata)
 unique(Contratrain_metadata$sex)
@@ -58,8 +59,6 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
   rbind(Contratrain_metadata) %>%
   rbind(Alpha_Omega_metadata) %>%
   rbind(SRP102542_metadata) %>%
- 
- 
   #Copd and volume and SRP102542 have age data in decimal
   mutate(across(c("age"), round, 0)) %>%
   # Create youps where group 1 = those below 30
@@ -78,13 +77,15 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
          group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
                                           ">50 & <=60",">60 & <=70", ">70"))) 
  unique(all_pre_metadata$sex)
- 
+length(unique(all_pre_metadata$participant))
  
 # ggplot(all_pre_metadata, aes(age, fill = group )) +
 #   geom_bar()+
 #   ggtitle("Distribution of baseline data")+
 #   theme(plot.title = element_text(hjust = 0.5))
 
+
+# saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 
 ggplot(all_pre_metadata, aes(group, fill = group)) +
   geom_bar()+
@@ -124,7 +125,7 @@ copd_data <- readRDS("data_new/Pre_Exercise/copd_preExc_splicing_data.RDS")
 
 volume_data <- readRDS("data_new/Pre_Exercise/vol_preExc_splicing_data.RDS")
 
-contratrain_data <- readRDS("data/preexercise_data/ct_PreExc_splicing_data.RDS")
+contratrain_data <- readRDS("data_new/Pre_Exercise/ct_PreExc_splicing_data.RDS")
 
 SRP102542_data <- readRDS("data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS")
 
@@ -137,6 +138,8 @@ all_pre_splice_cont <- copd_data%>%
   inner_join(SRP102542_data, by = "transcript_ID") %>%
    inner_join(Alpha_Omega_data, by = "transcript_ID") %>%
   drop_na()
+
+
 
 
 # Visualization
@@ -207,7 +210,7 @@ rownames(all_pre_metadata)
  match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
 
 
-
+ saveRDS(all_pre_splice_reordered, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 # invert the data to create a dataframe suitable for zero inflated analyses
 # splice_df_inverted <- all_pre_splice_reordered %>%
 #   mutate(across(X102PreExcVLR12:X134.subj8sample4, function(x)1-x))
@@ -314,7 +317,49 @@ model_cont_group <- mod_sum_group %>%
   inner_join(mod_eval_group, by = "target")
 
 # This contains the interaction between age-group and sex
-saveRDS(model_cont_group, "data_new/models/preExc_group_model.RDS")
+saveRDS(model_cont_group, "data_new/models/preExc_group_and_sex_model.RDS")
 
 
 
+
+# Model for age group alone. Without sex interaction
+
+args<- list(formula = y ~  group + (1|study) +(1|participant), 
+            family = glmmTMB::beta_family())
+
+SE_group_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                          arguments = args,
+                          data = all_pre_splice_reordered,
+                          metadata = all_pre_metadata,
+                          samplename = "seq_sample_id",
+                          summary_fun = sum_fun,
+                          eval_fun = eval_mod,
+                          exported = list(),
+                          save_models = FALSE,
+                          return_models = FALSE,
+                          cores = ncores-2)
+
+SE_group_model$summaries$ENST00000007516.8_2_16
+
+excl_2 <- names(which(SE_group_model$summaries == "NULL"))
+geneids_2 <- names(which(SE_group_model$summaries != "NULL"))
+
+
+mod_sum_group <- bind_rows(within(SE_group_model$summaries, rm(excl_2))) %>%
+  mutate(target = rep(geneids_2, each = 7))  %>%
+  subset(coef != "(Intercept)") # %>%
+#  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+#         log2fc = Estimate/log(2),
+#         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) %>%
+# filter(adj.p <= 0.05)
+
+
+
+mod_eval_group <- bind_rows(within(SE_group_model$evaluations, rm(excl_2)))%>%
+  mutate(target = geneids_2)
+
+
+model_cont_group <- mod_sum_group %>%
+  inner_join(mod_eval_group, by = "target")
+
+saveRDS(model_cont_group, "data_new/models/preExc_group_only_model.RDS")

@@ -6,12 +6,15 @@ library(tmod)
 
 # Load the primary pre-exercise model
 
-prim_Pre_group <- readRDS("data/re_models/primary_model_extracts/primary_preExc_interaction_group_model.RDS")%>%
+Pre_group <- readRDS("data_new/models/preExc_group_model.RDS") %>%
   drop_na()
 # Get those differentially spliced by age
+# Print the differet coefficients
+unique(Pre_group$coef)
 
-ds_age <- prim_Pre_group %>%
-  subset(coef == "age_groupOld")%>%
+# Extract ds introns in the different age groups
+ds_20_30 <- Pre_group %>%
+  subset(coef == "group>30 & <=40:sexmale")%>%
   mutate(adj.p = p.adjust(Pr...z.., method = "fdr") ,
          log2fc = Estimate/log(2),
          fcthreshold = if_else(abs(log2fc) > 1, "s", "ns")) %>%
