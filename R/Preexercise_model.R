@@ -152,7 +152,7 @@ long_df <- all_pre_splice_cont %>%
 
 
 # Plot the relationship between age and splicing efficiency
-x <- long_df %>%
+ long_df %>%
   group_by(group)%>%
   summarise(avg = mean(SE)) %>%
   ggplot(aes(avg, group))+
@@ -164,7 +164,7 @@ x <- long_df %>%
   theme_cowplot()
 
 
-z <- long_df %>%
+ long_df %>%
   group_by(age, sex)%>%
   summarise(avg = mean(SE)) %>%
   ggplot(aes(age, avg))+
@@ -363,3 +363,95 @@ model_cont_group <- mod_sum_group %>%
   inner_join(mod_eval_group, by = "target")
 
 saveRDS(model_cont_group, "data_new/models/preExc_group_only_model.RDS")
+
+
+
+
+# Model age and sex without looking at interaction
+
+args<- list(formula = y ~  age+sex + (1|study) +(1|participant), 
+            family = glmmTMB::beta_family())
+
+
+
+SE_model_2 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                    arguments = args,
+                    data = all_pre_splice_cont,
+                    metadata = all_pre_metadata,
+                    samplename = "seq_sample_id",
+                    summary_fun = sum_fun,
+                    eval_fun = eval_mod,
+                    exported = list(),
+                    save_models = FALSE,
+                    return_models = FALSE,
+                    # subset = 1:10,
+                    cores = ncores-2)
+
+SE_model_2$summaries
+
+SE_model_2$summaries$ENST00000296098.4_6_2
+
+
+excl__3 <- names(which(SE_model_2$summaries == "NULL"))
+geneids_3 <- names(which(SE_model_2$summaries != "NULL"))
+
+
+mod_sum <- bind_rows(within(SE_model_2$summaries, rm(excl_3))) %>%
+  mutate(target = rep(geneids_3, each = 3)) %>%
+  subset(coef != "(Intercept)") # %>%
+#   mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+# log2fc = Estimate/log(2),
+# fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
+
+
+
+mod_eval <- bind_rows(within(SE_model_2$evaluations, rm(excl_3)))%>%
+  mutate(target = geneids_3)
+
+
+model_cont <- mod_sum %>%
+  inner_join(mod_eval, by = "target")
+
+
+
+
+
+args<- list(formula = y ~  group + sex  + (1|study) +(1|participant), 
+            family = glmmTMB::beta_family())
+
+SE_group_model_2 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                          arguments = args,
+                          data = all_pre_splice_reordered,
+                          metadata = all_pre_metadata,
+                          samplename = "seq_sample_id",
+                          summary_fun = sum_fun,
+                          eval_fun = eval_mod,
+                          exported = list(),
+                          save_models = FALSE,
+                          return_models = FALSE,
+                          cores = ncores-2)
+
+SE_group_model_2$summaries$ENST00000007516.8_2_16
+
+excl_4 <- names(which(SE_group_model_2$summaries == "NULL"))
+geneids_4 <- names(which(SE_group_model_2$summaries != "NULL"))
+
+
+mod_sum_group <- bind_rows(within(SE_group_model_2$summaries, rm(excl_4))) %>%
+  mutate(target = rep(geneids_4, each = 8))  %>%
+  subset(coef != "(Intercept)") # %>%
+#  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+#         log2fc = Estimate/log(2),
+#         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) %>%
+# filter(adj.p <= 0.05)
+
+
+
+mod_eval_group <- bind_rows(within(SE_group_model_2$evaluations, rm(excl_4)))%>%
+  mutate(target = geneids_4)
+
+
+model_cont_group <- mod_sum_group %>%
+  inner_join(mod_eval_group, by = "target")
+
+saveRDS(model_cont_group, "data_new/models/preExc_group_and_sex_without_interaction_model.RDS")

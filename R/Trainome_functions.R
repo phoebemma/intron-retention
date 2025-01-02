@@ -36,6 +36,25 @@ eval_mod <- function(x) {
 ncores <- parallel::detectCores()
 
 
+model_eval <-  function(x){ 
+  bind_rows(x$evaluations) %>%
+    mutate(target = names(x$evaluations))
+  
+}
+
+
+#Function to extract model summary. Takes s input the model file and the number of coefficients
+model_sum <- function(x, y){
+  bind_rows(x$summaries) %>%
+    mutate(target = rep(names(x$summaries), each = y))%>%
+    subset(!coef == "(Intercept)") %>%
+    mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+           log2fc = Estimate/log(2),
+           
+           fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))
+}
+
+
 
 
 #function to read Kallisto files

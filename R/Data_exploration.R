@@ -45,7 +45,7 @@ low_SE <- all_pre_splice %>%
             max = max(SE), 
             q20 = quantile(SE, 0.2), 
             range = max(SE) - min(SE)) %>%
-  filter(max <= 0.2) %>%
+  filter(max <= 0.6) %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 length(unique(low_SE$transcript_ID))
 hist(low_SE$q20)
@@ -88,7 +88,7 @@ saveRDS(annotation_low_SE, "data_new/Pre_Exercise/annotated_low_SE_introns.RDS")
 
 saveRDS(annotation_high_SE, "data_new/Pre_Exercise/annotated_perfect_SE_introns.RDS")
 
-
+saveRDS(annotation, "data_new/ensembl_gene_annotation.RDS")
 
 ego_df <- enrichGO(gene = annotation_low_SE$ensembl_gene_id,
                    keyType = "ENSEMBL",

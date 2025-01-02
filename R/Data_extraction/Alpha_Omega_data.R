@@ -28,10 +28,10 @@ colnames(seq_df)[colnames(seq_df) == "colnames(AO_splice[, -1])"] <- "seq_sample
 
 # Load the participant details
 ids <- idkeys %>%
-  select(participant, treat, age,  sex )
+  dplyr::select(participant, treat, age,  sex )
 
 Sequenced_samples <- seq_samples %>%
-  select(participant, time, condition, leg, extraction_seq) %>%
+  dplyr::select(participant, time, condition, leg, extraction_seq) %>%
   inner_join(ids, by = "participant")  %>%
   inner_join(seq_df, by = c("extraction_seq" = "seq_id"))%>%
    mutate(time = case_when(time == "T1" ~ "PreExc",
@@ -50,10 +50,15 @@ Sequenced_samples["sex"][Sequenced_samples["sex"] == "f" ] <- "female"
 unique(Sequenced_samples$time)
 unique(Sequenced_samples$sex)
 
-# saveRDS(Sequenced_samples, "data_new/processed_data/Alpha_Omega_metadata.RDS")
+# select the pre and post exercise data
+Sequenced_samples <- Sequenced_samples %>%
+  filter(time == "PreExc" | time == "PostExc")
+
+unique(Sequenced_samples$time)
+#  saveRDS(Sequenced_samples, "data_new/processed_data/Alpha_Omega_metadata.RDS")
 pre_Exc <- Sequenced_samples %>%
   filter(time == "PreExc") %>%
-  select(study, participant, sex, time, seq_sample_id, age)
+  dplyr::select(study, participant, sex, time, seq_sample_id, age)
  
 # x <- seq_df %>%
 #   filter(!seq_sample_id %in% Sequenced_samples$seq_sample_id)

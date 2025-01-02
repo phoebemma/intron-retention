@@ -61,7 +61,7 @@ SRP102542["sex"][SRP102542["sex"] == "M" ] <- "male"
 
 SRP102542["sex"][SRP102542["sex"] == "F" ] <- "female"
 
-# saveRDS(SRP102542, "./data/processed_data/SRP102542_metadata.RDS")
+
 
 length(unique(SRP102542$participant))
 #Select pre-exercise data for the pre-exercise model
@@ -69,8 +69,12 @@ length(unique(SRP102542$participant))
 SRP102542_pre <- SRP102542 %>%
   subset(time == "PreExc")
  saveRDS(SRP102542_pre, "data_new/Pre_Exercise/SRP102542_preExc_metadata.RDS")
+ 
+ # For the full data analyses, we would need only participants that performed RT
 
-
+ SRP102542_full <- SRP102542 %>%
+   filter(condition == "Resistance")
+#  saveRDS(SRP102542_full, "./data_new/processed_data/SRP102542_metadata.RDS")
 
 
 #Load the SpliceQ data
