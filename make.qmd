@@ -1,0 +1,50 @@
+---
+title: "Data analysis:"
+format: html
+bibliography: "My_Library.bib"
+execute: 
+  warning: false
+  message: false
+  code-summary: "Code"
+  code-fold: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| code-fold: true
+#| code-summary: "Preliminary settings and packages"
+
+
+color_scale <- c("#7fc97f",  "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f")
+
+library(dplyr)
+library(gt)
+library(tidyverse)
+library(cowplot)
+library(seqwrap)
+
+
+source("R/Trainome_functions.R")
+
+
+```
+
+## Introduction
+
+This file reproduces the relevant analyses for the paper as well as the supplementary materials
+
+### Data Extraction
+
+Running the codes in this section extracts and processes the data for the individual datasets. It also saves the extracted datasets in the designated folders for further analyses
+
+```{r}
+# Extract the Alpha and Omega dataset
+source("R/Data_extraction/Alpha_Omega_data.R")
+
+# Extract the COPD dataset
+source("R/Data_extraction/COPD_data.R")
+
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

@@ -13,195 +13,26 @@ library(trainomeMetaData)
 # Contains functions needed for model building
 source("R/Trainome_functions.R")
 
-#Load the metadata of the the datasets
-
-#Copd 
-copd_metadata <- readRDS("data_new/Pre_Exercise/copd_preExc_metadata.RDS") %>%
-  select(study, participant, sex, time, seq_sample_id, age)
-unique(copd_metadata$time)
-colnames(copd_metadata)
+# Load metadata
+all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 
 
 
-#Volume
 
-volume_metadata <- readRDS("data_new/Pre_Exercise/vol_preExc_metadata.RDS")%>%
-  select(study, participant, sex, time, seq_sample_id, age)
-
-colnames(volume_metadata)
-unique(volume_metadata$time)
-
-
-# Contratratrain
-Contratrain_metadata <- readRDS("data_new/Pre_Exercise/ct_PreExc_metadata.RDS")%>%
-  select(study, participant, sex, time, seq_sample_id, age)
-colnames(Contratrain_metadata)
-unique(Contratrain_metadata$sex)
-
-# SRP102542
-SRP102542_metadata <- readRDS("data_new/Pre_Exercise/SRP102542_preExc_metadata.RDS")%>%
-  select(study, participant, sex, time, seq_sample_id, age)
-colnames(SRP102542_metadata)
-unique(SRP102542_metadata$sex)
-
-range(SRP102542_metadata$age)
-
-# SRP280348_metadata <- readRDS("data/preexercise_data/SRP280348_preExc_metadata.RDS")%>%
-#   select(study, participant, sex, time, seq_sample_id, age, age_group)
-# colnames(SRP280348_metadata)
-# unique(SRP280348_metadata$sex)
-# #
-
-
-Alpha_Omega_metadata <- readRDS("data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS")
-# Merge all in one
-all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
-  rbind(Contratrain_metadata) %>%
-  rbind(Alpha_Omega_metadata) %>%
-  rbind(SRP102542_metadata) %>%
-  #Copd and volume and SRP102542 have age data in decimal
-  mutate(across(c("age"), round, 0)) %>%
-  # Create youps where group 1 = those below 30
-  #group 2 is those above 30 but below 51
-  # group 3 those above 50 but below 71
-  # group 4 is those above 70
-  
-  mutate(group = case_when(age <=20 ~ "<=20" ,
-                           age > 20 & age <= 30 ~ ">20 & <=30",
-                           age > 30 & age <= 40 ~ ">30 & <=40", 
-                           age > 40 & age <= 50 ~ ">40 & <=50",
-                           age > 50 & age <= 60 ~ ">50 & <=60",
-                           age > 60 & age <= 70 ~ ">60 & <=70",
-                           age > 70 ~ ">70")) %>%
-  mutate(sex = factor(sex, levels = c("female", "male")),
-         group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
-                                          ">50 & <=60",">60 & <=70", ">70"))) 
- unique(all_pre_metadata$sex)
-length(unique(all_pre_metadata$participant))
- 
-# ggplot(all_pre_metadata, aes(age, fill = group )) +
-#   geom_bar()+
-#   ggtitle("Distribution of baseline data")+
-#   theme(plot.title = element_text(hjust = 0.5))
-
-
-# saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
-
-ggplot(all_pre_metadata, aes(group, fill = group)) +
-  geom_bar()+
-  ggtitle("Distribution of baseline data")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  xlab("Age range of participants")+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
-
-
-# ggplot(all_pre_metadata, aes(age_group, fill = age_group)) +
-#   geom_bar()+
-#   ggtitle("Distribution of baseline data")+
-#   theme(plot.title = element_text(hjust = 0.5))+
-#   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)+
-#   xlab("Age group of participants")
-
-
-
-ggplot(all_pre_metadata, aes(study, fill = group)) +
-  geom_bar()+
-  ggtitle("Distribution of baseline data")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
-
-
-ggplot(all_pre_metadata, aes(sex, fill = group)) +
-  geom_bar()+
-  ggtitle("Distribution of baseline data")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
-
-length(all_pre_metadata$participant)
+# splicing data
+all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 # Load Splicing data
-copd_data <- readRDS("data_new/Pre_Exercise/copd_preExc_splicing_data.RDS")
-
-
-volume_data <- readRDS("data_new/Pre_Exercise/vol_preExc_splicing_data.RDS")
-
-contratrain_data <- readRDS("data_new/Pre_Exercise/ct_PreExc_splicing_data.RDS")
-
-SRP102542_data <- readRDS("data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS")
-
-Alpha_Omega_data <- readRDS("data_new/Pre_Exercise/Alpha_Omega_PreExc_splicing_data.RDS")
-
-
-all_pre_splice_cont <- copd_data%>%
-  inner_join(volume_data, by = "transcript_ID") %>%
-  inner_join(contratrain_data, by = "transcript_ID")%>%
-  inner_join(SRP102542_data, by = "transcript_ID") %>%
-   inner_join(Alpha_Omega_data, by = "transcript_ID") %>%
-  drop_na()
-
-
-
-
-# Visualization
-long_df <- all_pre_splice_cont %>%
-  pivot_longer(names_to = "seq_sample_id",
-               values_to = "SE",
-               cols = -(transcript_ID) )%>%
-  inner_join(all_pre_metadata, by = "seq_sample_id")
-
-
-
-# Plot the relationship between age and splicing efficiency
- long_df %>%
-  group_by(group)%>%
-  summarise(avg = mean(SE)) %>%
-  ggplot(aes(avg, group))+
-  geom_point(mapping = aes(colour = group, size = 10))+ 
-  geom_smooth()+
-  ggtitle("Relationship between age group and splicing efficiency") +
-  xlab(" Average splicing efficiency")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  theme_cowplot()
-
-
- long_df %>%
-  group_by(age, sex)%>%
-  summarise(avg = mean(SE)) %>%
-  ggplot(aes(age, avg))+
-  geom_point(mapping = aes(colour = sex ,  size = 5))+ 
-  geom_smooth()+
-  ggtitle("Relationship between age, gender and splicing efficiency") +
-  xlab(" Average splicing efficiency")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  theme_cowplot()
-  
-
-# y <- long_df %>%
-#   group_by(age, age_group)%>%
-#   summarise(avg = mean(SE)) %>%
-#   ggplot(aes(avg, age))+
-#   geom_point(mapping = aes(colour = age_group , size = 5))+ 
-#   geom_smooth()+
-#   ggtitle("Relationship between age and splicing efficiency") +
-#   xlab(" Average splicing efficiency")+
-#   theme(plot.title = element_text(hjust = 0.5))+
-#   theme_cowplot()
-
-
-ggarrange(x, z)
-
-
 
 # reorder the column name to match how they occur in the metadata
-# Not certain it has an impact though
 
 # Filter to remove missing values
 all_pre_metadata <- all_pre_metadata %>%
-  filter((seq_sample_id %in% colnames(all_pre_splice_cont[,-1]))) %>%
+  filter((seq_sample_id %in% colnames(all_pre_splice[,-1]))) %>%
   print()
 
 
-all_pre_splice_reordered <- all_pre_splice_cont[ , c("transcript_ID",all_pre_metadata$seq_sample_id)]
+all_pre_splice_reordered <- all_pre_splice[ , c("transcript_ID",all_pre_metadata$seq_sample_id)]
 
 colnames(all_pre_splice_reordered)
 rownames(all_pre_metadata)
@@ -210,7 +41,6 @@ rownames(all_pre_metadata)
  match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
 
 
- saveRDS(all_pre_splice_reordered, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 # invert the data to create a dataframe suitable for zero inflated analyses
 # splice_df_inverted <- all_pre_splice_reordered %>%
 #   mutate(across(X102PreExcVLR12:X134.subj8sample4, function(x)1-x))

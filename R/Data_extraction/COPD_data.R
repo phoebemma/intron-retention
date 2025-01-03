@@ -1,6 +1,5 @@
-#This script shows and details the extraction of the COPD data
+# This script shows and details the extraction of the COPD data
 # Full details about the data is published in https://pubmed.ncbi.nlm.nih.gov/34229714/
-
 
 library(trainomeMetaData)
 library(dplyr)
@@ -8,12 +7,8 @@ library(tidyverse)
 source("R/Trainome_functions.R")
 
 
-#COPD metadata
-data(copd_samples)
-data(copd_participants)
-
-
-
+# COPD metadata
+# This extracts the metadata from the "copd_samples" and "copd_participants" data from trainomeMetaData
 copd_metadata <- copd_samples %>%
   inner_join(copd_participants, by = c("study", "participant", "sex", "treatment"))%>%
   dplyr::select(study, participant, sex, condition, time, seq_sample_id, age)%>%
@@ -22,9 +17,11 @@ copd_metadata <- copd_samples %>%
   drop_na() 
 
 
+# Creates a new column called "volume" which is intended for future use
 copd_metadata["volume"] <- 3
-hist(copd_metadata$age)
-length(unique(copd_metadata$participant))
+# hist(copd_metadata$age)
+# length(unique(copd_metadata$participant))
+
  saveRDS(copd_metadata, "data_new/processed_data/copd_metadata.RDS")
 
 #Load the COPD splicing data
