@@ -5,7 +5,7 @@
 /data/
 /plots/
 /old_repo/
-/public_data/
+/public_data/.pdf
 /Man/
 # Do not track big ome data (added by trainomeMetaData)
 /ome-data/

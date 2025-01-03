@@ -3,11 +3,7 @@ library(dplyr)
 library(tidyverse)
 source("R/Trainome_functions.R")
 
-# Download metadata from  the TrainomeMetadata package
-data(ct_participants)
-data(ct_samples)  
-
-
+# Download and extract metadata from  the TrainomeMetadata package
 ct_metadata <- ct_samples %>% inner_join(ct_participants, by = c("study", "participant", "sex")) %>%
   dplyr::select(study, participant, sex, condition, time, seq_sample_id, age) %>%
   # drop the rows containing missing data
@@ -16,6 +12,7 @@ ct_metadata <- ct_samples %>% inner_join(ct_participants, by = c("study", "parti
   mutate(volume = case_when(condition == "set0"~ 0,
                             condition == "set3" ~ 3,
                             condition == "set6" ~ 6))
+
 
 # Rename the time column to match those in the other dataframes
 ct_metadata["time"][ct_metadata["time"] == "t1"] <- "PreExc"
@@ -28,7 +25,6 @@ ct_metadata["condition"][ct_metadata["condition"] == "set0"] <- "Control"
 ct_metadata["condition"][ct_metadata["condition"] == "set6"] <- "RM10"
 
 
-
 # subset the prexercise data
 ct_pre_meta <- ct_metadata %>%
   subset(time == "PreExc")
@@ -39,6 +35,8 @@ ct_metadata <- ct_metadata %>%
   subset( time == "PreExc" | time == "PostExc")  %>%
   # remove the untrained group as they are not of interest
    filter(condition != "Control" )
+
+
 unique(ct_metadata$time)
 unique(ct_metadata$condition)
 unique(ct_metadata$volume)

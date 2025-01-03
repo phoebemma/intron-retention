@@ -22,7 +22,6 @@ library(dplyr)
 library(gt)
 library(tidyverse)
 library(cowplot)
-library(seqwrap)
 
 
 source("R/Trainome_functions.R")
@@ -39,12 +38,54 @@ This file reproduces the relevant analyses for the paper as well as the suppleme
 Running the codes in this section extracts and processes the data for the individual datasets. It also saves the extracted datasets in the designated folders for further analyses
 
 ```{r}
-# Extract the Alpha and Omega dataset
+#Create these directories if the don't already exist
+
+# A folder for baseline data
+ifelse(!dir.exists(file.path("data_new", "Pre_Exercise")), dir.create(file.path("data_new", "Pre_Exercise")), FALSE)
+
+# A folder for the full datasets
+ifelse(!dir.exists(file.path("data_new", "processed_data")), dir.create(file.path("data_new", "processed_data")), FALSE)
+
+
+# Extract the Alpha and Omega data
 source("R/Data_extraction/Alpha_Omega_data.R")
 
-# Extract the COPD dataset
+# Extract the COPD data
 source("R/Data_extraction/COPD_data.R")
+
+# Extract the Contratrain data
+source("R/Data_extraction/ct_data.R")
+
+# Extract the Volume data
+source("R/Data_extraction/Volume_data.R")
+
+
+# Extract the Public data; Srp102542
+source("R/Data_extraction/SRP102542_data.R")
 
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+Running the function above would save the following results in a `data_new` folder
+
+| Dataset                                                      | Description                       |
+|----------------------------------------------|--------------------------|
+| `data_new/processed_data/Alpha_Omega_splicing_data.RDS`      | Alpha_Omega SpliceQ data          |
+| `data_new/processed_data/Alpha_Omega_metadata.RDS`           | Alpha_Omega metadata              |
+| `data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS`      | Alpha_Omega baseline metadata     |
+| `data_new/Pre_Exercise/Alpha_Omega_PreExc_splicing_data.RDS` | Alpha_Omega baseline SpliceQ data |
+| `data_new/processed_data/copd_metadata.RDS`                  | COPD metadata                     |
+| `data_new/processed_data/copd_splicing_data.RDS`             | COPD SpliceQ data                 |
+| `data_new/Pre_Exercise/copd_preExc_metadata.RDS`             | COPD baseline metadata            |
+| `data_new/Pre_Exercise/copd_preExc_splicing_data.RDS`        | COPD baseline SpliceQ data        |
+| `data_new/processed_data/contratrain_metadata.RDS`           | Contratrain metadata              |
+| `data_new/Pre_Exercise/ct_PreExc_metadata.RDS`               | Contratrain baseline metadata     |
+| `data_new/processed_data/contratrain_splicing_data.RDS`      | Contratrain SpliceQ data          |
+| `data_new/Pre_Exercise/ct_PreExc_splicing_data.RDS`          | Contratrain baseline SpliceQ data |
+| `data_new/processed_data/volume_metadata.RDS`                | Volume metadata                   |
+| `data_new/processed_data/volume_splicing_data.RDS`           | Volume SpliceQ data               |
+| `data_new/Pre_Exercise/vol_preExc_metadata.RDS`              | Volume baseline metadata          |
+| `data_new/Pre_Exercise/vol_preExc_splicing_data.RDS`         | Volume baseline SpliceQ data      |
+| `data_new/Pre_Exercise/SRP102542_preExc_metadata.RDS`        | SRP102542 baseline metadata       |
+| `data_new/processed_data/SRP102542_metadata.RDS`             | SRP102542 metadata                |
+| `data_new/processed_data/SRP102542_splicing_data.RDS`        | SRP102542 SpliceQ data            |
+| `data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS`   | SRP102542 baseline SpliceQ data   |

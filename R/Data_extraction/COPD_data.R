@@ -24,20 +24,12 @@ copd_metadata["volume"] <- 3
 
  saveRDS(copd_metadata, "data_new/processed_data/copd_metadata.RDS")
 
+ 
+ 
+ 
 #Load the COPD splicing data
 
 copd_data <- extract_splice_q("./data_new/COPD_Spliceq_outputs_new/")
-#Rename the ccolumn names by removing everything after the second underscore
-# colnames(copd_data) <- gsub("_.*", "", colnames(copd_data) )
-# #COPD sequence data contains duplicates. The code below should remove duplicate columns
-# copd_data <-   copd_data[, !duplicated(colnames(copd_data))]
-
-#the gsub functio above also removed the underscore in "transcript_ID, replace it
-# colnames(copd_data)[1] <- "transcript_ID"
-# #remove everything before the . in sample_id. 
-# colnames(copd_data) <- gsub(".*?\\.", "", colnames(copd_data) )
-# #Add an X before the sample_ID. This makes it match to the naming in metadata
-# colnames(copd_data)[-1] <- paste0("X", colnames(copd_data)[-1] )
 
 idx <- sapply(copd_data, class)== "numeric"
 copd_data[, idx] <- lapply(copd_data[, idx], round, 2)
@@ -51,8 +43,7 @@ copd_data <- copd_data %>%
   subset(select = c("transcript_ID", copd_intersect))
 
 
- saveRDS(copd_data, "./data_new/processed_data/copd_splicing_data.RDS")
-
+ saveRDS(copd_data, "data_new/processed_data/copd_splicing_data.RDS")
 
 
 # Extract the pre-exercise data

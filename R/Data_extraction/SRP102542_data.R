@@ -3,6 +3,7 @@ library(tidyverse)
 library(readr)
 library(stringr)
 
+
 source("R/Trainome_functions.R")
 # This details the extractions and EDA fror the dataset with SRA number SRP102542
 # Load and clean the publicly available data
@@ -70,11 +71,12 @@ SRP102542_pre <- SRP102542 %>%
   subset(time == "PreExc")
  saveRDS(SRP102542_pre, "data_new/Pre_Exercise/SRP102542_preExc_metadata.RDS")
  
+ 
  # For the full data analyses, we would need only participants that performed RT
 
  SRP102542_full <- SRP102542 %>%
    filter(condition == "Resistance")
-#  saveRDS(SRP102542_full, "./data_new/processed_data/SRP102542_metadata.RDS")
+  saveRDS(SRP102542_full, "data_new/processed_data/SRP102542_metadata.RDS")
 
 
 #Load the SpliceQ data
@@ -91,7 +93,9 @@ SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542$seq_sample_
 
 SRP102542_data <- SRP102542_data %>%
   subset(select = c("transcript_ID", SRP102542_intersect))
-# saveRDS(SRP102542_data, "./data_new/processed_data/SRP102542_splicing_data.RDS")
+
+
+ saveRDS(SRP102542_data, "data_new/processed_data/SRP102542_splicing_data.RDS")
 
 
 #Repeat for pre-exercise data
@@ -100,6 +104,6 @@ SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542_pre$seq_sam
 
 SRP102542_pre_data <- SRP102542_data %>%
   subset(select = c("transcript_ID", SRP102542_intersect))
-# saveRDS(SRP102542_pre_data, "./data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS")
+ saveRDS(SRP102542_pre_data, "data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS")
 
 
