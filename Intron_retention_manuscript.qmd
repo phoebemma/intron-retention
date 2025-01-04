@@ -46,8 +46,9 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 # Participant characteristics
 all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS") 
 
- participants <- length(all_pre_metadata$participant)
-  age_range <- range(all_pre_metadata$age)
+ # participants <- all_pre_metadata %>%
+ #   filter(unique(all_pre_metadata$participant))
+ #  age_range <- range(all_pre_metadata$age)
   
 # splicing data
 all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
@@ -84,27 +85,25 @@ We hypothesize that since intron retention is a mechanism by which the cells mod
 
 ## Materials and methods
 
-Five datasets are included in the study. Four of which are from the TrainOme group. One Publicly available datasets from @robinson2017 @kulkarni_metformin_2020 were obtained which fitted the criteria of paired-end Illumina RNA-Seq data from vastus lateralis muscle of human subjects . It contained both young and old participants. The characteristics of included studies are presented in table 1
+#### Datasets
 
-+-----------------+------------------------+-------------------+----------------------+-----------------------------------+
-| Dataset name    | Number of participants | Number of samples | Age range (in years) | Linked Publication                |
-+=================+========================+===================+======================+===================================+
-| COPD            | 53                     | 65                | 56-79                | @molmen_chronic_2021              |
-+-----------------+------------------------+-------------------+----------------------+-----------------------------------+
-| Volume          | 25                     | 50                | 20-37                | @khan_increased_2020              |
-+-----------------+------------------------+-------------------+----------------------+-----------------------------------+
-| Contratrain     | 26                     |                   | 19-34                | Hamarsland et al (in preparation) |
-+-----------------+------------------------+-------------------+----------------------+-----------------------------------+
-| Alpha and Omega |                        |                   |                      |                                   |
-+-----------------+------------------------+-------------------+----------------------+-----------------------------------+
-| SRP102542       | 52                     | 52                | 19-30 (Young cohort) | @robinson_enhanced_2017           |
-|                 |                        |                   |                      |                                   |
-|                 |                        |                   | 65-78 (Old cohort)   |                                   |
-+-----------------+------------------------+-------------------+----------------------+-----------------------------------+
-| SRP280348       | 86                     | 86                | 18-27 (Young cohort) | @kulkarni_metformin_2020          |
-|                 |                        |                   |                      |                                   |
-|                 |                        |                   | 64-80(Old cohort)    |                                   |
-+-----------------+------------------------+-------------------+----------------------+-----------------------------------+
+Five datasets designed to investigate different aspects of response to RT are included in the study. Four of which are from the TrainOme group. One Publicly available datasets from @robinson2017 @kulkarni_metformin_2020 were obtained which fitted the criteria of paired-end Illumina RNA-Seq data from vastus lateralis muscle of human subjects . The study protocols have been described elsewhere asIt contained both young and old participants. The characteristics of included studies are presented in table 1
+
++--------------+-------------------------+----------------------+-------------------------------------+
+| Dataset name | Number of participants  | Age range (in years) | Linked Publication                  |
++==============+=========================+======================+=====================================+
+| COPD         | 53                      | 56-79                | @molmen_chronic_2021                |
++--------------+-------------------------+----------------------+-------------------------------------+
+| Volume       | 25                      | 20-37                | @khan_increased_2020                |
++--------------+-------------------------+----------------------+-------------------------------------+
+| Contratrain  | 32                      | 19-35                | Hamarsland *et al* (in preparation) |
++--------------+-------------------------+----------------------+-------------------------------------+
+| Alpha/ Omega | 132                     | 23-60                | Hamarsland *et al* (in preparation) |
++--------------+-------------------------+----------------------+-------------------------------------+
+| SRP102542    | 52                      | 19-30 (Young cohort) | @robinson_enhanced_2017             |
+|              |                         |                      |                                     |
+|              |                         | 65-78 (Old cohort)   |                                     |
++--------------+-------------------------+----------------------+-------------------------------------+
 
 The benjamin and hochberg method @benjamini_controlling_1995 was used to control for false discovery rates
 
@@ -112,23 +111,33 @@ The benjamin and hochberg method @benjamini_controlling_1995 was used to control
 
 RNA-SEQ data processing
 
-The quality of the reads were checked using FASTQC(v0.11.9). STAR (2.7.9a) was used to map reads to the human reference genome (GRCh38 version 40) using the 2-pass alignment method described by @veeneman_two-pass_2016 which advances quantification and discovery of splicing events. RSEM (1.3.3) [@li_rsem_2011] was used to generate transcript and gene level counts while SpliceQ @de_melo_costa_splice-q_2021 was used to quantify splicing efficiency.
+The quality of the reads were checked using FASTQC(v0.11.9). Using STAR (2.7.9a) the reads were mapped to the human reference genome (GRCh38, gencode v47 primary annotaion ) using the 2-pass alignment method described by [@veeneman_two-pass_2016]. This method is said to advance the quantification and discovery of splicing events. RSEM (1.3.3) \[@li_rsem_2011\] was used to generate transcript and gene level counts while SpliceQ @de_melo_costa_splice-q_2021 was used to quantify splicing efficiency.
 
-Using preexercise data alone, we sought to identify differentially spliced introns by age, sex and age group. For this, we built two generalized linear mixed beta regression models. One captured age as a continuous variable and modeled the interaction between age and sex as fixed effects, while study and participant were used as random effect having individual intercepts
+Participants were divided into seven groups based on their age ranges as shown in Table 2. Figure 1 shows the distribution of the baseline data by age_group, sex and study.Using baseline data alone, we sought to identify differentially spliced introns by age, sex and age group. For this, we built two generalized linear mixed beta regression models. One captured age as a continuous variable and modeled the interaction between age and sex as fixed effects, while study and participant were used as random effect having individual intercepts
 
 The second model, used age as a categorical variable where the participants were grouped into young, and old. Similar to the first model, the interaction of age_group and sex was used as fixed effects,
 
 The differentially spliced introns based on age of preexercise data was filtered for adjusted pvalues at or below 0.05. Those that had an absolute log2fc of 1 were also filtered to determine those with significant differential expression
 
-As recommended by [@zhao2020] in scenerios where multiple datasets are combined, we used the class-specific strategy of quantile normalization to normalize the gene expression data
+As recommended by [@zhao2020] in scenerios where multiple datasets are combined, we used the class-specific strategy of quantile normalization to normalize the gene expression data.
+
+| Age range    | Name in dataset |
+|--------------|-----------------|
+| 20 and below | \<=20           |
+| 21 to 30     | \>20 & \<=30    |
+| 31 to 40     | \>30 & \<= 40   |
+| 41 to 50     | \>40 & \<= 50   |
+| 51 to 60     | \>50 & \<= 60   |
+| 61 to 70     | \>60 & \<=70    |
+| Above 71     | \>71            |
 
 # Results
 
-We explored introns with characteristically low splicing efficiency by investigating those whose splicing efficiency across all pre-exercise samples are summed up to below 0.6
+We explored introns with characteristically low splicing efficiency by investigating those whose splicing efficiency across all pre-exercise samples have a maximum splicing efficiency of 0.6 . six introns had average SE below 0.6 . Table 3 contains the list of the introns while Figure 2 contains the gene ontology of the genes containing the introns . 336 introns of 260 genes were perfectly spliced across all datasets. The GO analyses of their biological processes reveal that they are physiologically relevent to the skeletal muscle
 
-To investigate the impact of age and RT on intron retention, we investigated intron retention in RNA sequence data from vastus lateralis of 141 individuals from four different RT studies . The participants were divided into two age groups with young comprising 65 individuals aged between 19 to 37 , the old age group consisted of 76 participants aged between 57 and 79 .
+The splicing efficiency of 25597 introns were captured across all the samples in the data
 
-We measured intron retention as splicing efficiency using SpliceQ @demelocosta2021. mis-splicing occurs more in non-protein coding genes than in protein-coding genes @garcia-ruiz_splicing_2023, this disagrees with the results we obtained . We however take cognisance of the limitations in RNA-Seq's reported ability to correctly quantify non-coding RNAs @stokes_transcriptomics_2023
+We measured intron retention as splicing efficiency using SpliceQ @demelocosta2021. mis-splicing occurs more in non-protein coding genes than in protein-coding genes @garcia-ruiz_splicing_2023, this disagrees with the results we obtained . We however take cognisance of the limitations in RNA-Seq's reported ability to correctly quantify non-coding RNAs @stokes_transcriptomics_2023.
 
 @saudemont_fitness_2017 stipulated a mutation-selection-drift theory that suggests shorter, intron-poor and lowly expressed genes show a poorer splicing efficiency
 
@@ -145,6 +154,8 @@ Of the 1693 ds introns captured in the full dataset, 135 were changed postexerci
 IR is a physiological mechanism that controls gene expression [@wong_intron_2016 ; @schmitz_intron_2017 ] increase in IR is a signature of the aging process @bhadra_alternative_2020
 
 Tissues and organs are altered differently by aging and aging-related processes @baralle_age-related_2023 .
+
+[@sanchez-escabias_co-transcriptional_2022 ; @garcia-ruiz_splicing_2023, @saudemont_fitness_2017] suggest a correlation between physiologic relevance, gene length and splicing efficiency. The generated data agrees with that as the introns poorly spliced across all samples were associated with biological processes of less relevance to the skeletal muscle when compared to those in the perfectly spliced introns. The gene ontology of the genes contaning the poorly spliced introns, and those containing the perfectly spliced introns
 
 ### Shortcoming
 

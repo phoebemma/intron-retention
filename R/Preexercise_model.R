@@ -6,7 +6,7 @@ library(seqwrap)
 library(gridExtra)
 library(ggpubr)
 library(cowplot)
-library(trainomeMetaData)
+
 
 
 # Load the Trainome functions
@@ -285,3 +285,32 @@ model_cont_group <- mod_sum_group %>%
   inner_join(mod_eval_group, by = "target")
 
 saveRDS(model_cont_group, "data_new/models/preExc_group_and_sex_without_interaction_model.RDS")
+
+
+
+
+
+
+
+args3<- list(formula = y ~  group + sex  + (1 + group|study) +(1|participant), 
+            family = glmmTMB::beta_family())
+
+SE_group_model_3 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                            arguments = args3,
+                            data = all_pre_splice_reordered,
+                            metadata = all_pre_metadata,
+                            samplename = "seq_sample_id",
+                            summary_fun = sum_fun,
+                            eval_fun = eval_mod,
+                            exported = list(),
+                            save_models = FALSE,
+                            return_models = FALSE,
+                            cores = ncores-2)
+
+SE_group_model_3$summaries$ENST00000007516.8_2_16
+
+excl_5 <- names(which(SE_group_model_3$summaries == "NULL"))
+geneids_5 <- names(which(SE_group_model_3$summaries != "NULL"))
+
+
+# Having an intercept unique to the study gave all NANs in summary

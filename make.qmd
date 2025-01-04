@@ -67,7 +67,7 @@ source("R/Data_extraction/SRP102542_data.R")
 
 Running the function above would save the following results in a `data_new` folder
 
-| Dataset                                                      | Description                       |
+| Data                                                         | Description                       |
 |----------------------------------------------|--------------------------|
 | `data_new/processed_data/Alpha_Omega_splicing_data.RDS`      | Alpha_Omega SpliceQ data          |
 | `data_new/processed_data/Alpha_Omega_metadata.RDS`           | Alpha_Omega metadata              |
@@ -89,3 +89,29 @@ Running the function above would save the following results in a `data_new` fold
 | `data_new/processed_data/SRP102542_metadata.RDS`             | SRP102542 metadata                |
 | `data_new/processed_data/SRP102542_splicing_data.RDS`        | SRP102542 SpliceQ data            |
 | `data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS`   | SRP102542 baseline SpliceQ data   |
+
+### Basic data exploration
+
+Running this code would perform basic data exploration using the data extracted and saved above. It also saves a couple of images and files as listed in the table below the code.
+
+```{r}
+# Basic data exploration 
+source("R/Data_exploration.R")
+```
+
+The code block above would produce and save the following files and images
+
+| Data                                                     | Description                                                                                |
+|------------------------------------------------|------------------------|
+| `data_new/Pre_Exercise/all_prexercise_metadata.RDS`      | All the baseline datasets combined in one dataframe                                        |
+| `data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS`    | All baseline splicing data in one dataframe                                                |
+| `data_new/Pre_Exercise/annotated_low_SE_introns.RDS`     | Annotation of genes containing introns with poor splicing efficiency across all samples    |
+| `data_new/Pre_Exercise/annotated_perfect_SE_introns.RDS` | Annotation of genes containing introns with perfect splicing efficiency across all samples |
+| `data_new/ensembl_gene_annotation.RDS`                   | All genes annotation for future use (downloaded from Ensembl)                              |
+| `Figures/Baseline_data.png`                              | Displays basic data distribution                                                           |
+| `Figures/age_group.png`                                  | Basic splicing efficiency (SE) by age group                                                |
+| `Figures/age_group_by_gender.png`                        | Visualizing SE by age and gender                                                           |
+| `Figures/GO_poorly_spliced_introns.png`                  | Gene ontology (GO) plot of genes containing poorly spliced introns across all samples      |
+| `Figures/GO_perfectly_spliced_introns.png`               | GO plot of genes containing perfectly spliced introns across all samples                   |
+| `data_new/processed_data/all_full_metadata.RDS`          | All metadata combined in one                                                               |
+| `data_new/processed_data/all_splice_data.RDS`            | The introns present across all the datasets in one dataframe                               |
