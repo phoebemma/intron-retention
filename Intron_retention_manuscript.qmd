@@ -20,38 +20,38 @@ prefer-html: true
 Correspondance: Chidimma Phoebe Echebiri (chidimma.echebiri\@inn.no), Daniel Hammarström (daniel.hammarstrom\@inn.no).
 :::
 
-```{r, setup, include=FALSE}
-## Libraries 
-library(ggplot2)
-library(tidyverse)
-library(cowplot)
-library(dplyr)
-
-color_scale <- c("#7fc97f",  "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f")
-
-
-source("R/Trainome_functions.R")
-
-knitr::opts_knit$set(root.dir = "C:/projects/Impact-of-age-and-exercise-on-intron-retention/")
-knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```{# {r, setup, include=FALSE}
+# ## Libraries 
+# library(ggplot2)
+# library(tidyverse)
+# library(cowplot)
+# library(dplyr)
+# 
+# color_scale <- c("#7fc97f",  "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f")
+# 
+# 
+# source("R/Trainome_functions.R")
+# 
+# knitr::opts_knit$set(root.dir = "C:/projects/Impact-of-age-and-exercise-on-intron-retention/")
+# knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```
 
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| label: abstract
-
-# Participant characteristics
-all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS") 
-
- # participants <- all_pre_metadata %>%
- #   filter(unique(all_pre_metadata$participant))
- #  age_range <- range(all_pre_metadata$age)
-  
-# splicing data
-all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
+```{# {r}
+# #| echo: false
+# #| message: false
+# #| warning: false
+# #| label: abstract
+# 
+# # Participant characteristics
+# all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS") 
+# 
+#  # participants <- all_pre_metadata %>%
+#  #   filter(unique(all_pre_metadata$participant))
+#  #  age_range <- range(all_pre_metadata$age)
+#   
+# # splicing data
+# all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 ```
 
