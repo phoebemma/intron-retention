@@ -65,7 +65,7 @@ Alternative splicing (AS) is a mechanism in mRNA processing in which protein-cod
 
 AS is tissue_specific and increases with age [@latorre_splicing_2017 ; @holly_changes_2013 ]as a result of alterations in the expression of splicing factors @stegeman_transcriptional_2017 which is a resilience strategy aimed at counteracting aging-induced damages and loss of function [@ferrucci_energysplicing_2022 ; @ubaida-mohien_discovery_2019]. There are three broad types of AS; exon skipping, alternative use of splice sites, and intron retention [@nishida_tissue-_2015 ; @zheng_intron_2020 ]. Of specific interest to this study is intron retention.
 
-Intron retention (IR) occurs when a full intron, or parts of an intron in a mature messenger RNA (mRNA) is retained during splicing, resulting in the presence of an unprocessed sequence in the mRNA. This leads either to the degradation of the IR-containing transcripts through nonsense-mediated decay or the action of nucleases; or to frameshifts that cause the generation of alternative protein isoforms [@baralle_age-related_2023 ; @zheng_intron_2020 ; @mauger_targeted_2016; @wong_intron_2022 ; @monteuuis_changing_2019 ]. mRNAs with retained introns play roles in gene regulation, normal physiology and disease conditions [@wong_intron_2016; @ge_functional_2014; @inoue_minor_2021]. This is because IR tends to increasingly occur in response to specific developmental cues and serve as a strategy for rapid mobilization of some mRNAs for protein translation [@ong_increased_2020] . IR affects about 80% of human protein-coding genes [@middleton_irfinder_2017 ; @braunschweig_widespread_2014 ] and is the main form of alternative splicing that is affected by age [@kodama_systematic_2024 ; @mariotti_deterioration_2022; @bhadra_alternative_2020] . IR occurs mostly at the 3\` end of transcripts[@wong_orchestrated_2013 ; @braunschweig_widespread_2014 ], and predominantly in transcripts that lack physiological relevance in cells and tissues they are detected in [@braunschweig_widespread_2014] . High IR levels reportedly correlate with the down-regulation of mRNA transcripts in myelocytes and granulocytes @wong_orchestrated_2013 . Short genes with high mRNA levels tend to be inefficiently spliced compared to long genes with high mRNA levels . That is, there is a positive correlation between gene length, expression level and splicing efficiency (SE) [@sanchez-escabias_co-transcriptional_2022 ; @garcia-ruiz_splicing_2023, @saudemont_fitness_2017] .
+Intron retention (IR) occurs when a full intron, or parts of an intron in a mature messenger RNA (mRNA) is retained during splicing, resulting in the presence of an unprocessed sequence in the mRNA. This leads either to the degradation of the IR-containing transcripts through nonsense-mediated decay or the action of nucleases; or to frameshifts that cause the generation of alternative protein isoforms [@baralle_age-related_2023 ; @zheng_intron_2020 ; @mauger_targeted_2016; @wong_intron_2022 ; @monteuuis_changing_2019 ]. mRNAs with retained introns play roles in gene regulation, normal physiology and disease conditions [@wong_intron_2016; @ge_functional_2014; @inoue_minor_2021]. This is because IR tends to increasingly occur in response to specific developmental cues and serve as a strategy for rapid mobilization of some mRNAs for protein translation [@ong_increased_2020] . IR affects about 80% of human protein-coding genes [@middleton_irfinder_2017 ; @braunschweig_widespread_2014 ] and is the main form of alternative splicing that is affected by age [@kodama_systematic_2024 ; @mariotti_deterioration_2022; @bhadra_alternative_2020] . IR occurs mostly at the 3\` end of transcripts[@wong_orchestrated_2013 ; @braunschweig_widespread_2014 ], and predominantly in transcripts that lack physiological relevance in cells and tissues they are detected in [@braunschweig_widespread_2014] . High IR levels reportedly correlate with the down-regulation of mRNA transcripts in myelocytes and granulocytes @wong_orchestrated_2013 . Short genes with high mRNA levels tend to be inefficiently spliced compared to long genes with high mRNA levels . That is, there is a positive correlation between gene length, expression level and splicing efficiency (SE) [@sanchez-escabias_co-transcriptional_2022 ; @garcia-ruiz_splicing_2023, @saudemont_fitness_2017, @braunschweig_widespread_2014] .
 
 .Intron retention is often measured as splicing efficiency which describes the amount of introns retained in a mature mRNA. Splicing efficiency is cell and tissue specific [@nishida_tissue-_2015; @baralle_age-related_2023] but tends to be similar between the introns of a gene [@sanchez-escabias_co-transcriptional_2022] . This suggests that a balanced study of intron retention shouldcompare same introns in same genes and same tissues across the subjects of interest.
 
@@ -89,21 +89,21 @@ We hypothesize that since intron retention is a mechanism by which the cells mod
 
 Five datasets designed to investigate different aspects of response to RT are included in the study. Four of which are from the TrainOme group. One Publicly available datasets from @robinson2017 @kulkarni_metformin_2020 were obtained which fitted the criteria of paired-end Illumina RNA-Seq data from vastus lateralis muscle of human subjects . The study protocols have been described elsewhere asIt contained both young and old participants. The characteristics of included studies are presented in table 1
 
-+--------------+-------------------------+----------------------+-------------------------------------+
-| Dataset name | Number of participants  | Age range (in years) | Linked Publication                  |
-+==============+=========================+======================+=====================================+
-| COPD         | 53                      | 56-79                | @molmen_chronic_2021                |
-+--------------+-------------------------+----------------------+-------------------------------------+
-| Volume       | 25                      | 20-37                | @khan_increased_2020                |
-+--------------+-------------------------+----------------------+-------------------------------------+
-| Contratrain  | 32                      | 19-35                | Hamarsland *et al* (in preparation) |
-+--------------+-------------------------+----------------------+-------------------------------------+
-| Alpha/ Omega | 132                     | 23-60                | Hamarsland *et al* (in preparation) |
-+--------------+-------------------------+----------------------+-------------------------------------+
-| SRP102542    | 52                      | 19-30 (Young cohort) | @robinson_enhanced_2017             |
-|              |                         |                      |                                     |
-|              |                         | 65-78 (Old cohort)   |                                     |
-+--------------+-------------------------+----------------------+-------------------------------------+
++--------------+------------------------+----------------------+-------------------------------------+
+| Dataset name | Number of participants | Age range (in years) | Linked Publication                  |
++==============+========================+======================+=====================================+
+| COPD         | 53                     | 56-79                | @molmen_chronic_2021                |
++--------------+------------------------+----------------------+-------------------------------------+
+| Volume       | 25                     | 20-37                | @khan_increased_2020                |
++--------------+------------------------+----------------------+-------------------------------------+
+| Contratrain  | 32                     | 19-35                | Hamarsland *et al* (in preparation) |
++--------------+------------------------+----------------------+-------------------------------------+
+| Alpha/ Omega | 132                    | 23-60                | Hamarsland *et al* (in preparation) |
++--------------+------------------------+----------------------+-------------------------------------+
+| SRP102542    | 52                     | 19-30 (Young cohort) | @robinson_enhanced_2017             |
+|              |                        |                      |                                     |
+|              |                        | 65-78 (Old cohort)   |                                     |
++--------------+------------------------+----------------------+-------------------------------------+
 
 The benjamin and hochberg method @benjamini_controlling_1995 was used to control for false discovery rates
 
@@ -111,7 +111,7 @@ The benjamin and hochberg method @benjamini_controlling_1995 was used to control
 
 RNA-SEQ data processing
 
-The quality of the reads were checked using FASTQC(v0.11.9). Using STAR (2.7.9a) the reads were mapped to the human reference genome (GRCh38, gencode v47 primary annotaion ) using the 2-pass alignment method described by [@veeneman_two-pass_2016]. This method is said to advance the quantification and discovery of splicing events. RSEM (1.3.3) \[@li_rsem_2011\] was used to generate transcript and gene level counts while SpliceQ @de_melo_costa_splice-q_2021 was used to quantify splicing efficiency.
+The quality of the reads were checked using FASTQC(v0.11.9). Using STAR (2.7.9a) the reads were mapped to the human reference genome (GRCh38, gencode v47 primary annotaion ) using the 2-pass alignment method described by [@veeneman_two-pass_2016]. This method is said to advance the quantification and discovery of splicing events. RSEM (1.3.3) [@li_rsem_2011] was used to generate transcript and gene level counts while SpliceQ @de_melo_costa_splice-q_2021 was used to quantify splicing efficiency.
 
 Participants were divided into seven groups based on their age ranges as shown in Table 2. Figure 1 shows the distribution of the baseline data by age_group, sex and study.Using baseline data alone, we sought to identify differentially spliced introns by age, sex and age group. For this, we built two generalized linear mixed beta regression models. One captured age as a continuous variable and modeled the interaction between age and sex as fixed effects, while study and participant were used as random effect having individual intercepts
 
@@ -135,7 +135,7 @@ As recommended by [@zhao2020] in scenerios where multiple datasets are combined,
 
 We explored introns with characteristically low splicing efficiency by investigating those whose splicing efficiency across all pre-exercise samples have a maximum splicing efficiency of 0.6 . six introns had average SE below 0.6 . Table 3 contains the list of the introns while Figure 2 contains the gene ontology of the genes containing the introns . 336 introns of 260 genes were perfectly spliced across all datasets. The GO analyses of their biological processes reveal that they are physiologically relevent to the skeletal muscle
 
-The splicing efficiency of 25597 introns were captured across all the samples in the data
+At baseline, the splicing efficiency of 25597 introns were captured across all the samples in the data. When both post and preexercise data were included, 8906 introns were captured across all datasets
 
 We measured intron retention as splicing efficiency using SpliceQ @demelocosta2021. mis-splicing occurs more in non-protein coding genes than in protein-coding genes @garcia-ruiz_splicing_2023, this disagrees with the results we obtained . We however take cognisance of the limitations in RNA-Seq's reported ability to correctly quantify non-coding RNAs @stokes_transcriptomics_2023.
 
@@ -150,6 +150,10 @@ Seven introns were shown to be differentially expressed by age when used as a co
 Of the 1693 ds introns captured in the full dataset, 135 were changed postexercise. Based on the Estimate values, they were all improvements
 
 ## Discussion
+
+splicing efficiency improves with increased expression level of genes [@saudemont_fitness_2017] and with longer genes which tend to agree that intron retention in normal circumstances are part of posttranscriptional regulation. IR reduces the expression of physiologically less relevant genes in a particular cell or tissue @braunschweig_widespread_2014 . Poor splicing efficiency of physiologically relevant genes can be deleterious thus its prevalence in less relevant genes are considered a mechanism with which gene expression is regulated.
+
+This data suggests that SE is more efficient
 
 IR is a physiological mechanism that controls gene expression [@wong_intron_2016 ; @schmitz_intron_2017 ] increase in IR is a signature of the aging process @bhadra_alternative_2020
 

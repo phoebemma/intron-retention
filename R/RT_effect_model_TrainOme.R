@@ -12,6 +12,11 @@ library(cowplot)
 source("R/Trainome_functions.R")
 
 
+# Load the full metadata 
+all_full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
+
+# Load full splice data
+all_splice_df <- readRDS("data_new/processed_data/all_splice_data.RDS")
 
 # Get the ds introns by group and sex without interaction
 # That proved to be the best performing model
@@ -131,11 +136,11 @@ mod_eval <- bind_rows(within(RT_model$evaluations, rm(missing)))%>%
 
 
 model_cont <- mod_sum %>%
-  inner_join(mod_eval, by = "target")# %>%
-#  filter(adj.p <= 0.05)
+  inner_join(mod_eval, by = "target") # %>%
+  #filter(adj.p <= 0.05)
 
 hist(model_cont$Estimate)
-
+length(unique(model_cont$target))
 saveRDS(model_cont, "data_new/models/full_data_RT_model.RDS")
 
 
@@ -147,7 +152,7 @@ saveRDS(model_cont, "data_new/models/full_data_RT_model.RDS")
 # Impact of age and exercise in one go
 
 
-args_full <- args<- list(formula = y ~  group*time + sex + (1|study) +(1|participant), 
+args_full <-list(formula = y ~  group*time + sex + (1|study) +(1|participant), 
                         family = glmmTMB::beta_family())
 
 
@@ -189,10 +194,16 @@ mod_eval <- bind_rows(within(full_RT_model$evaluations, rm(missing_full)))%>%
 
 
 model_cont <- mod_sum %>%
-  inner_join(mod_eval, by = "target")# %>%
-  #filter(adj.p <= 0.05)
+  inner_join(mod_eval, by = "target") %>%
+  filter(adj.p <= 0.05)
 
 length(unique(model_cont$target))
 hist(model_cont$Estimate)
 
+model_cont %>%
+  ggplot(aes(x = coef)) +
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
+
+unique(model_cont$coef)
 saveRDS(model_cont, "data_new/models/full_data_RT_and_age_model.RDS")

@@ -68,7 +68,7 @@ source("R/Data_extraction/SRP102542_data.R")
 Running the function above would save the following results in a `data_new` folder
 
 | Data                                                         | Description                       |
-|----------------------------------------------|--------------------------|
+|---------------------------------------------|---------------------------|
 | `data_new/processed_data/Alpha_Omega_splicing_data.RDS`      | Alpha_Omega SpliceQ data          |
 | `data_new/processed_data/Alpha_Omega_metadata.RDS`           | Alpha_Omega metadata              |
 | `data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS`      | Alpha_Omega baseline metadata     |
@@ -102,7 +102,7 @@ source("R/Data_exploration.R")
 The code block above would produce and save the following files and images
 
 | Data                                                     | Description                                                                                |
-|------------------------------------------------|------------------------|
+|----------------------------|--------------------------------------------|
 | `data_new/Pre_Exercise/all_prexercise_metadata.RDS`      | All the baseline datasets combined in one dataframe                                        |
 | `data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS`    | All baseline splicing data in one dataframe                                                |
 | `data_new/Pre_Exercise/annotated_low_SE_introns.RDS`     | Annotation of genes containing introns with poor splicing efficiency across all samples    |
@@ -115,3 +115,27 @@ The code block above would produce and save the following files and images
 | `Figures/GO_perfectly_spliced_introns.png`               | GO plot of genes containing perfectly spliced introns across all samples                   |
 | `data_new/processed_data/all_full_metadata.RDS`          | All metadata combined in one                                                               |
 | `data_new/processed_data/all_splice_data.RDS`            | The introns present across all the datasets in one dataframe                               |
+
+### Baseline model
+
+This builds models to analyse differentially spliced introns
+
+```{r}
+
+# A folder for the models
+ifelse(!dir.exists(file.path("data_new", "models")), dir.create(file.path("data_new", "models")), FALSE)
+
+source("R/Preexercise_model.R")
+```
+
+The script above produces the following files containing model outputs and the argument that produced the models
+
+| Data                                                                   | Argument                                                                                          |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| `data_new/models/preExc_count_interaction_model.RDS`                   |  y \~ age\*sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                    |
+| `data_new/models/preExc_group_interaction_model.RDS`                   |  y \~ group\*sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                  |
+| `data_new/models/preExc_group_only_model.RDS`                          |  y \~ group + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                       |
+| `data_new/models/PreExc_count_no_interaction_model.RDS`                | y \~ age+sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                      |
+| `data_new/models/preExc_group_and_sex_without_interaction_model.RDS`   | y \~ group + sex  + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                 |
+| `data_new/models/Preexc_age_class_no_interaction_unique_intercept.RDS` | y \~ age_class + sex  + (1 + age_class\|study) +(1\|participant), family = glmmTMB::beta_family() |
+| `data_new/models/PreExc_age_class_sex_no_interaction.RDS`              | y \~age_class + sex  + (1\|study) +(1\|participant), family = glmmTMB::beta_family()              |

@@ -1,7 +1,6 @@
 library(dplyr)
 library(ggplot2)
-library(biomaRt)
-library(tmod)
+
 
 
 # Load the primary pre-exercise model
@@ -27,6 +26,40 @@ filt_pre_group <- Pre_group %>%
 
 
 unique(filt_pre_group$coef)
+length(unique(filt_pre_group$target))
+
+
+pre_group_sex_no_int <- readRDS("data_new/models/preExc_group_and_sex_without_interaction_model.RDS")
+
+unique(pre_group_sex_no_int$coef)
+
+filt_pre_grop_sex_no_int <- pre_group_sex_no_int %>%
+  filter(coef %in% c("group>20 & <=30",
+                     "group>30 & <=40", 
+                     "group>40 & <=50",
+                     "group>50 & <=60",
+                     "group>60 & <=70",
+                     "group>70",
+                     "sexmale"
+  )) %>%
+  mutate(.by = coef,
+         adj.p = p.adjust(Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))%>%
+  filter(adj.p <= 0.05)
+ # Appears to be the best model
+saveRDS(filt_pre_grop_sex_no_int, "data_new/models/filt_preExc_group_sex_no_int.RDS")
+
+length(unique(filt_pre_grop_sex_no_int$target))
+
+unique(filt_pre_grop_sex_no_int$coef)
+
+
+
+
+
+
+
 
 
 
@@ -35,7 +68,7 @@ unique(filt_pre_group$coef)
 # Extract ds introns in the model that looked at age group and sex
 
 
-pre_group_sex <- readRDS("data_new/models/preExc_group_and_sex_model.RDS")
+pre_group_sex <- readRDS("data_new/models/preExc_group_interaction_model.RDS")
 
 unique(pre_group_sex$coef)
 
@@ -60,44 +93,27 @@ mutate(.by = coef,
 
 
 unique(filt_pre_grop_sex$coef)
+length(unique(filt_pre_grop_sex$target))
 
 
 
 
+# The model with age class but no interaction with sex
+pre_age_class_no_int <- readRDS("data_new/models/PreExc_age_class_sex_no_interaction.RDS")
+unique(pre_age_class_no_int$coef)
 
-
-
-pre_group_sex_no_int <- readRDS("data_new/models/preExc_group_and_sex_without_interaction_model.RDS")
-
-unique(pre_group_sex_no_int$coef)
-
-filt_pre_grop_sex_no_int <- pre_group_sex_no_int %>%
-  filter(coef %in% c("group>20 & <=30",
-                     "group>30 & <=40", 
-                     "group>40 & <=50",
-                     "group>50 & <=60",
-                     "group>60 & <=70",
-                     "group>70",
-                     "sexmale"
-                     )) %>%
+filt_age_class <- pre_age_class_no_int %>%
+  filter(coef %in% c("age_classMiddle aged",
+                     "age_classOld",
+                     "sexmale")) %>%
   mutate(.by = coef,
          adj.p = p.adjust(Pr...z.., method = "fdr"),
          log2fc = Estimate/log(2),
          fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))%>%
   filter(adj.p <= 0.05)
 
-saveRDS(filt_pre_grop_sex_no_int, "data_new/models/filt_preExc_group_sex_no_int.RDS")
-
-length(unique(filt_pre_grop_sex$target))
-
-length(unique(filt_pre_group$target))
-
-
-length(unique(filt_pre_grop_sex_no_int$target))
-
-
-
-
+unique(filt_age_class$coef)
+length(unique(filt_age_class$target))
 
 # ds_20_30 <- Pre_group %>%
 #   subset(coef == "group>30 & <=40:sexmale")%>%

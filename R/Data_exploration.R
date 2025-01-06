@@ -77,15 +77,19 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
                            age > 40 & age <= 50 ~ ">40 & <=50",
                            age > 50 & age <= 60 ~ ">50 & <=60",
                            age > 60 & age <= 70 ~ ">60 & <=70",
-                           age > 70 ~ ">70")) %>%
+                           age > 70 ~ ">70"),
+         age_class = case_when(age <= 40 ~ "Young",
+                               age > 40 & age <= 60 ~ "Middle aged",
+                               age > 60 ~ "Old")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
          group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
-                                          ">50 & <=60",">60 & <=70", ">70"))) 
+                                          ">50 & <=60",">60 & <=70", ">70")),
+         age_class = factor(age_class, levels = c("Young","Middle aged", "Old" ))) 
 unique(all_pre_metadata$sex)
 length(unique(all_pre_metadata$participant))
+unique(all_pre_metadata$age_class)
 
-
-
+all
 
  saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 
@@ -98,6 +102,12 @@ a<- ggplot(all_pre_metadata, aes(group, fill = group)) +
 
 # ggsave("Figures/Baseline_data.png")
 
+d <- ggplot(all_pre_metadata, aes(age_class, fill = age_class)) +
+  geom_bar()+
+  #  ggtitle("Distribution of baseline data")+
+  theme(plot.title = element_text(hjust = 0.5))+
+#  xlab("Age c of participants")+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
 
 
 
@@ -118,8 +128,8 @@ c <- ggplot(all_pre_metadata, aes(sex, fill = group)) +
 # ggsave("Figures/Baseline_data_by_gender.png")
 length(all_pre_metadata$participant)
 
-ggarrange(a ,b  , c ,
-          labels = c("A", "B", "C"), 
+ggarrange(a ,b  , c , d, 
+          labels = c("A", "B", "C", "D"), 
           common.legend = T,
           align = "hv",
           hjust = -1,
@@ -163,11 +173,11 @@ long_df <- all_pre_splice%>%
 long_df %>%
   group_by(group)%>%
   summarise(avg = mean(SE)) %>%
-  ggplot(aes(avg, group))+
+  ggplot(aes(group,avg))+
   geom_point(mapping = aes(colour = group, size = 10))+ 
   geom_smooth()+
   ggtitle("Relationship between age group and splicing efficiency") +
-  xlab(" Average splicing efficiency")+
+  ylab(" Average splicing efficiency")+
   theme(plot.title = element_text(hjust = 0.5))+
   theme_cowplot()
 ggsave("Figures/age_group.png", bg = "white")
@@ -179,7 +189,7 @@ long_df %>%
   geom_point(mapping = aes(colour = sex ,  size = 5))+ 
   geom_smooth()+
   ggtitle("Relationship between age, gender and splicing efficiency") +
-  xlab(" Average splicing efficiency")+
+  ylab(" Average splicing efficiency")+
   theme(plot.title = element_text(hjust = 0.5))+
   theme_cowplot()
 
@@ -407,6 +417,16 @@ all_splice_df <-copd_splice_df  %>%
   inner_join(SRP102542_splice_df, by = "transcript_ID") 
 
 
+# Get the post exercise splicing data
+# Getting it before removing the NAs in the full data ensures more introns are captured
+
+post_intersect <- intersect(colnames(all_splice_df),post_metadata$seq_sample_id)
+
+post_splice_df <- all_splice_df %>%
+  subset(select = c("transcript_ID", post_intersect))%>%
+  drop_na()
+
+
 # select only the splicing samples captured in the metadata
 all_intersect <- intersect(colnames(all_splice_df), all_full_metadata$seq_sample_id)
 
@@ -417,16 +437,49 @@ all_spliceq_df <- all_splice_df %>%
 saveRDS(all_spliceq_df, "data_new/processed_data/all_splice_data.RDS")
 
 
-# Get the post exercise splicing data
-
-post_intersect <- intersect(colnames(all_splice_df),post_metadata$seq_sample_id)
-
-post_splice_df <- all_splice_df %>%
-  subset(select = c("transcript_ID", post_intersect))%>%
-  drop_na()
 
 
-a <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/s100_EKRN240058206.tsv")
+
+#a <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/s100_EKRN240058206.tsv")
 # Query the low and perfect spliced introns to see how they fared postexercise
 
 High_at_post <- all_spliceq_df[all_spliceq_df$transcript_ID %in% High_SE$transcript_ID,]
+
+
+# Visualize the postexercise data to see if same pattern remains in postexercise
+# Visualization
+long_df_post <- post_splice_df%>%
+  pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID) )%>%
+  inner_join(post_metadata, by = "seq_sample_id")
+
+
+
+# Plot the relationship between age and splicing efficiency
+ long_df_post %>%
+  group_by(group)%>%
+  summarise(avg = mean(SE)) %>%
+  ggplot(aes(group,avg))+
+  geom_point(mapping = aes(colour = group, size = 10))+ 
+  geom_smooth()+
+  ggtitle("Relationship between age group and splicing efficiency") +
+  ylab(" Average splicing efficiency at post exercise")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme_cowplot()
+ggsave("Figures/SE_post_exc.png", bg= "white")
+
+long_df_post %>%
+  group_by(age, sex, group)%>%
+  summarise(avg = mean(SE)) %>%
+  ggplot(aes(age, avg))+
+  geom_point(mapping = aes(colour = sex ,  size = 5))+ 
+  geom_smooth()+
+  ggtitle("Relationship between age, gender and splicing efficiency") +
+  ylab(" Average splicing efficiency at postexercise")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme_cowplot()
+ggsave("Figures/SE_post_exc_age.png", bg= "white")
+# ggarrange(x, y, 
+#           legend = "top")
+
