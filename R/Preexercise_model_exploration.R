@@ -25,6 +25,14 @@ filt_pre_group <- Pre_group %>%
   filter(adj.p <= 0.05)
 
 
+
+filt_pre_group %>%
+  ggplot(aes(x = coef)) +
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
+
+
+
 unique(filt_pre_group$coef)
 length(unique(filt_pre_group$target))
 
@@ -54,7 +62,10 @@ length(unique(filt_pre_grop_sex_no_int$target))
 
 unique(filt_pre_grop_sex_no_int$coef)
 
-
+filt_pre_grop_sex_no_int %>%
+  ggplot(aes(x = coef)) +
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
 
 
 
@@ -91,6 +102,10 @@ mutate(.by = coef,
        fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))%>%
   filter(adj.p <= 0.05)
 
+filt_pre_gro %>%
+  ggplot(aes(x = coef)) +
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
 
 unique(filt_pre_grop_sex$coef)
 length(unique(filt_pre_grop_sex$target))
