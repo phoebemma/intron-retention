@@ -20,22 +20,10 @@ prefer-html: true
 Correspondance: Chidimma Phoebe Echebiri (chidimma.echebiri\@inn.no), Daniel Hammarström (daniel.hammarstrom\@inn.no).
 :::
 
-```{# {r, setup, include=FALSE}
-# ## Libraries 
-# library(ggplot2)
-# library(tidyverse)
-# library(cowplot)
-# library(dplyr)
-# 
-# color_scale <- c("#7fc97f",  "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f")
-# 
-# 
-# source("R/Trainome_functions.R")
-# 
-# knitr::opts_knit$set(root.dir = "C:/projects/Impact-of-age-and-exercise-on-intron-retention/")
+\`\`\`{# {r, setup, include=FALSE} \# \## Libraries \# library(ggplot2) \# library(tidyverse) \# library(cowplot) \# library(dplyr) \# \# color_scale \<- c("#7fc97f", "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f") \# \# \# source("R/Trainome_functions.R") \# \# knitr::opts_knit$set(root.dir = "C:/projects/Impact-of-age-and-exercise-on-intron-retention/")
 # knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
-```
+```         
 
 ```{# {r}
 # #| echo: false
@@ -52,7 +40,6 @@ Correspondance: Chidimma Phoebe Echebiri (chidimma.echebiri\@inn.no), Daniel Ham
 #   
 # # splicing data
 # all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
-
 ```
 
 ## Abstract

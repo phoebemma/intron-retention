@@ -6,7 +6,7 @@ library(seqwrap)
 library(gridExtra)
 library(ggpubr)
 library(cowplot)
-
+library(scales)
 
 
 # Load the Trainome functions
@@ -16,8 +16,13 @@ source("R/Trainome_functions.R")
 # Load metadata
 all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 
+# Standardize the age by scaling them 0 to 1
+
+all_pre_metadata$scaled_age <- round(rescale(all_pre_metadata$age), digits = 2)
 
 
+hist(all_pre_metadata$age)
+hist(all_pre_metadata$scaled_age)
 
 # splicing data
 all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
@@ -87,6 +92,61 @@ args_7<- list(formula = y ~  age_class + sex  + (1 + age_class|study) +(1|partic
 
 args_8 <- list(formula = y ~  age_class + sex  + (1|study) +(1|participant), 
               family = glmmTMB::beta_family())
+
+
+
+args <- list(formula = y ~  scaled_age  + (1|study) +(1|participant), 
+             family = glmmTMB::beta_family())
+
+
+
+model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                arguments = args,
+                data = all_pre_splice_reordered,
+                metadata = all_pre_metadata,
+                samplename = "seq_sample_id",
+                summary_fun = sum_fun,
+                eval_fun = eval_mod,
+                exported = list(),
+                save_models = FALSE,
+                return_models = FALSE,
+                # subset = 1:10,
+                cores = ncores-2)
+
+
+model$summaries
+
+model$summaries$ENST00000023939.8_6_20
+
+
+
+excl<- names(which(model$summaries == "NULL"))
+geneids <- names(which(model$summaries != "NULL"))
+
+#Remove all that have output NULL
+
+
+
+mod_sum <- bind_rows(within(model$summaries, rm(excl))) %>%
+  mutate(target = rep(geneids, each = 2)) %>%
+ subset(coef != "(Intercept)")  %>%
+  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+log2fc = Estimate/log(2),
+fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))
+
+
+
+mod_eval <- bind_rows(within(model$evaluations, rm(excl)))%>%
+  mutate(target = geneids)
+
+
+model_cont <- mod_sum %>%
+  inner_join(mod_eval, by = "target") %>%
+  filter(adj.p <= 0.05)
+
+hist(model_cont_1$Pr...z..)
+
+
 
 
 
