@@ -15,6 +15,9 @@ source("R/Trainome_functions.R")
 # Load the full metadata 
 all_full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
 
+# Standardize the age by scaling them 0 to 1
+
+all_full_metadata$scaled_age <- round(rescale(all_full_metadata$age), digits = 2)
 # Load full splice data
 all_splice_df <- readRDS("data_new/processed_data/all_splice_data.RDS")
 

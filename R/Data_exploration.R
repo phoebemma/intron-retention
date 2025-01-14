@@ -7,6 +7,7 @@ library(tidyverse)
 library(clusterProfiler)
 library(org.Hs.eg.db)
 library(ggpubr)
+library(cowplot)
 
 
 # metadata
@@ -57,6 +58,11 @@ range(SRP102542_metadata$age)
 Alpha_Omega_metadata <- readRDS("data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS")
 length(unique(Alpha_Omega_metadata$seq_sample_id))
 
+# Relief
+
+Relief_metadata <- readRDS("data_new/Pre_Exercise/Relief_PreExc_metadata.RDS")
+length(unique(Relief_metadata$seq_sample_id))
+
 length(unique(Alpha_Omega_metadata$participant))
 range(Alpha_Omega_metadata$age)
 # Merge all in one
@@ -64,6 +70,7 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
   rbind(Contratrain_metadata) %>%
   rbind(Alpha_Omega_metadata) %>%
   rbind(SRP102542_metadata) %>%
+  rbind(Relief_metadata) %>%
   #Copd and volume and SRP102542 have age data in decimal
   mutate(across(c("age"), round, 0)) %>%
   # Create age groups where group 1 = those 20 and below
@@ -148,13 +155,14 @@ contratrain_data <- readRDS("data_new/Pre_Exercise/ct_PreExc_splicing_data.RDS")
 SRP102542_data <- readRDS("data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS")
 
 Alpha_Omega_data <- readRDS("data_new/Pre_Exercise/Alpha_Omega_PreExc_splicing_data.RDS")
-
+Relief_data <- readRDS("data_new/Pre_Exercise/Relief_PreExc_splicing_data.RDS")
 
 all_pre_splice <- copd_data%>%
   inner_join(volume_data, by = "transcript_ID") %>%
   inner_join(contratrain_data, by = "transcript_ID")%>%
   inner_join(SRP102542_data, by = "transcript_ID") %>%
   inner_join(Alpha_Omega_data, by = "transcript_ID") %>%
+  inner_join(Relief_data, by = "transcript_ID") %>%
   drop_na()
 
 
@@ -183,10 +191,10 @@ long_df %>%
 ggsave("Figures/age_group.png", bg = "white")
 
 long_df %>%
-  group_by(age, sex)%>%
+  group_by(age, study)%>%
   summarise(avg = mean(SE)) %>%
   ggplot(aes(age, avg))+
-  geom_point(mapping = aes(colour = sex ,  size = 5))+ 
+  geom_point(mapping = aes(colour = study ,  size = 5))+ 
   geom_smooth()+
   ggtitle("Relationship between age, gender and splicing efficiency") +
   ylab(" Average splicing efficiency")+
@@ -203,18 +211,18 @@ saveRDS(all_pre_splice, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 # Are there sex-specific intron retentions
 
-sex_spec <- all_pre_splice %>%
-  pivot_longer(names_to = "seq_sample_id",
-               values_to = "SE",
-               cols = -(transcript_ID))%>%
-  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
-  summarise(median = median(SE), 
-            min = min(SE), 
-            max = max(SE),
-            s = sd(SE), 
-            .by = c(sex,  transcript_ID)) %>%
-  filter( max < 0.5) %>%
-  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") 
+# sex_spec <- all_pre_splice %>%
+#   pivot_longer(names_to = "seq_sample_id",
+#                values_to = "SE",
+#                cols = -(transcript_ID))%>%
+#   inner_join(all_pre_metadata, by = "seq_sample_id") %>%
+#   summarise(median = median(SE), 
+#             min = min(SE), 
+#             max = max(SE),
+#             s = sd(SE), 
+#             .by = c(sex,  transcript_ID)) %>%
+#   filter( max < 0.5) %>%
+#   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") 
 hist(sex_spec$s)
 unique(sex_spec$transcript_ID)
 # Are there specific introns that charactaristically have low splicing efficiency
@@ -251,6 +259,8 @@ low_SE_grouped <- all_pre_splice %>%
             range = max(SE) - min(SE)) %>%
   filter(max <= 0.6) %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+# confirm if they arent same with that above
+length(unique(low_SE_grouped$transcript_ID))
 
 High_SE <- all_pre_splice %>%
   pivot_longer(names_to = "seq_sample_id",
@@ -367,12 +377,14 @@ A_Omega_metadata <- readRDS("data_new/processed_data/Alpha_Omega_metadata.RDS")%
 unique(A_Omega_metadata$time)
 
 
+Relief_full_meta <- readRDS("data_new/processed_data/Relief_metadata.RDS")
 # Merge them all in one
 
 all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
   rbind(ct_metadata) %>%
   rbind(A_Omega_metadata) %>%
   rbind(SRP102542_metadata) %>%
+  rbind(Relief_full_meta) %>%
   
   mutate(across(c("age"), round, 0)) %>%
   
@@ -409,6 +421,7 @@ vol_splice_df <- readRDS("data_new/processed_data/volume_splicing_data.RDS")
 ct_splice_df <- readRDS("data_new/processed_data/contratrain_splicing_data.RDS")
 SRP102542_splice_df <- readRDS("data_new/processed_data/SRP102542_splicing_data.RDS")
 AOD_splice_df <- readRDS("data_new/processed_data/Alpha_Omega_splicing_data.RDS")
+Relief_full_splice <- readRDS("data_new/processed_data/Relief_splicing_data")
 
 all_splice_df <-copd_splice_df  %>%
   inner_join(vol_splice_df, by = "transcript_ID") %>%

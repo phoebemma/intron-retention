@@ -56,42 +56,138 @@ rownames(all_pre_metadata)
 # convert the 1.0 to 0.999. This is becasue beta-model accepts only values between 0 and one
 all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
-# This argument models for age as a continous variable
+# This argumentwould estimate the intercept, and the slope seperately
+# uncorrelated random intercept and random slope within group
 
-arg_1<- list(formula = y ~  age*sex + (1|study) +(1|participant), 
-            family = glmmTMB::beta_family())
-
-# Argument for age group and interaction with sex
-arg_2<- list(formula = y ~  group*sex + (1|study) +(1|participant), 
-            family = glmmTMB::beta_family())
- 
-
-# Argument for age group alone
-arg_3<- list(formula = y ~  group + (1|study) +(1|participant), 
+arg_1<- list(formula = y ~  scaled_age + (1|study) + (scaled_age+0|study) +(1|participant), 
             family = glmmTMB::beta_family())
 
 
-# Model age and sex without looking at interaction
+model_1 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                 arguments = arg_1,
+                 data = all_pre_splice_reordered,
+                 metadata = all_pre_metadata,
+                 samplename = "seq_sample_id",
+                 summary_fun = sum_fun,
+                 eval_fun = eval_mod,
+                 exported = list(),
+                 save_models = FALSE,
+                 return_models = FALSE,
+                 # subset = 1:10,
+                 cores = ncores-2)
 
-arg_4<- list(formula = y ~  age+sex + (1|study) +(1|participant), 
+
+model_1$summaries
+
+model_1$summaries$ENST00000023939.8_6_20
+
+
+
+excl_1<- names(which(model_1$summaries == "NULL"))
+geneids_1 <- names(which(model_1$summaries != "NULL"))
+
+#Remove all that have output NULL
+
+
+
+mod_sum_1 <- bind_rows(within(model_1$summaries, rm(excl_1))) %>%
+  mutate(target = rep(geneids_1, each = 2)) %>%
+   subset(coef != "(Intercept)")  %>%
+  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))
+
+
+
+mod_eval_1 <- bind_rows(within(model_1$evaluations, rm(excl_1)))%>%
+  mutate(target = geneids_1)
+
+
+model_cont_1 <- mod_sum_1 %>%
+  inner_join(mod_eval_1, by = "target") %>%
+  filter(Pr...z.. <= 0.05)
+
+hist(model_cont_1$Pr...z..)
+
+
+# Estimate the among-study variation as a fixed effect
+arg_2<- list(formula = y ~  scaled_age+ (1 |study) + (scaled_age|study) +(1|participant),
             family = glmmTMB::beta_family())
 
 
-arg_5<- list(formula = y ~  group + sex  + (1|study) +(1|participant), 
-            family = glmmTMB::beta_family())
 
 
 
-args_6<- list(formula = y ~  group + sex  + (1 + group|study) +(1|participant), 
-             family = glmmTMB::beta_family())
+model_2 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                   arguments = arg_2,
+                   data = all_pre_splice_reordered,
+                   metadata = all_pre_metadata,
+                   samplename = "seq_sample_id",
+                   summary_fun = sum_fun,
+                   eval_fun = eval_mod,
+                   exported = list(),
+                   save_models = FALSE,
+                   return_models = FALSE,
+                   # subset = 1:10,
+                   cores = ncores-2)
+
+model_2$summaries
+
+model_2$summaries$ENST00000023939.8_6_20
 
 
-args_7<- list(formula = y ~  age_class + sex  + (1 + age_class|study) +(1|participant), 
-             family = glmmTMB::beta_family())
+
+excl_2<- names(which(model_2$summaries == "NULL"))
+geneids_2 <- names(which(model_2$summaries != "NULL"))
+
+#Remove all that have output NULL
 
 
-args_8 <- list(formula = y ~  age_class + sex  + (1|study) +(1|participant), 
-              family = glmmTMB::beta_family())
+
+mod_sum_2 <- bind_rows(within(model_2$summaries, rm(excl_2))) %>%
+  mutate(target = rep(geneids_2, each = 2)) %>%
+  subset(coef != "(Intercept)")  %>%
+  mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))
+
+
+
+mod_eval_2 <- bind_rows(within(model_2$evaluations, rm(excl_2)))%>%
+  mutate(target = geneids_2)
+
+
+model_cont_2 <- mod_sum_2 %>%
+  inner_join(mod_eval_2, by = "target") %>%
+  filter(Pr...z.. <= 0.05)
+
+hist(model_cont_1$Pr...z..)
+# # Argument for age group alone
+# arg_3<- list(formula = y ~  group + (1|study) +(1|participant), 
+#             family = glmmTMB::beta_family())
+# 
+# 
+# # Model age and sex without looking at interaction
+# 
+# arg_4<- list(formula = y ~  age+sex + (1|study) +(1|participant), 
+#             family = glmmTMB::beta_family())
+# 
+# 
+# arg_5<- list(formula = y ~  group + sex  + (1|study) +(1|participant), 
+#             family = glmmTMB::beta_family())
+# 
+# 
+# 
+# args_6<- list(formula = y ~  group + sex  + (1 + group|study) +(1|participant), 
+#              family = glmmTMB::beta_family())
+# 
+# 
+# args_7<- list(formula = y ~  age_class + sex  + (1 + age_class|study) +(1|participant), 
+#              family = glmmTMB::beta_family())
+# 
+# 
+# args_8 <- list(formula = y ~  age_class + sex  + (1|study) +(1|participant), 
+#               family = glmmTMB::beta_family())
 
 
 
@@ -144,10 +240,10 @@ model_cont <- mod_sum %>%
   inner_join(mod_eval, by = "target") %>%
   filter(adj.p <= 0.05)
 
-hist(model_cont_1$Pr...z..)
+hist(model_cont$Pr...z..)
 
 
-
+saveRDS(model_cont, "data_new/models/scaled_age_diff_intercetp_model.RDS")
 
 
 model_1 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,

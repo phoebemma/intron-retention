@@ -138,7 +138,7 @@ The characteristics of the genes containing the differntially spliced introns we
 
 To indentify introns with characteristically low splicing efficiency , we filtered the dataset for introns whose splicing efficiency across all pre-exercise samples have a maximum splicing efficiency of 0.4 . six introns had average SE below 0.6 . Table 3 contains the list of the introns while Figure 2 contains the gene ontology of the genes containing the introns . 336 introns of 260 genes were perfectly spliced across all datasets. The GO analyses of their biological processes reveal that they are physiologically relevent to the skeletal muscle. The results suggest that the different age groups responded differently to RT, with the most diverse result obtained from those above 70, and those between 20 to 30
 
-At baseline, the splicing efficiency of 25597 introns were captured across all the samples in the data. of the 336 ds introns at baseline, only 49 were captured in the full dataset in all samples.
+At baseline, the splicing efficiency of 25589 introns were captured across all the samples in the data. of the 336 ds introns at baseline, only 49 were captured in the full dataset in all samples.
 
 When both post and preexercise data were included, 8906 introns were captured across all datasets
 
