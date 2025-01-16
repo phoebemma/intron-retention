@@ -1,0 +1,369 @@
+---
+title: "Beta regression simulations"
+format: typst
+bibliography: resources/extra-bibliography.bib
+bibliographystyle: "the-lancet"
+editor_options: 
+  chunk_output_type: console
+---
+
+## The Beta distribution
+
+The Beta distribution is parameterized by $\alpha$ and $\beta$, called shape parameters. These are positive numbers and related to the central tendency $\mu$ and inverse dispersion (or precision [@douma2019]), $\phi$ of the distribution:
+
+$$
+\begin{align}
+\alpha &= \mu \times \phi \\
+\beta &= (1 - \mu) \times \phi
+\end{align}
+$$
+
+$\mu$ is modelled on the logit scale where $\eta$ is the linear predictor. To get $\mu$ from $\eta$ we apply the inverse logit transformation:
+
+$$\mu = \frac{\operatorname{exp}(\eta)}{1+\operatorname{exp}(\eta)}$$
+
+The inverse dispersion parameter $\phi$ is modelled on the log scale:
+
+$$\phi = \operatorname{exp}(1/\sigma)$$ To simulate values from the beta distribution we can use `rbeta()`, e.g.:
+
+```{r}
+#| message: false
+#| warning: false
+
+
+library(tidyverse)
+
+y <- rbeta(100, 2, 5)
+
+
+data.frame(y) |>
+  ggplot(aes(y)) + geom_histogram()
+
+```
+
+The mean of the Beta distribution ($\mu$) is related to the linear predictor, $\eta$, as shown below.
+
+```{r}
+eta <- seq(from = -6, to = 6, by = 0.1)
+
+data.frame(eta, mu = plogis(eta)) |>
+  ggplot(aes(eta, mu)) + geom_line()
+```
+
+## Simulating beta-distributed data
+
+In our study we want to explore the effect of age (a continuous variable) and training status (a factor variable) on the proportion of retained introns (IR; $\text{IR} \in [0,1]$).
+
+$$
+\begin{align}
+\text{IR} &\sim \text{Beta}(\alpha, \beta) \\
+\alpha &= \mu \times \phi \\
+\beta &= (1 - \mu) \times \phi \\
+\mu &= \frac{\operatorname{exp}(\eta)}{1+\operatorname{exp}(\eta)} \\
+\phi &= \operatorname{exp}(1/\sigma) \\
+\eta &= \beta_0 + \beta_1 \times \text{age} + \beta_2 \times \text{training} \\
+\sigma &= 2
+\end{align}
+$$
+
+A simulation function is constructed as
+
+```{r}
+ir_sim1 <- function(beta0, beta1, beta2, sigma, age, training) {
+  
+  n <- length(age)
+  eta <- beta0 + beta1 * age + beta2 * training
+  
+  phi <- exp(sigma)
+  mu <- exp(eta) / (1 + exp(eta))
+  
+  alpha <- mu * phi
+  beta <- (1 - mu) * phi
+  
+  y <- rbeta(n, alpha, beta)
+  
+  y
+}
+```
+
+The raw data from the simulation function produces outcome on the scale $y\in[0,1]$ based on the parameters for the linear predictor of $\eta$.
+
+```{r}
+## Test the function 
+
+
+
+Age <- runif(500)
+Training <- rep(c(0,1), each = 250)
+
+
+y <- ir_sim1(beta0 = 3, beta1 = -6, beta2 = 4, sigma = 0.001,  age = Age, training = Training)
+
+dat0 <- data.frame(Age, Training, y) 
+
+dat0 |>
+  ggplot(aes(Age, y, color = as.factor(Training))) + 
+  geom_point()
+
+
+```
+
+The `rbeta` function returns values in the interval $[0,1]$ including boudaries (0, and 1). However, modelling with the `beta_family` distribution does not allow for boundary values (0,1). We have to compress the data prior to fitting.
+
+```{r}
+
+
+compress <- function(x, e = 10^-4, additative = TRUE) {
+  
+  n <- length(x)
+  
+  if(additative) {
+    xout <- x * (1 - 2*e) + e
+  } else {
+    xout <- (x * (n - 1) + 0.5) / n
+  }
+  
+  xout
+  
+}
+
+
+dat0$y2 <- compress(dat0$y)
+
+
+
+library(glmmTMB)
+
+
+m <- glmmTMB(y2 ~ Age + Training, data = dat0, 
+             family = "beta_family")
+
+
+summary(m)
+
+
+
+```
+
+The simulation function together with compression seems to return a data sets that we are able to model. In the construction of the parameters of the Beta distribution ($\alpha$ and $\beta$), the dispersion parameter $\phi$ is of importance. We will likely not get the coefficients from $\eta$ back from the model due to $\phi$. To explore the effect of $\phi$:
+
+```{r}
+
+sigmas <- seq(from = 0.1, to = 10, by = 0.7)
+Age <- runif(500)
+Training <- rep(c(0,1), each = 250)
+
+results <- list()
+
+
+for(i in seq_along(sigmas)) {
+  
+  # Simulate data
+  y <- ir_sim1(beta0 = 3, beta1 = -6, beta2 = 4, sigma = sigmas[i],  age = Age, training = Training)
+
+  dat_sim <- data.frame(Age, Training, y) 
+  
+  dat_sim$y2 <- compress(dat_sim$y)
+  
+  # Fit model
+  m <- glmmTMB(y2 ~ Age + Training, data = dat_sim, 
+             family = "beta_family")
+
+  results[[i]] <- data.frame(param = c("b0", "b1", "b2"), 
+             coef = fixef(m)$cond,
+             sigma = sigmas[i],
+             row.names = NULL)
+  
+}
+
+results <- bind_rows(results) 
+
+
+results |>
+  mutate(eta_beta = rep(c('beta[0]*" = 3"',
+                          'beta[1]*" = -6"', 
+                          'beta[2]*" = 4"'), length.out = length(sigmas) * 3)) |>
+  
+  ggplot(aes(sigma, coef)) + geom_point() + 
+  facet_wrap(~ eta_beta, labeller = label_parsed)
+  
+
+
+
+```
+
+As $\phi$ increases, the precision increases. This means that we should think about $\sigma$ in the simulation as being specified as $1/\sigma$. A large $\sigma$ will result in small precision (and larger variation in the coefficients).
+
+## Multilevel Beta
+
+How can we interpret coefficients in the multilevel version of the Beta model?
+
+Interpretation of our data will benefit from interpretation using a multilevel model. Data comes from a number of different studies, with multiple samples from participants in each study.
+
+```{r}
+
+# beta0, global intercept
+# beta1, global slope for age
+# beta2, global training effect
+# sigma0/sigma1/sigma2, SD of global effects between studies
+# sigma_participant, SD of between participant intercepts
+# sigma, "residual" variation should be entered as precision 1/sigma
+# age/training/study/participants, design variables
+#
+#
+# returns a vector of simulated IR values based on the design variables.
+ir_sim2 <- function(beta0 = 3, 
+                    beta1 = -3, 
+                    beta2 = 3, 
+                    sigma0 = 1, 
+                    sigma1 = 1, 
+                    sigma2 = 1, 
+                    sigma = 1/0.5, 
+                    sigma_participant = 1,
+                    age = c(1, 2, 1, 2), 
+                    training = c(0,0,0,0), 
+                    study = c(1, 2, 3, 4), 
+                    participant = c(1, 2, 4, 5)) {
+  
+  # Save n observations
+  n <- length(participant)
+  # Check that all design variables are of equal length
+  if(length(unique(lengths(list(participant, study, training, age)))) != 1) stop("All design variables (age, training, study, participant) must be of the same length.") 
+   
+  
+  # List all studies
+  studies <- unique(study)
+  
+  ## Draw intercepts per study
+  beta0s <- rnorm(length(studies), beta0, sigma0)
+  
+  ## Draw age-slopes per study
+  beta1s <- rnorm(length(studies), beta1, sigma1)
+  
+  ## Draw training slopes per study
+  beta2s <- rnorm(length(studies), beta2, sigma2)
+  
+  ## List all participants
+  participants <- unique(paste0(participant, "_", study))
+  
+  ## Draw intercept per participant
+  b0s <- rnorm(length(participants), 0, sigma_participant) 
+  
+  # Combine all drawn values
+  
+  partdat <- data.frame(participant_study = participants, 
+                     b0 = b0s) |>
+    tidyr::separate(participant_study, 
+                    into = c("participant", "study"), 
+                    sep = "_")
+  
+  studydat <- data.frame(study = as.character(studies), 
+                      beta0 = beta0s, 
+                      beta1 = beta1s, 
+                      beta2 = beta2s)
+  
+  eta <- partdat |>
+    dplyr::inner_join(studydat, by = "study") |>
+    dplyr::inner_join(data.frame(age, 
+                                 training, 
+                                 study = as.character(study), 
+                                 participant = as.character(participant))) |>
+    dplyr::mutate(eta = beta0 + beta1 * age + beta2 * training + b0) |>
+    dplyr::pull(eta)
+  
+  phi <- exp(sigma)
+  mu <- exp(eta) / (1 + exp(eta))
+  
+  alpha <- mu * phi
+  beta <- (1 - mu) * phi
+  
+  y <- rbeta(n, alpha, beta)
+  
+  return(y)
+  
+}
+
+
+```
+
+### Multilevel Beta regression with simulated data
+
+```{r}
+
+design <- rbind(
+  # Study 1
+  data.frame(study = 1, 
+             participant = rep(1:20, each = 2), 
+             age = rep(runif(20, 0.5, 1), each = 2), 
+             training = c(0,1)), 
+  # Study 2
+   data.frame(study = 2, 
+             participant = rep(1:20, each = 2), 
+             age = rep(runif(20, 0.1, 0.6), each = 2), 
+             training = c(0,1)), 
+  # Study 3
+  data.frame(study = 3, 
+             participant = rep(1:20, each = 2), 
+             age = rep(runif(20, 0.1, 0.9), each = 2), 
+             training = c(0,1)), 
+  # Study 4
+    data.frame(study = 4, 
+             participant = rep(1:20, each = 2), 
+             age = rep(runif(20, 0.01, 0.3), each = 2), 
+             training = c(0,1)), 
+  # Study 5
+     data.frame(study = 5, 
+             participant = rep(1:20, each = 2), 
+             age = rep(runif(20, 0.01, 0.99), each = 2), 
+             training = c(0,1))
+  
+)
+
+
+```
+
+Next we simulate (and compress) the data.
+
+```{r}
+
+y <- ir_sim2(beta0 = 3, beta1 = -1.5, beta2 = 2, 
+             sigma0 = 2, sigma1 = 1, sigma2 = 2,
+        sigma = 1/0.5, 
+        sigma_participant = 0.66, 
+        age = design$age, 
+        training = design$training, 
+        participant = design$participant, 
+        study = design$study)
+
+
+dat1 <- design |>
+  mutate(participant = paste0(study, "_", participant))
+
+dat1$y <- compress(y)
+
+
+```
+
+```{r}
+
+dat1 |>
+  ggplot(aes(age, y, 
+             color = as.factor(study))) + 
+  geom_smooth(se = FALSE) +
+  geom_point()
+
+
+```
+
+```{r}
+
+m <- glmmTMB(y ~ age * training + 
+               (1|study) + (1|participant), 
+             data = dat1, 
+             family = beta_family() )
+
+
+summary(m)
+VarCorr(m)
+
+```

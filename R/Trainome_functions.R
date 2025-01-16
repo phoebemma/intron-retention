@@ -376,3 +376,9 @@ extract_splice_q <- function(folder){
   
   return(data.frame(comb.df))
 }
+
+# Create a mode  function.
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}

@@ -2,12 +2,12 @@
 title: "Impact of age and exercise on intron retention"
 format:
   docx:
-   reference-doc: custom_reference.docx
+   reference-doc: resources/custom_reference.docx
 author:
   - "Chidimma Phoebe Echebiri^a,b^, Kristian Lian^b^, H&aring;vard Hamarsland^b^, Knut Sindre M&#248;lmen^b^, Rafi Ahmad^a^, Stian Ellefsen^b^, and Daniel Hammarstr&ouml;m^b^"
 editor: visual
-csl: rna.csl
-bibliography: My_Library.bib
+csl: resources/rna.csl
+bibliography: resources/My_Library.bib
 target_journal: https://rnajournal.cshlp.org/ 
 prefer-html: true
 ---
@@ -48,27 +48,23 @@ Progressive resistance exercise training elicits a range of adaptive responses i
 
 ## Introduction
 
-Alternative splicing (AS) is a mechanism in mRNA processing in which protein-coding and non-protein coding parts of the RNA are alternatively skipped. It results in a transcriptomic and proteomic diversity that could determine an organism's ability to adapt to changes [@holly_changes_2013; @angarola_splicing_2021] ; a mechanism described as cellular plasticity. This diversity could lead to dysfunction if the biological system breaks down [@bhadra_alternative_2020] . Basically, alternative splicing regulates life and death in living beings [@schwerk_regulation_2005].
+Alternative splicing (AS) is a mechanism in mRNA processing in which protein-coding and non-protein coding parts of the RNA are alternatively skipped. It results in a transcriptomic and proteomic diversity that could determines cellular plasticity [@holly_changes_2013; @angarola_splicing_2021]. This diversity could lead to dysfunction if the biological system breaks down [@bhadra_alternative_2020] . Basically, alternative splicing regulates life and death in living beings [@schwerk_regulation_2005]. AS increases with age [@latorre_splicing_2017 ; @holly_changes_2013 ] as a result of alterations in the expression of splicing factors [@stegeman_transcriptional_2017] which is a resilience strategy aimed at counteracting aging-induced damages and loss of function [@ferrucci_energysplicing_2022 ; @ubaida-mohien_discovery_2019]. There are three broad types of AS; exon skipping, alternative use of splice sites, and intron retention [@nishida_tissue-_2015 ; @zheng_intron_2020 ]. Of specific interest to this study is intron retention.
 
-AS is tissue_specific and increases with age [@latorre_splicing_2017 ; @holly_changes_2013 ]as a result of alterations in the expression of splicing factors @stegeman_transcriptional_2017 which is a resilience strategy aimed at counteracting aging-induced damages and loss of function [@ferrucci_energysplicing_2022 ; @ubaida-mohien_discovery_2019]. There are three broad types of AS; exon skipping, alternative use of splice sites, and intron retention [@nishida_tissue-_2015 ; @zheng_intron_2020 ]. Of specific interest to this study is intron retention.
+Intron retention (IR) occurs when a full intron, or parts of an intron in a mature messenger RNA (mRNA) is retained during splicing, resulting in the presence of an unprocessed sequence in the mRNA. This occurs mostly at the 3\` end of transcripts[@wong_orchestrated_2013 ; @braunschweig_widespread_2014 ], and predominantly in transcripts that lack physiological relevance in cells and tissues they are detected in [@braunschweig_widespread_2014]. IR tends to increasingly occur in response to specific developmental cues and serve as a strategy for rapid mobilization of some mRNAs for protein translation [@ong_increased_2020]. It leads either to the degradation of the IR-containing transcripts through nonsense-mediated decay or the action of nucleases; or to frameshifts that cause the generation of alternative protein isoforms [@baralle_age-related_2023 ; @zheng_intron_2020 ; @mauger_targeted_2016; @wong_intron_2022 ; @monteuuis_changing_2019; @jacob2017 ]. Thus, it plays roles in gene regulation, normal physiology and disease conditions [@wong_intron_2016; @ge_functional_2014; @inoue_minor_2021]. IR is a potential biomarker or driver of the aging process [@baralle_age-related_2023 ; @adusumalli_increased_2019 ]. It is also linked to the inactivation of tumour supressor genes [@jung_intron_2015]
 
-Intron retention (IR) occurs when a full intron, or parts of an intron in a mature messenger RNA (mRNA) is retained during splicing, resulting in the presence of an unprocessed sequence in the mRNA. This leads either to the degradation of the IR-containing transcripts through nonsense-mediated decay or the action of nucleases; or to frameshifts that cause the generation of alternative protein isoforms [@baralle_age-related_2023 ; @zheng_intron_2020 ; @mauger_targeted_2016; @wong_intron_2022 ; @monteuuis_changing_2019; @jacob2017 ]. IR play different roles in gene regulation, normal physiology and disease conditions [@wong_intron_2016; @ge_functional_2014; @inoue_minor_2021]as it tends to increasingly occur in response to specific developmental cues and serve as a strategy for rapid mobilization of some mRNAs for protein translation [@ong_increased_2020] . IR affects about 80% of human protein-coding genes [@middleton_irfinder_2017 ; @braunschweig_widespread_2014 ] and is the main form of alternative splicing that is affected by age [@kodama_systematic_2024 ; @mariotti_deterioration_2022; @bhadra_alternative_2020] . IR occurs mostly at the 3\` end of transcripts[@wong_orchestrated_2013 ; @braunschweig_widespread_2014 ], and predominantly in transcripts that lack physiological relevance in cells and tissues they are detected in [@braunschweig_widespread_2014] . High IR levels reportedly correlate with the down-regulation of mRNA transcripts in myelocytes and granulocytes @wong_orchestrated_2013 .
+IR affects about 80% of human protein-coding genes [@middleton_irfinder_2017 ; @braunschweig_widespread_2014 ] and is the main form of alternative splicing that is affected by age [@kodama_systematic_2024 ; @mariotti_deterioration_2022; @bhadra_alternative_2020] . High IR levels reportedly correlate with the down-regulation of mRNA transcripts in myelocytes and granulocytes @wong_orchestrated_2013 . Short genes with high mRNA levels tend to be inefficiently spliced compared to long genes with high mRNA levels . That is, there is a positive correlation between gene length, expression level and splicing efficiency (SE) [@sanchez-escabias_co-transcriptional_2022 , @garcia-ruiz_splicing_2023, @saudemont_fitness_2017, @braunschweig_widespread_2014] .
 
-Short genes with high mRNA levels tend to be inefficiently spliced compared to long genes with high mRNA levels . That is, there is a positive correlation between gene length, expression level and splicing efficiency (SE) [@sanchez-escabias_co-transcriptional_2022 , @garcia-ruiz_splicing_2023, @saudemont_fitness_2017, @braunschweig_widespread_2014] .
-
-.Intron retention is often measured in terms of splicing efficiency which describes the amount of introns retained in a mature mRNA. Splicing efficiency is cell and tissue specific [@nishida_tissue-_2015; @baralle_age-related_2023] but tends to be similar between the introns of a gene [@sanchez-escabias_co-transcriptional_2022] . This suggests that a balanced study of intron retention should compare same introns in same genes and same tissues across the subjects of interest.
-
-Poor splicing efficiency has been linked to aging as well as human diseases like alpha thalassemia [@nelson_novel_2005] , inflammatory bowel disease [@hasler_alterations_2011] , neurodegenerative diseases [@sznajder_intron_2018; @ong_increased_2020 ] and an increased risk of certain cancers [@dvinge_widespread_2015 ; @inoue_minor_2021 ; @shah_towards_2022]. IR is a potential biomarker or driver of the aging process [@baralle_age-related_2023 ; @adusumalli_increased_2019 ]. It is also linked to the inactivation of tumour supressor genes [@jung2015] There is currently a gap in knowledge about how IR plays roles in normal or adaptive physiology, and, if or how a decline in splicing efficiency can be minimised or reversed.
+Intron retention is often measured in terms of splicing efficiency which describes the amount of introns retained in a mature mRNA. Splicing efficiency is cell and tissue specific [@nishida_tissue-_2015; @baralle_age-related_2023] but tends to be similar between the introns of a gene [@sanchez-escabias_co-transcriptional_2022] . This suggests that a balanced study of intron retention should compare same introns in same genes and same tissues across the subjects of interest. Poor splicing efficiency has been linked to aging as well as human diseases like alpha thalassemia [@nelson_novel_2005] , inflammatory bowel disease [@hasler_alterations_2011] , neurodegenerative diseases [@sznajder_intron_2018; @ong_increased_2020 ] and an increased risk of certain cancers [@dvinge_widespread_2015 ; @inoue_minor_2021 ; @shah_towards_2022]. There is currently a gap in knowledge about how IR plays roles in normal or adaptive physiology, and, if or how a decline in splicing efficiency can be minimized or reversed.
 
 ### Aging and progressive resistance exercise training
 
-Aging is the progressive transformation of young organisms into old ones. It involves changes across several physiological processes and is characterized by a progressive decline in most biological functions; including skeletal muscle and mass. Aging results in reduced vitality, increased risk of diseases and eventually death [@lopez-otin_hallmarks_2013; @keshavarz_targeting_2023 ; @gyenis_genome-wide_2023] . It is the greatest cause of disease and death worldwide [@schaum_ageing_2020]. Physiologically, aging is associated with the induction of different stress response pathways in different cells, tissues and species [@stegeman_transcriptional_2017; @welle_gene_2003]. Aging is often assessed using the concept of a "biological clock" that is organ, system and sex specific [@nie_distinct_2022].
+Aging; the progressive transformation of young organisms into old ones, involves changes across several physiological processes and is characterized by a progressive decline in most biological functions; including skeletal muscle and mass. Aging results in reduced vitality, increased risk of diseases and eventually death [@lopez-otin_hallmarks_2013; @keshavarz_targeting_2023 ; @gyenis_genome-wide_2023] . It is the greatest cause of disease and death worldwide [@schaum_ageing_2020]. Physiologically, aging is associated with the induction of different stress response pathways in different cells, tissues and species [@stegeman_transcriptional_2017; @welle_gene_2003]. Aging is often assessed using the concept of a "biological clock" that is organ, system and sex specific [@nie_distinct_2022].
 
-Aging and aging-like phenotypes are associated with increased splicing alterations [@angarola_splicing_2021 ; @garcia-ruiz_splicing_2023 ; @nishida_tissue-_2015 ; @mariotti_deterioration_2022; @stegeman_transcriptional_2017; @pabis_concerted_2024] .A significant part of aging-focused research is focused on interventions that could slow-down aging or its impacts.
+Aging and aging-like phenotypes are associated with increased splicing alterations [@angarola_splicing_2021 ; @garcia-ruiz_splicing_2023 ; @nishida_tissue-_2015 ; @mariotti_deterioration_2022; @stegeman_transcriptional_2017; @pabis_concerted_2024] . A significant part of aging-focused research is focused on interventions that could slow-down aging or its impacts.
 
 Physical exercise is an anti-aging intervention targeted at maintaining not just muscle health, but general well-being. It counteracts the effects of aging on mitochondrial health and can offset aging-related changes to the splicing machinery [@ubaida-mohien_physical_2019; @ubaida-mohien_unbiased_2022]; it also associated with lower risk of mortality @ekelund2019 . Progressive resistance exercise training (RT) describes the type of physical exercise training where the skeletal muscle is exercised against progressively increased types of resistance [@liu_progressive_2009]. The benefits of RT include improvements in , muscle strength, muscle mass, bone density, mRNA splicing [@kodama_systematic_2024] and several other major hallmarks of aging @garatachea2015 . RT could thus be a potent preventive or treatment strategy for improving aging-related functional disabilities associated with the aging skeletal muscle [@peterson_influence_2011 ; @kryger_resistance_2007 ; @lu_effects_2021 ]as well as for improving cardiorespiratory fitness in older persons [@smart2022]. A lot is currently known about adaptive responses to RT. However, intron retention in response to RT is relatively unexplored especially in healthy individuals of different age ranges . If increased intron retention is linked to disease conditions and RT correlates to improved health condition, itshould be important to investigate if the benefits of RT include improving upon splicing efficiency.
 
-This study is aimed at investigating differentially spliced introns with increasing age, and how about 12 weeks of RT can influence IR. It also hopes to determine the age range with the most abherrent splicing efficiency. It also hopes to generate more insights into the molecular mediators of response to RT
+This study is aimed at investigating differentially spliced introns with increasing age, and how about 12 weeks of RT can influence IR. This study will hopefully generate more insights into the molecular mediators of response to RT
 
 We hypothesize that since intron retention is a mechanism by which the cells modify gene expression in response to muscular stress, there would be age-related decline in splicing efficiency. We also hypothesize that 12 weeks of RT would improve upon age-related splicing efficincy while eliciting a unique set of retained introns in response to RT-induced muscular stress.
 
@@ -76,23 +72,29 @@ We hypothesize that since intron retention is a mechanism by which the cells mod
 
 #### Datasets
 
-Five datasets designed to investigate different aspects of response to RT are included in the study. Four of which are from the TrainOme group. One Publicly available datasets from @robinson2017 @kulkarni_metformin_2020 were obtained which fitted the criteria of paired-end Illumina RNA-Seq data from the *vastus lateralis* muscle of human subjects . The study protocols have been described elsewhere asIt contained both young and old participants. The characteristics of included studies are presented in table 1
+Six datasets designed to investigate different aspects of adaptive response to RT are included in the study. Five of these datasets are from the TrainOme group while one is a publicly available dataset from @robinson2017. The datasets were selected based on the criteria that they included paired-end Illumina RNA-Seq data from the *vastus lateralis* muscle of human subjects who performed at least 10 weeks of RT with samples collected at baseline and at the end of the program . Age, recorded as a numerical variable of all participants also needed to be included in the data. The study protocols of the different datasets are described elsewhere.
 
-+--------------+------------------------+----------------------+-------------------------------------+
-| Dataset name | Number of participants | Age range (in years) | Linked Publication                  |
-+==============+========================+======================+=====================================+
-| COPD         | 53                     | 56-79                | @molmen_chronic_2021                |
-+--------------+------------------------+----------------------+-------------------------------------+
-| Volume       | 25                     | 20-37                | @khan_increased_2020                |
-+--------------+------------------------+----------------------+-------------------------------------+
-| Contratrain  | 32                     | 19-35                | Hamarsland *et al* (in preparation) |
-+--------------+------------------------+----------------------+-------------------------------------+
-| Alpha/ Omega | 132                    | 23-60                | Hamarsland *et al* (in preparation) |
-+--------------+------------------------+----------------------+-------------------------------------+
-| SRP102542    | 52                     | 19-30 (Young cohort) | @robinson_enhanced_2017             |
-|              |                        |                      |                                     |
-|              |                        | 65-78 (Old cohort)   |                                     |
-+--------------+------------------------+----------------------+-------------------------------------+
+The characteristics of included studies are presented in **Table 1**
+
++--------------+------------------------+------------------------+------------------------+-------------------------------------+
+| Dataset name | Number of participants | Age range (in years)   | RT duration (in weeks) | Linked Publication                  |
++==============+========================+========================+========================+=====================================+
+| COPD         | 53                     | 56-79                  | 13                     | @molmen_chronic_2021                |
++--------------+------------------------+------------------------+------------------------+-------------------------------------+
+| Volume       | 25                     | 20-37                  | 12                     | @khan_increased_2020                |
++--------------+------------------------+------------------------+------------------------+-------------------------------------+
+| Contratrain  | 32                     | 19-35                  | 10                     | Hamarsland *et al* (in preparation) |
++--------------+------------------------+------------------------+------------------------+-------------------------------------+
+| Alpha/ Omega | 132                    | 23-60                  | 12                     | Hamarsland *et al* (in preparation) |
++--------------+------------------------+------------------------+------------------------+-------------------------------------+
+| SRP102542    | 52                     | 19-30 (Young cohort)   | 12                     | @robinson_enhanced_2017             |
+|              |                        |                        |                        |                                     |
+|              |                        | 65-78 (Old cohort)     |                        |                                     |
++--------------+------------------------+------------------------+------------------------+-------------------------------------+
+| Relief       | 30                     | 20 - 29 (Young cohort) | 12                     | Lian *et al* (in preparation)       |
+|              |                        |                        |                        |                                     |
+|              |                        | 72 - 93 (Old cohort)   |                        |                                     |
++--------------+------------------------+------------------------+------------------------+-------------------------------------+
 
 The benjamin and hochberg method @benjamini_controlling_1995 was used to control for false discovery rates
 
@@ -104,7 +106,7 @@ The quality of the reads were checked using FASTQC(v0.11.9). Using STAR (2.7.9a)
 
 #### Splicing data analyses on baseline data
 
-Participants were divided into seven groups based on their age ranges as shown in Table 2. Figure 1 shows the distribution of the baseline data by age_group, sex and study.Using baseline data alone, we sought to identify differentially spliced introns by age, sex and age group. For this, we built two generalized linear mixed beta regression models. One captured age as a continuous variable and analysed the interaction between age and sex as fixed effects, while study and participant were used as random effect having individual intercepts
+Figure 1 shows the distribution of the baseline data by age_group, sex and study.Using baseline data alone, we sought to identify differentially spliced introns by age, sex and age group. For this, we built two generalized linear mixed beta regression models. One captured age as a continuous variable and analysed the interaction between age and sex as fixed effects, while study and participant were used as random effect having individual intercepts
 
 The second model, used age as a categorical variable where the participants were grouped into several age ranges as shown in the table below. Similar to the first model, the interaction of age_group and sex was used as fixed effects,
 
@@ -136,9 +138,11 @@ The characteristics of the genes containing the differntially spliced introns we
 
 #### Identification of introns with characteristically low or high splicing efficiency
 
-To indentify introns with characteristically low splicing efficiency , we filtered the dataset for introns whose splicing efficiency across all pre-exercise samples have a maximum splicing efficiency of 0.4 . six introns had average SE below 0.6 . Table 3 contains the list of the introns while Figure 2 contains the gene ontology of the genes containing the introns . 336 introns of 260 genes were perfectly spliced across all datasets. The GO analyses of their biological processes reveal that they are physiologically relevent to the skeletal muscle. The results suggest that the different age groups responded differently to RT, with the most diverse result obtained from those above 70, and those between 20 to 30
+To identify introns with characteristically low splicing efficiency , we filtered the dataset for introns whose splicing efficiency across all 378 pre-exercise samples have a maximum total splicing efficiency of 0.2 . Six introns belonging to six different transcripts were shown to be completely retained in almost all sample, with maximum splicing efficiency in any sample being 0.2. That is to say, over 80% of the six introns were retained across all samples. The introns are as shown in **Table 2** and the gene ontology of the genes containing the introns are as sown in **Figure 2.** investigating the poorly spliced introns across age groups returned the same 6 introns. There were no group-specific complete intron retention.
 
-At baseline, the splicing efficiency of 25589 introns were captured across all the samples in the data. of the 336 ds introns at baseline, only 49 were captured in the full dataset in all samples.
+331 introns of 255 genes were perfectly spliced across all datasets. The GO analyses of their biological processes reveal that they are physiologically relevent to the skeletal muscle. The results suggest that the different age groups responded differently to RT, with the most diverse result obtained from those above 70, and those between 20 to 30
+
+At baseline, the splicing efficiency of 25589 introns were captured across all the.... number of samples in the data. of the 336 ds introns at baseline, only 49 were captured in the full dataset in all samples.
 
 When both post and preexercise data were included, 8906 introns were captured across all datasets
 

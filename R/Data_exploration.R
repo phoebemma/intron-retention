@@ -8,8 +8,10 @@ library(clusterProfiler)
 library(org.Hs.eg.db)
 library(ggpubr)
 library(cowplot)
+library(gridExtra)
+library(grid)
 
-
+source("R/Trainome_functions.R")
 # metadata
 #Load the metadata of the the datasets
 
@@ -57,14 +59,25 @@ range(SRP102542_metadata$age)
 
 Alpha_Omega_metadata <- readRDS("data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS")
 length(unique(Alpha_Omega_metadata$seq_sample_id))
+length(unique(Alpha_Omega_metadata$participant))
+range(Alpha_Omega_metadata$age)
 
 # Relief
 
 Relief_metadata <- readRDS("data_new/Pre_Exercise/Relief_PreExc_metadata.RDS")
 length(unique(Relief_metadata$seq_sample_id))
+length(unique(Relief_metadata$participant))
+hist(Relief_metadata$age)
 
-length(unique(Alpha_Omega_metadata$participant))
-range(Alpha_Omega_metadata$age)
+Relief_metadata %>%
+  filter(age < 30)%>%
+  print()
+
+
+Relief_metadata %>%
+  filter(age > 30)%>%
+  print()
+
 # Merge all in one
 all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
   rbind(Contratrain_metadata) %>%
@@ -84,17 +97,13 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
                            age > 40 & age <= 50 ~ ">40 & <=50",
                            age > 50 & age <= 60 ~ ">50 & <=60",
                            age > 60 & age <= 70 ~ ">60 & <=70",
-                           age > 70 ~ ">70"),
-         age_class = case_when(age <= 40 ~ "Young",
-                               age > 40 & age <= 60 ~ "Middle aged",
-                               age > 60 ~ "Old")) %>%
+                           age > 70  ~ "above 70")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
          group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
-                                          ">50 & <=60",">60 & <=70", ">70")),
-         age_class = factor(age_class, levels = c("Young","Middle aged", "Old" ))) 
+                                          ">50 & <=60",">60 & <=70", "above 70" ))) 
 unique(all_pre_metadata$sex)
 length(unique(all_pre_metadata$participant))
-unique(all_pre_metadata$age_class)
+unique(all_pre_metadata$group)
 
 all
 
@@ -108,14 +117,6 @@ a<- ggplot(all_pre_metadata, aes(group, fill = group)) +
   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
 
 # ggsave("Figures/Baseline_data.png")
-
-d <- ggplot(all_pre_metadata, aes(age_class, fill = age_class)) +
-  geom_bar()+
-  #  ggtitle("Distribution of baseline data")+
-  theme(plot.title = element_text(hjust = 0.5))+
-#  xlab("Age c of participants")+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
-
 
 
 b <- ggplot(all_pre_metadata, aes(study, fill = group)) +
@@ -133,10 +134,10 @@ c <- ggplot(all_pre_metadata, aes(sex, fill = group)) +
   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
 
 # ggsave("Figures/Baseline_data_by_gender.png")
-length(all_pre_metadata$participant)
 
-ggarrange(a ,b  , c , d, 
-          labels = c("A", "B", "C", "D"), 
+
+ggarrange(a ,b  , c ,  
+          labels = c("A", "B", "C"), 
           common.legend = T,
           align = "hv",
           hjust = -1,
@@ -233,16 +234,30 @@ low_SE <- all_pre_splice %>%
                cols = -(transcript_ID)) %>%
 #  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
   summarise(.by = transcript_ID, 
-            me = median(SE),
+            mode = getmode(SE),
             min = min(SE), 
             max = max(SE), 
-            mean = mean(SE),
-            q20 = quantile(SE, 0.2), 
-            range = max(SE) - min(SE)) %>%
-  filter(max <= 0.6) %>%
+            mean = mean(SE)
+           # q20 = quantile(SE, 0.2), 
+           #  range = max(SE) - min(SE)
+           ) %>%
+  filter(max <= 0.2) %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 length(unique(low_SE$transcript_ID))
+length
 hist(low_SE$q20)
+
+table_plot_low <- tableGrob(low_SE)
+
+# Open a PNG device
+pdf("Figures/low_se_ints.pdf")
+
+# Draw the table
+grid.draw(table_plot_low)
+
+# Close the pdf device
+dev.off()
+
 
 # Investigate introns with low SE across groups. 
 # Appears to be same introns that are low across all samples
@@ -252,7 +267,7 @@ low_SE_grouped <- all_pre_splice %>%
                cols = -(transcript_ID)) %>%
   inner_join(all_pre_metadata, by = "seq_sample_id") %>%
   summarise(.by = c(transcript_ID, group),
-            me = median(SE),
+            mode = getmode(SE),
             min = min(SE), 
             max = max(SE), 
             q20 = quantile(SE, 0.2), 
@@ -262,18 +277,92 @@ low_SE_grouped <- all_pre_splice %>%
 # confirm if they arent same with that above
 length(unique(low_SE_grouped$transcript_ID))
 
+
+
+
+
+
+
+# Get the perfectly spliced introns across all datasets
 High_SE <- all_pre_splice %>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
                cols = -(transcript_ID)) %>%
   summarise(.by = transcript_ID, 
-            me = median(SE),
+            mode = getmode(SE),
             min = min(SE), 
             max = max(SE)) %>%
   filter(min == 1) %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 
 length(unique(High_SE$transcript_ID))
+
+table_plot_high <- tableGrob(High_SE)
+
+# Open a PNG device
+pdf("Figures/high_se_ints_across_all.pdf", width = 8, height = 10)
+
+# Draw the table
+grid.draw(table_plot_high)
+
+# Close the pdf device
+dev.off()
+
+
+
+High_SE_grouped <- all_pre_splice %>%
+  pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID)) %>%
+  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
+  summarise(.by = c(transcript_ID, group),
+            mode = getmode(SE),
+            min = min(SE), 
+            max = max(SE)) %>%
+  filter(min == 1) %>%
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+# confirm if they arent same with that above
+# x <- as.character(unique(High_SE_grouped$group))
+length(unique(High_SE_grouped$transcript_ID))
+
+# Extract thosse for participants aged 20 and below
+# They are 19 participants in that age group
+twenty_and_below <- High_SE_grouped %>%
+  filter(group == "<=20")
+
+length(unique(twenty_and_below$transcript_ID))
+
+
+twentyOne_to_thirty <- High_SE_grouped %>%
+  filter(group == ">20 & <=30")
+
+length(unique(twentyOne_to_thirty$transcript_ID))
+
+
+thirtyOne_to_forty <- High_SE_grouped %>%
+  filter(group == ">30 & <=40")
+
+
+length(unique(thirtyOne_to_forty$transcript_ID))
+
+fourtyOne_to_fifty <- High_SE_grouped %>%
+  filter(group == ">40 & <=50")
+length(unique(fourtyOne_to_fifty$transcript_ID))
+
+
+fiftyOne_to_sixty <-  High_SE_grouped %>%
+  filter(group == ">50 & <=60")
+length(unique(fiftyOne_to_sixty$transcript_ID))
+
+sixtyOne_to_seventy <-  High_SE_grouped %>%
+  filter(group == ">60 & <=70")
+length(unique(sixtyOne_to_seventy$transcript_ID))
+
+above_70 <- High_SE_grouped %>%
+  filter(group == "above 70")
+length(unique(above_70$transcript_ID))
+
+
 
 # Get the ensemble annotation of genes
 ensembl <- useMart(biomart = "ENSEMBL_MART_ENSEMBL",
