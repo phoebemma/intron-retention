@@ -110,7 +110,7 @@ Figure 1 shows the distribution of the baseline data by age_group, sex and study
 
 The second model, used age as a categorical variable where the participants were grouped into several age ranges as shown in the table below. Similar to the first model, the interaction of age_group and sex was used as fixed effects,
 
-The differentially spliced introns based on age of preexercise data was filtered for adjusted pvalues at or below 0.05. Those that had an absolute log2fc of 1 were also filtered to determine those with significant differential expression
+The differentially spliced introns were defined as those with p values at or below 0.05 and log2Fc of above 0.5.
 
 As recommended by [@zhao2020] in scenerios where multiple datasets are combined, we used the class-specific strategy of quantile normalization to normalize the gene expression data.
 
@@ -142,7 +142,7 @@ To identify introns with characteristically low splicing efficiency , we filtere
 
 331 introns of 255 genes were perfectly spliced across all datasets. The GO analyses of their biological processes reveal that they are physiologically relevent to the skeletal muscle. The results suggest that the different age groups responded differently to RT, with the most diverse result obtained from those above 70, and those between 20 to 30
 
-At baseline, the splicing efficiency of 25589 introns were captured across all the.... number of samples in the data. of the 336 ds introns at baseline, only 49 were captured in the full dataset in all samples.
+At baseline, the splicing efficiency of 25589 introns were captured across all the.... number of samples in the data. Of the 25589 introns at baseline, 1022 introns from 925 transcripts were differentially spliced. At the gene level, these corresponded to 132 genes.
 
 When both post and preexercise data were included, 8906 introns were captured across all datasets
 

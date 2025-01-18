@@ -430,6 +430,27 @@ ggsave("Figures/GO_perfectly_spliced_introns.png")
 
 
 
+
+# check if there is a relationship between splicing efficiency and transcript length
+
+
+df <- long_df %>%
+  group_by(transcript_ID) %>%
+  summarize(avg = round(mean(SE), digits = 2)) %>%
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+  inner_join(gene_annotation, by = c("transcript_ID" = "ensembl_transcript_id_version"), copy = T) %>%
+  mutate(.by = external_transcript_name, 
+           SE_per_gene = mean(avg))
+
+
+
+plot(df$SE_per_gene, df$transcript_length)
+
+cor.test(df$SE_per_gene, df$transcript_length)
+
+
+
+cor.test(df$avg, df$transcript_length)
 # Explore what happens to those introns at post exercise
 
 #Load the full data of all types
@@ -516,7 +537,8 @@ all_splice_df <-copd_splice_df  %>%
   inner_join(vol_splice_df, by = "transcript_ID") %>%
   inner_join(ct_splice_df, by = "transcript_ID") %>%
   inner_join(AOD_splice_df, by = "transcript_ID") %>%
-  inner_join(SRP102542_splice_df, by = "transcript_ID") 
+  inner_join(SRP102542_splice_df, by = "transcript_ID") %>%
+  inner_join(Relief_full_splice, by = "transcript_ID")
 
 
 # Get the post exercise splicing data

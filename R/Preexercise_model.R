@@ -45,8 +45,6 @@ rownames(all_pre_metadata)
 
 # Check if everything matches except the transcript_id
  match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
-
-
 # invert the data to create a dataframe suitable for zero inflated analyses
 # splice_df_inverted <- all_pre_splice_reordered %>%
 #   mutate(across(X102PreExcVLR12:X134.subj8sample4, function(x)1-x))

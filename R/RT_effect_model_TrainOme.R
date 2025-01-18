@@ -23,8 +23,9 @@ all_splice_df <- readRDS("data_new/processed_data/all_splice_data.RDS")
 
 # Get the ds introns by group and sex without interaction
 # That proved to be the best performing model
-introns_of_int <- readRDS("data_new/models/filt_preExc_group_sex_no_int.RDS")%>%
+introns_of_int <- readRDS("data_new/models/filt_scaled_age_seperate_slope_intercept_model.RDS")%>%
   pull(target)
+
 
 
 full_splice_df <- all_splice_df[all_splice_df$transcript_ID %in% introns_of_int,]
@@ -32,7 +33,7 @@ full_splice_df <- all_splice_df[all_splice_df$transcript_ID %in% introns_of_int,
 # Check if everything matches except the transcript_id
 match(colnames(full_splice_df), all_full_metadata$seq_sample_id)
 
-full_splice_reordered <- full_splice_df[ , c("transcript_ID",all_full_metadata$seq_sample_id)]
+full_splice_reordered <- full_splice_df[ , c("transcript_ID", all_full_metadata$seq_sample_id)]
 
 # Check if everything matches except the transcript_id
 match(colnames(full_splice_reordered), all_full_metadata$seq_sample_id)
@@ -64,31 +65,41 @@ RT_impact_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
 RT_impact_model$summaries
 
 
-# missing <- names(which(RT_impact_model$summaries == "NULL"))
-# avail <- names(which(RT_impact_model$summaries != "NULL"))
+ missing <- names(which(RT_impact_model$summaries == "NULL"))
+ avail <- names(which(RT_impact_model$summaries != "NULL"))
 
 #Remove all that have output NULL
 
 
 
-mod_sum <- model_sum(RT_impact_model, 2)
+ mod_sum <- bind_rows(within(RT_impact_model$summaries, rm(missing))) %>%
+   mutate(target = rep(avail, each = 2)) %>%
+   subset(coef != "(Intercept)")  %>%
+   mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
+          log2fc = Estimate/log(2),
+          fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
+ 
+ 
+ 
+ mod_eval <- bind_rows(within(RT_impact_model$evaluations, rm(missing)))%>%
+   mutate(target = avail)
+ 
+ 
+ model_cont <- mod_sum %>%
+   inner_join(mod_eval, by = "target") # %>%
+# filter(Pr...z.. <= 0.05)
+ hist(model_cont$Estimate)
 
-
-
-mod_eval <- model_eval(RT_impact_model)
-
-
-model_cont <- mod_sum %>%
-  inner_join(mod_eval, by = "target")  %>%
-  filter(adj.p <= 0.05)
-
-
+saveRDS(model_cont, "data_new/models/RT_impact_model.RDS")
 
 
 # Evaluate the impact of RT on the full dataset
+all_full_metadata <- all_full_metadata %>%
+  filter((seq_sample_id %in% colnames(all_splice_df[,-1]))) %>%
+  print()
 
 
-all_splice_reordered <- all_splice_df[ , c("transcript_ID",all_full_metadata$seq_sample_id)]
+all_splice_reordered <- all_splice_df[, c("transcript_ID",all_full_metadata$seq_sample_id)]
 
 colnames(all_splice_reordered)
 rownames(all_pre_metadata)
@@ -99,7 +110,7 @@ match(colnames(all_splice_reordered), all_full_metadata$seq_sample_id)
 # convert the 1.0 to 0.999. This is becasue beta-model accepts only values between 0 and one
 all_splice_reordered[all_splice_reordered == 1 ] <- 0.999
 
-args<- list(formula = y ~  time + (1|study) +(1|participant), 
+args<- list(formula = y ~  scaled_age + time + (1|study) + (scaled_age+0|study) +(1|participant), 
             family = glmmTMB::beta_family())
 
 
@@ -126,7 +137,7 @@ avail <- names(which(RT_model$summaries != "NULL"))
 
 
 mod_sum <- bind_rows(within(RT_model$summaries, rm(missing))) %>%
-  mutate(target = rep(avail, each = 2)) %>%
+  mutate(target = rep(avail, each = 3)) %>%
   subset(coef != "(Intercept)")  %>%
    mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
  log2fc = Estimate/log(2),
@@ -144,7 +155,7 @@ model_cont <- mod_sum %>%
 
 hist(model_cont$Estimate)
 length(unique(model_cont$target))
-saveRDS(model_cont, "data_new/models/full_data_RT_model.RDS")
+saveRDS(model_cont, "data_new/models/full_data_RT_no_int_model.RDS")
 
 
 
@@ -155,7 +166,7 @@ saveRDS(model_cont, "data_new/models/full_data_RT_model.RDS")
 # Impact of age and exercise in one go
 
 
-args_full <-list(formula = y ~  group*time + sex + (1|study) +(1|participant), 
+args_full <-list(formula = y ~  scaled_age*time + (1|study) + (scaled_age+0|study) +(1|participant), 
                         family = glmmTMB::beta_family())
 
 
@@ -183,7 +194,7 @@ avail_full <- names(which(full_RT_model$summaries != "NULL"))
 
 
 mod_sum <- bind_rows(within(full_RT_model$summaries, rm(missing_full))) %>%
-  mutate(target = rep(avail_full, each = 15)) %>%
+  mutate(target = rep(avail_full, each = 4)) %>%
   subset(coef != "(Intercept)")  %>%
    mutate(.by = coef,
           adj.p = p.adjust(Pr...z.., method = "fdr"),
@@ -196,9 +207,10 @@ mod_eval <- bind_rows(within(full_RT_model$evaluations, rm(missing_full)))%>%
   mutate(target = avail_full)
 
 
+
 model_cont <- mod_sum %>%
-  inner_join(mod_eval, by = "target") # %>%
-#  filter(adj.p <= 0.05)
+  inner_join(mod_eval, by = "target")  %>%
+ filter(adj.p <= 0.05)
 
 length(unique(model_cont$target))
 hist(model_cont$Estimate)
@@ -209,7 +221,7 @@ model_cont %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
 
 unique(model_cont$coef)
-saveRDS(model_cont, "data_new/models/full_data_RT_and_age_model.RDS")
+saveRDS(model_cont, "data_new/models/full_data_RT_scaled_age_int_model.RDS")
 
 
 
