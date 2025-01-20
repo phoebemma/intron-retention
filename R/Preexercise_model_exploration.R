@@ -1,7 +1,12 @@
 library(dplyr)
 library(ggplot2)
-
-
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(tidyverse)
+library(ggpubr)
+library(cowplot)
+library(gridExtra)
+library(grid)
 
 # Load the primary pre-exercise model
 # This was built using the formula y ~  scaled_age + (1|study) + (scaled_age+0|study) +(1|participant)
@@ -11,7 +16,7 @@ colnames(Pre_group)
 unique(Pre_group$coef)
 
 filt_pre_group <- Pre_group %>%
-  filter(Pr...z.. <= 0.05 & fcthreshold == "s")
+  filter(Pr...z..<= 0.05 & fcthreshold == "s")
 
 
 
@@ -64,4 +69,181 @@ cor(filt$Estimate, filt$transcript_length)
 
 cor.test(filt$Estimate, filt$transcript_length)
 
+
+ego_df_mf <- enrichGO(gene = filt$ensembl_gene_id,
+                   keyType = "ENSEMBL",
+                   OrgDb = org.Hs.eg.db, 
+                   ont = "MF", 
+                   pAdjustMethod = "BH", 
+                   qvalueCutoff = 0.05, 
+                   readable = T)
+
+## Output results from GO analysis to a table
+ cluster_summary_mf <- data.frame(ego_df_mf)
+
+a <- dotplot(ego_df_mf,
+        
+        font.size = 8, title = "Enriched molecular functions in genes containing differentially spliced introns at baseline") +
+  theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
+
+
+ego_df_bp <- enrichGO(gene = filt$ensembl_gene_id,
+                      keyType = "ENSEMBL",
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "BP", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+cluster_summary_bp <- data.frame(ego_df_bp)
+b <- dotplot(ego_df_bp,
+        
+        font.size = 8, title = "Enriched biological functions in genes containing differentially spliced introns at baseline") +
+  theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
+
+
+
+
+ego_df_cc <- enrichGO(gene = filt$ensembl_gene_id,
+                      keyType = "ENSEMBL",
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "CC", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+cluster_summary_cc <- data.frame(ego_df_cc)
+c <- dotplot(ego_df_cc,
+        
+        font.size = 8, title = "Enriched cellular compartments in genes containing differentially spliced introns at baseline") +
+  theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
+
+
+ggarrange(a, b, c, )
+
+ggsave("Figures/DS_introns_at_baseline.png", bg = "white" ,  scale = 2)
+
+
+
+# Some of the models had positive estimates , while others had negative
+# That is, those that increase with each scaled age, and those that decrease. 
+
+# Apparently, a couple of introns improve with age
+
+improved_SE <- filt %>%
+  filter(Estimate > 0)
+
+decreased_SE <- filt %>%
+  filter(Estimate < 0)
+
+# investigate the enriched biological functions in the enriched versus decreased 
+
+
+ego_df_improved <- enrichGO(gene = improved_SE$ensembl_gene_id,
+                      keyType = "ENSEMBL",
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "BP", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+cluster_summary_improved <- data.frame(ego_df_improved)
+d <- dotplot(ego_df_improved,
+             
+             font.size = 8, title = "Enriched biological processes in genes with positive estimates at baseline") +
+  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 12))
+
+
+
+
+ego_df_decreased <- enrichGO(gene = decreased_SE$ensembl_gene_id,
+                            keyType = "ENSEMBL",
+                            OrgDb = org.Hs.eg.db, 
+                            ont = "BP", 
+                            pAdjustMethod = "BH", 
+                            qvalueCutoff = 0.05, 
+                            readable = T)
+
+cluster_summary_decreased <- data.frame(ego_df_decreased)
+e <- dotplot(ego_df_decreased,
+        
+        font.size = 8, title = "Enriched biological processes in genes with negative estimates at baseline") +
+  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 12))
+
+
+
+ego_df_improved <- enrichGO(gene = improved_SE$ensembl_gene_id,
+                            keyType = "ENSEMBL",
+                            OrgDb = org.Hs.eg.db, 
+                            ont = "MF", 
+                            pAdjustMethod = "BH", 
+                            qvalueCutoff = 0.05, 
+                            readable = T)
+
+cluster_summary_improved <- data.frame(ego_df_improved)
+f <- dotplot(ego_df_improved,
+             
+             font.size = 8, title = "Enriched molecular functions in genes with positive estimates at baseline") +
+  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 12))
+
+
+ego_df_decreased <- enrichGO(gene = decreased_SE$ensembl_gene_id,
+                             keyType = "ENSEMBL",
+                             OrgDb = org.Hs.eg.db, 
+                             ont = "MF", 
+                             pAdjustMethod = "BH", 
+                             qvalueCutoff = 0.05, 
+                             readable = T)
+
+cluster_summary_decreased <- data.frame(ego_df_decreased)
+g <- dotplot(ego_df_decreased,
+             
+             font.size = 8, title = "Enriched molecular functions in genes with negative estimates at baseline") +
+  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 12))
+
+
+
+
+
+
+
+ego_df_improved <- enrichGO(gene = improved_SE$ensembl_gene_id,
+                            keyType = "ENSEMBL",
+                            OrgDb = org.Hs.eg.db, 
+                            ont = "CC", 
+                            pAdjustMethod = "BH", 
+                            qvalueCutoff = 0.05, 
+                            readable = T)
+
+cluster_summary_improved <- data.frame(ego_df_improved)
+h <- dotplot(ego_df_improved,
+             
+             font.size = 8, title = "Enriched cellular_compartments in genes with positive estimates at baseline") +
+  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 12), axis.title.x = element_text(size = 12))
+
+
+
+
+ego_df_decreased <- enrichGO(gene = decreased_SE$ensembl_gene_id,
+                             keyType = "ENSEMBL",
+                             OrgDb = org.Hs.eg.db, 
+                             ont = "CC", 
+                             pAdjustMethod = "BH", 
+                             qvalueCutoff = 0.05, 
+                             readable = T)
+
+cluster_summary_decreased <- data.frame(ego_df_decreased)
+i <- dotplot(ego_df_decreased,
+             
+             font.size = 8, title = "Enriched cellular compartments in genes with negative estimates at baseline") +
+  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 12), axis.title.x = element_text(size = 12))
+
+
+
+ggarrange(d, e, f, g, h,i,
+          ncol = 2,
+          nrow = 3, 
+          legend = "none")
+
+ggsave("Figures/ds_introns_based_on_estimates.png", bg = "white" ,  scale = 2)
 

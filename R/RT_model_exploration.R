@@ -6,18 +6,12 @@ library(org.Hs.eg.db)
 library(clusterProfiler)
 
 # This model analyses the interaction between  the age_groups and RT, and sex
-model <- readRDS("data_new/models/full_data_RT_and_age_model.RDS") %>%
+model <- readRDS("data_new/models/full_data_RT_scaled_age_int_model.RDS") %>%
   # filter to only those with adjusted p values at or below 0.05
-  filter(adj.p <= 0.05)
+  filter(Pr...z..<= 0.05 )
 
 length(unique(model$target))
 
-# This model analyses only exercise and group
-model_RT <- readRDS("data_new/models/full_data_RT_model.RDS")%>%
-  filter(adj.p <= 0.05)
-length(unique(model_RT$target))
-hist(model_RT$Estimate)
-hist(model$Estimate)
 
 
 model %>%
@@ -25,29 +19,13 @@ model %>%
   geom_bar()+
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
 
-# This looked at interaction between sex and RT, as well as group and RT
-
-model_3 <- readRDS("data_new/models/full_data_RT_interction_group_sex_model.RDS")%>%
-  filter(adj.p <= 0.05)
-length(unique(model_3$target))
-unique(model_3$coef)
-
-model_3 %>%
-  ggplot(aes(x = coef)) +
-  geom_bar()+
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
 
 
-# filter the ds of 70 and above's interaction with time
-sev_above <- model_3 %>%
-  filter(coef == "group>70:timePostExc")%>%
-  # seperate it into the original format 
-  separate("target",  c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
-  select(transcript_ID,intron_ID )
+
 
 #hist(sev_above$Estimate)
 # Load the gene annotation extracted from Ensemble
-En_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
+gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
 
 
 # Extract the annotation 

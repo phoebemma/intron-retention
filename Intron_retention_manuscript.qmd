@@ -142,11 +142,17 @@ To identify introns with characteristically low splicing efficiency , we filtere
 
 331 introns of 255 genes were perfectly spliced across all datasets. The GO analyses of their biological processes reveal that they are physiologically relevent to the skeletal muscle. The results suggest that the different age groups responded differently to RT, with the most diverse result obtained from those above 70, and those between 20 to 30
 
-At baseline, the splicing efficiency of 25589 introns were captured across all the.... number of samples in the data. Of the 25589 introns at baseline, 1022 introns from 925 transcripts were differentially spliced. At the gene level, these corresponded to 132 genes.
+there was
+
+At baseline, the splicing efficiency of 25589 introns were captured across all the 378 samples in the data. Of the 25589 introns at baseline, 1022 introns from 925 transcripts were differentially spliced. At the gene level, these corresponded to 132 genes. We explored
 
 When both post and preexercise data were included, 8906 introns were captured across all datasets
 
 We measured intron retention as splicing efficiency using SpliceQ @demelocosta2021. mis-splicing occurs more in non-protein coding genes than in protein-coding genes @garcia-ruiz_splicing_2023, this disagrees with the results we obtained . We however take cognisance of the limitations in RNA-Seq's reported ability to correctly quantify non-coding RNAs @stokes_transcriptomics_2023.
+
+### Differentially spliced introns at baseline
+
+1022 introns were differentially spliced at baseline, based on age. OF which 718 has negative estimates while 304 had positive estimates . Gene ontology analyses reveal that the introns that tend to get poorly spliced with age tend to be related to skeletal muscle processes.
 
 @saudemont_fitness_2017 stipulated a mutation-selection-drift theory that suggests shorter, intron-poor and lowly expressed genes show a poorer splicing efficiency
 
