@@ -224,7 +224,7 @@ read_Rsem_genes <- function(file){
 #function to read Rsem isoform.results file
 read_Rsem_isoforms <- function(file){
   df <- readr::read_delim(file)
-  df <- df %>% select(transcript_id, effective_length, length, expected_count,)
+  df <- df %>% dplyr::select(transcript_id, effective_length, length, expected_count,)
   return(df)
 }
 
