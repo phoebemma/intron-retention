@@ -6,9 +6,9 @@ format:
 author:
   - "Chidimma Phoebe Echebiri^a,b^, Kristian Lian^b^, H&aring;vard Hamarsland^b^, Knut Sindre M&#248;lmen^b^, Rafi Ahmad^a^, Stian Ellefsen^b^, and Daniel Hammarstr&ouml;m^b^"
 editor: visual
-csl: resources/rna.csl
+csl: resources/journal-of-cell-science.csl
 bibliography: resources/My_Library.bib
-target_journal: https://rnajournal.cshlp.org/ 
+target_journal: https://journals.biologists.com/jcs
 prefer-html: true
 ---
 
