@@ -232,13 +232,66 @@ saveRDS(normalised_ct_counts, "data_new/gene_counts/cpm_normalised_contratrain_c
 
 
 
-
+# COPD
 
 
 Copd_counts <- extract_rsem_isoform_counts("data_new/gene_counts/COPD_RSEM_outputs_new/")
 
 # load COPD metadata
 copd_metadata <- readRDS("data_new/processed_data/copd_metadata.RDS")
+
+
+Copd <- Copd_counts %>% 
+  separate(transcript_id, c("transcript_id", "transcript_name"), sep = "_", extra = "merge") %>%
+  
+  # drop transcript_id, select transcripte_name and any of the sample names that match sample name in metadata
+  dplyr::select(transcript_id, all_of(copd_metadata$seq_sample_id))
+
+
+## Keep nonzero rows
+nonzero_copd <- Copd %>%
+  dplyr::filter(rowSums(Copd[,-1]) != 0)
+
+
+# Keep filtered genes (based on time)
+# time filtering assures that genes are kept that are expressed
+# in all times as that is the main comparing factor in subsequent 
+# models.
+
+filtered_copd <- nonzero_copd %>%
+  dplyr::filter(filterByExpr(nonzero_copd[,-1], 
+                             min.count = 1,
+                             #   min.total.count = 15,
+                             large.n = 10, 
+                             min.prop = 0.7,
+                             group = paste(copd_metadata$time)))  
+
+
+
+
+
+
+# Create dge lists and calculate norm factors
+dge_copd   <- DGEList(filtered_copd[,-1])
+
+
+dge_copd  <- calcNormFactors(dge_copd, method = "TMM")
+
+
+# get the normalised counts
+
+normalised_copd_counts <- as.data.frame(cpm(dge_copd, normalized.lib.sizes = T))
+
+normalised_copd_counts$transcript_ID <- filtered_copd$transcript_id
+
+# Make the transcript_ID the first column
+
+normalised_copd_counts <- normalised_copd_counts %>%
+  dplyr::select(transcript_ID, everything())
+
+
+saveRDS(normalised_copd_counts, "data_new/gene_counts/cpm_normalised_COPD_counts.RDS")
+
 
 
 
@@ -249,12 +302,167 @@ copd_metadata <- readRDS("data_new/processed_data/copd_metadata.RDS")
 
 Relief_counts <- extract_rsem_isoform_counts("data_new/gene_counts/Relief_RSEM_outputs/")
 
+
+# Load the Relief metadata
+Relief_metadata <- readRDS("data_new/processed_data/Relief_metadata.RDS")
+
+
+Relief <- Relief_counts %>% 
+  separate(transcript_id, c("transcript_id", "transcript_name"), sep = "_", extra = "merge") %>%
+  
+  # drop transcript_id, select transcripte_name and any of the sample names that match sample name in metadata
+  dplyr::select(transcript_id, all_of(Relief_metadata$seq_sample_id))
+
+
+## Keep nonzero rows
+nonzero_Relief <- Relief %>%
+  dplyr::filter(rowSums(Relief[,-1]) != 0)
+
+
+# Keep filtered genes (based on time)
+# time filtering assures that genes are kept that are expressed
+# in all times as that is the main comparing factor in subsequent 
+# models.
+
+filtered_Relief <- nonzero_Relief %>%
+  dplyr::filter(filterByExpr(nonzero_Relief[,-1], 
+                             min.count = 1,
+                             #   min.total.count = 15,
+                             large.n = 10, 
+                             min.prop = 0.7,
+                             group = paste(Relief_metadata$time)))  
+
+
+
+
+
+
+# Create dge lists and calculate norm factors
+dge_Relief   <- DGEList(filtered_Relief[,-1])
+
+
+dge_Relief  <- calcNormFactors(dge_Relief, method = "TMM")
+
+
+# get the normalised counts
+
+normalised_Relief_counts <- as.data.frame(cpm(dge_Relief, normalized.lib.sizes = T))
+
+normalised_Relief_counts$transcript_ID <- filtered_Relief$transcript_id
+
+# Make the transcript_ID the first column
+
+normalised_Relief_counts <- normalised_Relief_counts %>%
+  dplyr::select(transcript_ID, everything())
+
+
+saveRDS(normalised_Relief_counts, "data_new/gene_counts/cpm_normalised_Relief_counts.RDS")
+
+
+
+
+
+
+
+# SRP102542 data
+
 SRP102542_counts <- extract_rsem_isoform_counts("data_new/gene_counts/SRP102542_RSEM_outputs/")
 
 
 
 
+# Load the Relief metadata
+SRP102542_metadata <- readRDS("data_new/processed_data/SRP102542_metadata.RDS")
+
+
+SRP102542 <- SRP102542_counts %>% 
+  separate(transcript_id, c("transcript_id", "transcript_name"), sep = "_", extra = "merge") %>%
+  
+  # drop transcript_id, select transcripte_name and any of the sample names that match sample name in metadata
+  dplyr::select(transcript_id, all_of(SRP102542_metadata$seq_sample_id))
+
+
+## Keep nonzero rows
+nonzero_SRP102542 <- SRP102542 %>%
+  dplyr::filter(rowSums(SRP102542[,-1]) != 0)
+
+
+# Keep filtered genes (based on time)
+# time filtering assures that genes are kept that are expressed
+# in all times as that is the main comparing factor in subsequent 
+# models.
+
+filtered_SRP102542 <- nonzero_SRP102542 %>%
+  dplyr::filter(filterByExpr(nonzero_SRP102542[,-1], 
+                             min.count = 1,
+                             #   min.total.count = 15,
+                             large.n = 10, 
+                             min.prop = 0.7,
+                             group = paste(SRP102542_metadata$time)))  
 
 
 
 
+
+
+# Create dge lists and calculate norm factors
+dge_SRP102542   <- DGEList(filtered_SRP102542[,-1])
+
+
+dge_SRP102542  <- calcNormFactors(dge_SRP102542, method = "TMM")
+
+
+# get the normalised counts
+
+normalised_SRP102542_counts <- as.data.frame(cpm(dge_SRP102542, normalized.lib.sizes = T))
+
+normalised_SRP102542_counts$transcript_ID <- filtered_SRP102542$transcript_id
+
+# Make the transcript_ID the first column
+
+normalised_SRP102542_counts <- normalised_SRP102542_counts %>%
+  dplyr::select(transcript_ID, everything())
+
+
+saveRDS(normalised_SRP102542_counts, "data_new/gene_counts/cpm_normalised_SRP102542_counts.RDS")
+
+
+###### Batch effects correction
+ # Merge the normalised gene counts into one
+
+all_normalised_transcripts <- normalised_copd_counts %>%
+  full_join(normalised_vol_counts, by = "transcript_ID") %>%
+  full_join(normalised_ct_counts, by = "transcript_ID") %>%
+  full_join(normalised_ao_counts, by = "transcript_ID") %>%
+  full_join(normalised_SRP102542_counts, by = "transcript_ID") %>%
+  full_join(normalised_Relief_counts, by = "transcript_ID") %>%
+  drop_na() 
+  
+
+
+
+all_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
+
+# Check if everything matches except the transcript_id
+match(colnames(all_normalised_transcripts), all_metadata$seq_sample_id)
+
+all_transcripts_reordered <- all_normalised_transcripts[ , c("transcript_ID",all_metadata$seq_sample_id)] 
+
+all_transcripts_reordered[,-1] <- round(all_transcripts_reordered[,-1], 2)
+
+# recheck# recheckround()
+match(colnames(all_transcripts_reordered), all_metadata$seq_sample_id)
+
+saveRDS(all_transcripts_reordered, "data_new/gene_counts/all_normalised_counts.RDS")
+# all_transcripts_reordered <- readRDS("data_new/gene_counts/all_normalised_counts.RDS")
+ 
+ 
+# Define the batch, which in this case is the styd
+batch <- factor(all_metadata$study)
+
+# correct batch effect
+corrected_counts <- removeBatchEffect(all_transcripts_reordered[,-1], batch = batch, group = all_metadata$time)
+
+#boxplot(corrected_counts, main = "batch corrected data")
+
+saveRDS(corrected_counts, "data_new/gene_counts/batch_corrected_counts")
