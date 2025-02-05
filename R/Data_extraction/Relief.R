@@ -36,11 +36,11 @@ colnames(Relief_metadata)[colnames(Relief_metadata) == "subject"] <- "participan
 # relief_volume$participant <- as.character(relief_volume$participant)
 
 # Add study name
-Relief_metadata$study <- "Relief"
+Relief_metadata$study <- "ReLiEf"
 
 Relief_metadata <- Relief_metadata %>%
-  inner_join(relief_participants, by =  "participant") %>%
   inner_join(seq_df, by = "seq_id") %>%
+  inner_join(relief_participants, by =  "participant") %>%
   dplyr::select(study, participant, time_rep, age, sex, seq_sample_id) %>%
   #Extract leg column
   mutate( 

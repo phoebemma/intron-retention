@@ -80,15 +80,19 @@ Progressive resistance exercise training (RT) describes the type of physical exe
 
 ```
 
-#### Certain introns have characteristically poor or perfect splicing efficiency
+#### Some introns have characteristically poor or perfect splicing efficiency
 
-To investigate if there were introns having same splicing efficiency pattern across all baseline samples, we investigated those with poor splicing efficiency, as well as those with perfect splicing efficiency across all samples. To identify introns with characteristically low splicing efficiency , we filtered the baseline dataset for introns whose splicing efficiency across all baseline samples have a maximum total splicing efficiency of 0.2 . Six introns belonging to six different transcripts were shown to be almost completely retained in all sample, with maximum splicing efficiency in any sample being 0.2. That is, over 80% of the six introns were retained across all samples. The introns are as shown in **Table 1** **.** 5 of the 6 transcripts containing the poorly spliced introns are long non-coding RNAs without functional annotation on the org.Hs.eg.db database @manual databases . The other transcript containing the poorly spliced intron is an alternatively spliced transcript of the MEIOC gene that lacks a coding sequence (CDS).
+To investigate if there were introns having same splicing efficiency patterns across all baseline samples, we investigated those with poor splicing efficiency, as well as those with perfect splicing efficiency across all samples. To identify introns with characteristically low splicing efficiency , we filtered the baseline dataset for introns whose splicing efficiency across all baseline samples have a maximum total splicing efficiency of 0.2 . Six introns belonging to six different transcripts were shown to be almost completely retained in all sample, with maximum splicing efficiency in any sample being 0.2. That is, over 80% of the six introns were retained across all samples. The introns are as shown in **Table 1** **.** 5 of the 6 transcripts containing the poorly spliced introns are long non-coding RNAs without functional annotation on the org.Hs.eg.db database @manual databases . The other transcript containing the poorly spliced intron is an alternatively spliced transcript of the MEIOC gene that lacks a coding sequence (CDS).
 
-305 introns from 229 genes were perfectly spliced across all datasets. These genes were mostly protein_coding genes as can be seen in **Figure 1**. The GO analyses of their biological processes reveal that they are physiologically relevent to the skeletal muscle. The results suggest that the different age groups responded differently to RT, with the most diverse result obtained from those above 70, and those between 20 to 30
+305 introns from 229 genes were perfectly spliced across all datasets. These genes were mostly protein_coding genes as can be seen in **Figure 1**. These genes were enriched for biological processes that are physiologically relevent to the skeletal muscle. The results suggest that the different age groups responded differently to RT, with the most diverse result obtained from those above 70, and those between 20 to 30
 
 there was
 
-At baseline, the splicing efficiency of 25322 introns were captured across all the 367 samples in the data. Of the 25589 introns at baseline, 1022 introns from 925 transcripts were differentially spliced. At the gene level, these corresponded to 132 genes. We explored
+At baseline, the splicing efficiency of 25322 introns were captured across all the 422 baseline samples in the data. , 1022 introns from 925 transcripts were differentially spliced. At the gene level, these corresponded to 132 genes. We explored
+
+### Transcript length did not correlate to splicing efficiency
+
+To investigate if there was a correlation between transcript length and splicing efficiency at baseline, a pearson's product-moment correlation test was performed and a negligle correllation of -0.017 at a pvalue of 0.007 was found between the transcript length and splicing efficiency
 
 When both post and preexercise data were included, 8906 introns were captured across all datasets
 
@@ -122,25 +126,25 @@ ContraTrain (ClinicalTrial.gov Identifier NCT03795025)
 
 The characteristics of included studies are presented in **Table 1**
 
-+--------------+------------------------+------------------------+------------------------+-------------------------------------+
-| Dataset name | Number of participants | Age range (in years)   | RT duration (in weeks) | Linked Publication                  |
-+==============+========================+========================+========================+=====================================+
-| COPD         | 53                     | 56-79                  | 13                     | @molmen_chronic_2021                |
-+--------------+------------------------+------------------------+------------------------+-------------------------------------+
-| Volume       | 25                     | 20-37                  | 12                     | @khan_increased_2020                |
-+--------------+------------------------+------------------------+------------------------+-------------------------------------+
-| Contratrain  | 32                     | 19-35                  | 10                     | Hamarsland *et al* (in preparation) |
-+--------------+------------------------+------------------------+------------------------+-------------------------------------+
-| Alpha/ Omega | 132                    | 23-60                  | 12                     | Hamarsland *et al* (in preparation) |
-+--------------+------------------------+------------------------+------------------------+-------------------------------------+
-| SRP102542    | 52                     | 19-30 (Young cohort)   | 12                     | @robinson_enhanced_2017             |
-|              |                        |                        |                        |                                     |
-|              |                        | 65-78 (Old cohort)     |                        |                                     |
-+--------------+------------------------+------------------------+------------------------+-------------------------------------+
-| Relief       | 73                     | 20 - 29 (Young cohort) | 12                     | Lian *et al* (in preparation)       |
-|              |                        |                        |                        |                                     |
-|              |                        | 72 - 93 (Old cohort)   |                        |                                     |
-+--------------+------------------------+------------------------+------------------------+-------------------------------------+
++--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Dataset name | Number of participants. postexc in bracket | Age range (in years)   | RT duration (in weeks) | Linked Publication                  |
++==============+============================================+========================+========================+=====================================+
+| COPD         | 53 (53)                                    | 56-79                  | 13                     | @molmen_chronic_2021                |
++--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Volume       | 25 (25)                                    | 20-37                  | 12                     | @khan_increased_2020                |
++--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Contratrain  | 32 (26)                                    | 19-35                  | 10                     | Hamarsland *et al* (in preparation) |
++--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Alpha/ Omega | 143                                        | 23-60                  | 12                     | Hamarsland *et al* (in preparation) |
++--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| SRP102542    | 52                                         | 19-30 (Young cohort)   | 12                     | @robinson_enhanced_2017             |
+|              |                                            |                        |                        |                                     |
+|              |                                            | 65-78 (Old cohort)     |                        |                                     |
++--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Relief       | 73(66)                                     | 20 - 29 (Young cohort) | 12                     | Lian *et al* (in preparation)       |
+|              |                                            |                        |                        |                                     |
+|              |                                            | 72 - 93 (Old cohort)   |                        |                                     |
++--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
 
 The benjamin and hochberg method @benjamini_controlling_1995 was used to control for false discovery rates
 

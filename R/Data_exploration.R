@@ -20,10 +20,10 @@ source("R/Trainome_functions.R")
 #Copd 
 copd_metadata <- readRDS("data_new/Pre_Exercise/copd_preExc_metadata.RDS") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-unique(copd_metadata$time)
-colnames(copd_metadata)
-length(unique(copd_metadata$participant))
-length(unique(copd_metadata$seq_sample_id))
+# unique(copd_metadata$time)
+# colnames(copd_metadata)
+# length(unique(copd_metadata$participant))
+# length(unique(copd_metadata$seq_sample_id))
 
 
 #Volume
@@ -31,54 +31,41 @@ length(unique(copd_metadata$seq_sample_id))
 volume_metadata <- readRDS("data_new/Pre_Exercise/vol_preExc_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
 
-colnames(volume_metadata)
-unique(volume_metadata$time)
-length(unique(volume_metadata$participant))
-length(unique(volume_metadata$seq_sample_id))
+# colnames(volume_metadata)
+# unique(volume_metadata$time)
+# length(unique(volume_metadata$participant))
+# length(unique(volume_metadata$seq_sample_id))
 # Contratratrain
 Contratrain_metadata <- readRDS("data_new/Pre_Exercise/ct_PreExc_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-colnames(Contratrain_metadata)
-unique(Contratrain_metadata$sex)
-length(unique(Contratrain_metadata$participant))
-length(unique(Contratrain_metadata$seq_sample_id))
-range(Contratrain_metadata$age)
+# colnames(Contratrain_metadata)
+# unique(Contratrain_metadata$sex)
+# length(unique(Contratrain_metadata$participant))
+# length(unique(Contratrain_metadata$seq_sample_id))
+# range(Contratrain_metadata$age)
 
 # SRP102542
 SRP102542_metadata <- readRDS("data_new/Pre_Exercise/SRP102542_preExc_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-colnames(SRP102542_metadata)
-unique(SRP102542_metadata$sex)
-length(unique(SRP102542_metadata$participant))
-range(SRP102542_metadata$age)
 
-# SRP280348_metadata <- readRDS("data/preexercise_data/SRP280348_preExc_metadata.RDS")%>%
-#   select(study, participant, sex, time, seq_sample_id, age, age_group)
-# colnames(SRP280348_metadata)
-# unique(SRP280348_metadata$sex)
-# #
+# colnames(SRP102542_metadata)
+# unique(SRP102542_metadata$sex)
+# length(unique(SRP102542_metadata$participant))
+length(unique(SRP102542_metadata$seq_sample_id))
+# range(SRP102542_metadata$age)
 
 
+
+# Alpha_and_Omega
 Alpha_Omega_metadata <- readRDS("data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS")
-length(unique(Alpha_Omega_metadata$seq_sample_id))
 length(unique(Alpha_Omega_metadata$participant))
-range(Alpha_Omega_metadata$age)
-
+length(unique(Alpha_Omega_metadata$seq_sample_id))
 # Relief
 
 Relief_metadata <- readRDS("data_new/Pre_Exercise/Relief_PreExc_metadata.RDS")
-length(unique(Relief_metadata$seq_sample_id))
-length(unique(Relief_metadata$participant))
-hist(Relief_metadata$age)
-
-Relief_metadata %>%
-  filter(age < 30)%>%
-  print()
-
-
-Relief_metadata %>%
-  filter(age > 30)%>%
-  print()
+# length(unique(Relief_metadata$seq_sample_id))
+# length(unique(Relief_metadata$participant))
+# hist(Relief_metadata$age)
 
 # Merge all in one
 all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
@@ -88,71 +75,67 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
   rbind(Relief_metadata) %>%
   #Copd and volume and SRP102542 have age data in decimal
   mutate(across(c("age"), round, 0)) %>%
-  # Create age groups where group 1 = those 20 and below
-  #group 2 is those above 20 but below 31
-  # group 3 those above 30 but below 41
-  # etc
+  # Create age groups where we have those above 50, and those below 50 
   
-  # mutate(group = case_when(age <=20 ~ "<=20" ,
-  #                          age > 20 & age <= 30 ~ ">20 & <=30",
-  #                          age > 30 & age <= 40 ~ ">30 & <=40", 
-  #                          age > 40 & age <= 50 ~ ">40 & <=50",
-  #                          age > 50 & age <= 60 ~ ">50 & <=60",
-  #                          age > 60 & age <= 70 ~ ">60 & <=70",
-  #                          age > 70  ~ "above 70")) %>%
+   mutate(group = case_when(age <=50 ~ "Fifty and below" ,
+                            age > 50  ~ "Above fifty")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
-         # group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
-         #                                  ">50 & <=60",">60 & <=70", "above 70" ))
-         ) 
+          group = factor(group, levels = c("Fifty and below" ,"Above fifty" ))) 
 unique(all_pre_metadata$sex)
-length(unique(all_pre_metadata$participant))
 unique(all_pre_metadata$group)
 
-all
+
+
+
+
+
 
  saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
+ 
+ 
+ 
 
-# a<- ggplot(all_pre_metadata, aes(group, fill = group)) +
-#   geom_bar()+
-# #  ggtitle("Distribution of baseline data")+
-#   theme(plot.title = element_text(hjust = 0.5))+
-#   xlab("Age range of participants")+
-#   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
-# 
-# # ggsave("Figures/Baseline_data.png")
-# 
-# 
-# b <- ggplot(all_pre_metadata, aes(study, fill = group)) +
-#   geom_bar()+
-# #  ggtitle("Distribution of baseline data")+
-#   theme(plot.title = element_text(hjust = 0.5))+
-#   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
-# 
-# # ggsave("Figures/Baseline_data_by_study.png")
-# 
-# c <- ggplot(all_pre_metadata, aes(sex, fill = group)) +
-#   geom_bar()+
-# #  ggtitle("Distribution of baseline data")+
-#   theme(plot.title = element_text(hjust = 0.5))+
-#   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
-# 
-# # ggsave("Figures/Baseline_data_by_gender.png")
-# 
-# 
-# ggarrange(a ,b  , c ,  
-#           labels = c("A", "B", "C"), 
-#           common.legend = T,
-#           align = "hv",
-#           hjust = -1,
-#           legend = "right")
+ ggplot(all_pre_metadata, aes(group, fill = group)) +
+  geom_bar()+
+  ggtitle("Distribution of baseline data by group")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  xlab("Age group of participants")+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
 
-# ggsave("Figures/Baseline_data.png", scale = 2, dpi = 400, bg = "white")
+ ggsave("Figures/Baseline_data.png")
+
+
+ 
+ 
+ # check age group
+ ggplot(all_pre_metadata, aes(sex, fill = group)) +
+  geom_bar()+
+#  ggtitle("Distribution of baseline data")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
+
+
+ 
+
 hist(all_pre_metadata$age)
-all_pre_metadata %>%
-  ggplot(aes(x= age, fill = sex))+
-  geom_histogram(binwidth = 1, colour= "lightblue") +
-  facet_wrap(study ~.)
 
+
+all_pre_metadata %>%
+  ggplot(aes(x= age, fill = sex, colour = sex))+
+  geom_histogram(binwidth = 2, colour= "lightblue") +
+  ylab("Number of participants")+
+  facet_wrap(study ~.)+
+  ggtitle(" Distribution of baseline samples across all studies")+
+     theme(plot.title = element_text(hjust = 0.5))+
+     theme_cowplot() # removes grid
+
+ggsave("Images_tables/Distribution_baseline_samples.png", bg = "white", scale = 1.5, dpi = 400)
+
+
+
+
+
+# Load the splicing information
 copd_data <- readRDS("data_new/Pre_Exercise/copd_preExc_splicing_data.RDS")
 
 
@@ -175,64 +158,15 @@ all_pre_splice <- copd_data%>%
 
 
 
-
-# Visualization
-long_df <- all_pre_splice%>%
-  pivot_longer(names_to = "seq_sample_id",
-               values_to = "SE",
-               cols = -(transcript_ID) )%>%
-  inner_join(all_pre_metadata, by = "seq_sample_id")
-
-
-
-## Plot the relationship between age and splicing efficiency
-# long_df %>%
-#   group_by(group)%>%
-#   summarise(avg = mean(SE)) %>%
-#   ggplot(aes(group,avg))+
-#   geom_point(mapping = aes(colour = group, size = 10))+ 
-#   geom_smooth()+
-#   ggtitle("Relationship between age group and splicing efficiency") +
-#   ylab(" Average splicing efficiency")+
-#   theme(plot.title = element_text(hjust = 0.5))+
-#   theme_cowplot()
-# ggsave("Figures/age_group.png", bg = "white")
-
-long_df %>%
-  group_by(age, study)%>%
-  summarise(avg = mean(SE)) %>%
-  ggplot(aes(age, avg))+
-  geom_point(mapping = aes(colour = study ,  size = 5))+ 
-  geom_smooth()+
-  ggtitle("Relationship between age, gender and splicing efficiency") +
-  ylab(" Average splicing efficiency")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  theme_cowplot()
-
-ggsave("Figures/age_group_by_gender.png", bg = "white")
-
-
-# ggarrange(x, z)
-
-
 saveRDS(all_pre_splice, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
-# Are there sex-specific intron retentions
 
-# sex_spec <- all_pre_splice %>%
-#   pivot_longer(names_to = "seq_sample_id",
-#                values_to = "SE",
-#                cols = -(transcript_ID))%>%
-#   inner_join(all_pre_metadata, by = "seq_sample_id") %>%
-#   summarise(median = median(SE), 
-#             min = min(SE), 
-#             max = max(SE),
-#             s = sd(SE), 
-#             .by = c(sex,  transcript_ID)) %>%
-#   filter( max < 0.5) %>%
-#   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") 
-hist(sex_spec$s)
-unique(sex_spec$transcript_ID)
+
+
+
+
+
+
 # Are there specific introns that charactaristically have low splicing efficiency
 
 low_SE <- all_pre_splice %>%
@@ -250,8 +184,8 @@ low_SE <- all_pre_splice %>%
            ) %>%
   filter(max <= 0.2) %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
-length(unique(low_SE$transcript_ID))
-length
+# length(unique(low_SE$transcript_ID))
+
 
 
 table_plot_low <- tableGrob(low_SE)
@@ -264,25 +198,6 @@ grid.draw(table_plot_low)
 
 # Close the pdf device
 dev.off()
-
-
-# Investigate introns with low SE across groups. 
-# Appears to be same introns that are low across all samples
-# low_SE_grouped <- all_pre_splice %>%
-#   pivot_longer(names_to = "seq_sample_id",
-#                values_to = "SE",
-#                cols = -(transcript_ID)) %>%
-#   inner_join(all_pre_metadata, by = "seq_sample_id") %>%
-#   summarise(.by = c(transcript_ID, group),
-#             mode = getmode(SE),
-#             min = min(SE), 
-#             max = max(SE), 
-#             q20 = quantile(SE, 0.2), 
-#             range = max(SE) - min(SE)) %>%
-#   filter(max <= 0.6) %>%
-#   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
-# # confirm if they arent same with that above
-# length(unique(low_SE_grouped$transcript_ID))
 
 
 
@@ -302,7 +217,7 @@ High_SE <- all_pre_splice %>%
   filter(min == 1) %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 
-length(unique(High_SE$transcript_ID))
+# length(unique(High_SE$transcript_ID))
 
 
 
@@ -335,27 +250,6 @@ grid.draw(table_plot_low)
 dev.off()
 
 
-# Gene annotation
-ego_df <- enrichGO(gene = annotation_low_SE$ensembl_gene_id,
-                   keyType = "ENSEMBL",
-                   OrgDb = org.Hs.eg.db, 
-                   ont = "BP", 
-                   pAdjustMethod = "BH", 
-                   qvalueCutoff = 0.05, 
-                   readable = T)
-
-## Output results from GO analysis to a table
- cluster_summary <- data.frame(ego_df)
-
-dotplot(ego_df,
-        
-        font.size = 8, title = "Enriched biological processes in poorly spliced out  introns") +
-  theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
-ggsave("Figures/GO_poorly_spliced_introns.png")
-
-
-
-
 
 # Perfectly spliced introns
 
@@ -385,6 +279,8 @@ grid.draw(table_plot_high)
 # Close the pdf device
 dev.off()
 
+
+
 length(unique(annotation_high_SE$transcript_ID))
 
 
@@ -397,31 +293,12 @@ saveRDS(annotation, "data_new/ensembl_gene_annotation.RDS")
 
 
 
-# Gene annotation
-ego_df <- enrichGO(gene = annotation_low_SE$ensembl_gene_id,
-                   keyType = "ENSEMBL",
-                   OrgDb = org.Hs.eg.db, 
-                   ont = "BP", 
-                   pAdjustMethod = "BH", 
-                   qvalueCutoff = 0.05, 
-                   readable = T)
 
-## Output results from GO analysis to a table
-# cluster_summary <- data.frame(ego_df)
-
-dotplot(ego_df,
-        
-        font.size = 8, title = "Enriched biological processes in poorly spliced out  introns") +
-  theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
-ggsave("Figures/GO_poorly_spliced_introns.png")
-
-
-
-# perfectly spliced introns
+# annotation of perfectly spliced introns
 ego_df_high <- enrichGO(gene = annotation_high_SE$ensembl_gene_id,
                    keyType = "ENSEMBL",
                    OrgDb = org.Hs.eg.db, 
-                   ont = "all", 
+                   ont = "BP", 
                    pAdjustMethod = "BH", 
                    qvalueCutoff = 0.05, 
                    readable = T)
@@ -431,21 +308,25 @@ cluster_summary <- ego_df_high
 dotplot(ego_df_high,
         
         font.size = 8, title = "Enriched biological processes in perfectly spliced out  introns") +
-  theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 10))
 
-ggsave("Figures/GO_perfectly_spliced_introns.png")
+ggsave("Images_tables/Figure_2.png", dpi = 400, scale = 1)
 
 
 
 
 # check if there is a relationship between splicing efficiency and transcript length
-
+long_df <- all_pre_splice%>%
+  pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID) )%>%
+  inner_join(all_pre_metadata, by = "seq_sample_id")
 
 df <- long_df %>%
   group_by(transcript_ID) %>%
   summarize(avg = round(mean(SE), digits = 2)) %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
-  inner_join(gene_annotation, by = c("transcript_ID" = "ensembl_transcript_id_version"), copy = T) %>%
+  inner_join(annotation, by = c("transcript_ID" = "ensembl_transcript_id_version"), copy = T) %>%
   mutate(.by = external_transcript_name, 
            SE_per_gene = mean(avg))
 
@@ -454,7 +335,6 @@ df <- long_df %>%
 plot(df$SE_per_gene, df$transcript_length)
 
 cor.test(df$SE_per_gene, df$transcript_length)
-
 
 
 cor.test(df$avg, df$transcript_length)
@@ -466,17 +346,18 @@ cor.test(df$avg, df$transcript_length)
 #COPD metadata
 copd_metadata <- readRDS("data_new/processed_data/copd_metadata.RDS") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
+length(unique(copd_metadata$participant))
 
 # Volume_data
 Vol_metadata <- readRDS("data_new/processed_data/volume_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age) 
-
+length(unique(Vol_metadata$participant))
 unique(Vol_metadata$time)
 
 # Contratrain_data
 ct_metadata <- readRDS("data_new/processed_data/contratrain_metadata.RDS") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-
+length(unique(ct_metadata$participant))
 
 unique(ct_metadata$time)
 
