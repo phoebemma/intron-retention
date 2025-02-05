@@ -80,7 +80,7 @@ Progressive resistance exercise training (RT) describes the type of physical exe
 
 ```
 
-#### Certain introns have characteristically poor or perfect splicing efficiency 
+#### Certain introns have characteristically poor or perfect splicing efficiency
 
 To investigate if there were introns having same splicing efficiency pattern across all baseline samples, we investigated those with poor splicing efficiency, as well as those with perfect splicing efficiency across all samples. To identify introns with characteristically low splicing efficiency , we filtered the baseline dataset for introns whose splicing efficiency across all baseline samples have a maximum total splicing efficiency of 0.2 . Six introns belonging to six different transcripts were shown to be almost completely retained in all sample, with maximum splicing efficiency in any sample being 0.2. That is, over 80% of the six introns were retained across all samples. The introns are as shown in **Table 1** **.** 5 of the 6 transcripts containing the poorly spliced introns are long non-coding RNAs without functional annotation on the org.Hs.eg.db database @manual databases . The other transcript containing the poorly spliced intron is an alternatively spliced transcript of the MEIOC gene that lacks a coding sequence (CDS).
 
