@@ -25,8 +25,16 @@ seq_df <- as.data.frame(colnames(AO_splice[, -1])) %>%
 # rename the first column to seq_sample_id to match the other datasets
 colnames(seq_df)[colnames(seq_df) == "colnames(AO_splice[, -1])"] <- "seq_sample_id"
 
+# A_O_seq_list <- readxl::read_excel("data_new/Alpha_Omega_sample_list_transcriptomics.xlsx") %>%
+#   filter(Tissue == "muscle")
+A_O_seq_list$leg <- toupper(A_O_seq_list$leg)
+
+# seq_df <- seq_df %>%
+#   inner_join(A_O_seq_list, by = c("seq_id" = "sample"))
 
 
+
+range(seq_samples$extraction_seq)
 # Load the participant details
 ids <- idkeys %>%
   dplyr::select(participant, treat, age,  sex )
@@ -56,7 +64,7 @@ Sequenced_samples <- Sequenced_samples %>%
   filter(time == "PreExc" | time == "PostExc")
 
 unique(Sequenced_samples$time)
-
+length(unique(Sequenced_samples$participant))
 
   saveRDS(Sequenced_samples, "data_new/processed_data/Alpha_Omega_metadata.RDS")
 
@@ -65,7 +73,7 @@ unique(Sequenced_samples$time)
   filter(time == "PreExc") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
  
-
+length(unique(pre_Exc$participant))
 
  saveRDS(pre_Exc, "data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS")
 

@@ -10,6 +10,8 @@ library(ggpubr)
 library(cowplot)
 library(gridExtra)
 library(grid)
+library(gt)
+library(webshot)
 
 source("R/Trainome_functions.R")
 # metadata
@@ -91,16 +93,17 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
   # group 3 those above 30 but below 41
   # etc
   
-  mutate(group = case_when(age <=20 ~ "<=20" ,
-                           age > 20 & age <= 30 ~ ">20 & <=30",
-                           age > 30 & age <= 40 ~ ">30 & <=40", 
-                           age > 40 & age <= 50 ~ ">40 & <=50",
-                           age > 50 & age <= 60 ~ ">50 & <=60",
-                           age > 60 & age <= 70 ~ ">60 & <=70",
-                           age > 70  ~ "above 70")) %>%
+  # mutate(group = case_when(age <=20 ~ "<=20" ,
+  #                          age > 20 & age <= 30 ~ ">20 & <=30",
+  #                          age > 30 & age <= 40 ~ ">30 & <=40", 
+  #                          age > 40 & age <= 50 ~ ">40 & <=50",
+  #                          age > 50 & age <= 60 ~ ">50 & <=60",
+  #                          age > 60 & age <= 70 ~ ">60 & <=70",
+  #                          age > 70  ~ "above 70")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
-         group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
-                                          ">50 & <=60",">60 & <=70", "above 70" ))) 
+         # group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
+         #                                  ">50 & <=60",">60 & <=70", "above 70" ))
+         ) 
 unique(all_pre_metadata$sex)
 length(unique(all_pre_metadata$participant))
 unique(all_pre_metadata$group)
@@ -109,42 +112,46 @@ all
 
  saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 
-a<- ggplot(all_pre_metadata, aes(group, fill = group)) +
-  geom_bar()+
-#  ggtitle("Distribution of baseline data")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  xlab("Age range of participants")+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
+# a<- ggplot(all_pre_metadata, aes(group, fill = group)) +
+#   geom_bar()+
+# #  ggtitle("Distribution of baseline data")+
+#   theme(plot.title = element_text(hjust = 0.5))+
+#   xlab("Age range of participants")+
+#   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
+# 
+# # ggsave("Figures/Baseline_data.png")
+# 
+# 
+# b <- ggplot(all_pre_metadata, aes(study, fill = group)) +
+#   geom_bar()+
+# #  ggtitle("Distribution of baseline data")+
+#   theme(plot.title = element_text(hjust = 0.5))+
+#   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
+# 
+# # ggsave("Figures/Baseline_data_by_study.png")
+# 
+# c <- ggplot(all_pre_metadata, aes(sex, fill = group)) +
+#   geom_bar()+
+# #  ggtitle("Distribution of baseline data")+
+#   theme(plot.title = element_text(hjust = 0.5))+
+#   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
+# 
+# # ggsave("Figures/Baseline_data_by_gender.png")
+# 
+# 
+# ggarrange(a ,b  , c ,  
+#           labels = c("A", "B", "C"), 
+#           common.legend = T,
+#           align = "hv",
+#           hjust = -1,
+#           legend = "right")
 
-# ggsave("Figures/Baseline_data.png")
-
-
-b <- ggplot(all_pre_metadata, aes(study, fill = group)) +
-  geom_bar()+
-#  ggtitle("Distribution of baseline data")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
-
-# ggsave("Figures/Baseline_data_by_study.png")
-
-c <- ggplot(all_pre_metadata, aes(sex, fill = group)) +
-  geom_bar()+
-#  ggtitle("Distribution of baseline data")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
-
-# ggsave("Figures/Baseline_data_by_gender.png")
-
-
-ggarrange(a ,b  , c ,  
-          labels = c("A", "B", "C"), 
-          common.legend = T,
-          align = "hv",
-          hjust = -1,
-          legend = "right")
-
-ggsave("Figures/Baseline_data.png", scale = 2, dpi = 400, bg = "white")
-
+# ggsave("Figures/Baseline_data.png", scale = 2, dpi = 400, bg = "white")
+hist(all_pre_metadata$age)
+all_pre_metadata %>%
+  ggplot(aes(x= age, fill = sex))+
+  geom_histogram(binwidth = 1, colour= "lightblue") +
+  facet_wrap(study ~.)
 
 copd_data <- readRDS("data_new/Pre_Exercise/copd_preExc_splicing_data.RDS")
 
@@ -178,18 +185,18 @@ long_df <- all_pre_splice%>%
 
 
 
-# Plot the relationship between age and splicing efficiency
-long_df %>%
-  group_by(group)%>%
-  summarise(avg = mean(SE)) %>%
-  ggplot(aes(group,avg))+
-  geom_point(mapping = aes(colour = group, size = 10))+ 
-  geom_smooth()+
-  ggtitle("Relationship between age group and splicing efficiency") +
-  ylab(" Average splicing efficiency")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  theme_cowplot()
-ggsave("Figures/age_group.png", bg = "white")
+## Plot the relationship between age and splicing efficiency
+# long_df %>%
+#   group_by(group)%>%
+#   summarise(avg = mean(SE)) %>%
+#   ggplot(aes(group,avg))+
+#   geom_point(mapping = aes(colour = group, size = 10))+ 
+#   geom_smooth()+
+#   ggtitle("Relationship between age group and splicing efficiency") +
+#   ylab(" Average splicing efficiency")+
+#   theme(plot.title = element_text(hjust = 0.5))+
+#   theme_cowplot()
+# ggsave("Figures/age_group.png", bg = "white")
 
 long_df %>%
   group_by(age, study)%>%
@@ -245,7 +252,7 @@ low_SE <- all_pre_splice %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 length(unique(low_SE$transcript_ID))
 length
-hist(low_SE$q20)
+
 
 table_plot_low <- tableGrob(low_SE)
 
@@ -261,21 +268,21 @@ dev.off()
 
 # Investigate introns with low SE across groups. 
 # Appears to be same introns that are low across all samples
-low_SE_grouped <- all_pre_splice %>%
-  pivot_longer(names_to = "seq_sample_id",
-               values_to = "SE",
-               cols = -(transcript_ID)) %>%
-  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
-  summarise(.by = c(transcript_ID, group),
-            mode = getmode(SE),
-            min = min(SE), 
-            max = max(SE), 
-            q20 = quantile(SE, 0.2), 
-            range = max(SE) - min(SE)) %>%
-  filter(max <= 0.6) %>%
-  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
-# confirm if they arent same with that above
-length(unique(low_SE_grouped$transcript_ID))
+# low_SE_grouped <- all_pre_splice %>%
+#   pivot_longer(names_to = "seq_sample_id",
+#                values_to = "SE",
+#                cols = -(transcript_ID)) %>%
+#   inner_join(all_pre_metadata, by = "seq_sample_id") %>%
+#   summarise(.by = c(transcript_ID, group),
+#             mode = getmode(SE),
+#             min = min(SE), 
+#             max = max(SE), 
+#             q20 = quantile(SE, 0.2), 
+#             range = max(SE) - min(SE)) %>%
+#   filter(max <= 0.6) %>%
+#   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+# # confirm if they arent same with that above
+# length(unique(low_SE_grouped$transcript_ID))
 
 
 
@@ -297,70 +304,7 @@ High_SE <- all_pre_splice %>%
 
 length(unique(High_SE$transcript_ID))
 
-table_plot_high <- tableGrob(High_SE)
 
-# Open a PNG device
-pdf("Figures/high_se_ints_across_all.pdf", width = 8, height = 10)
-
-# Draw the table
-grid.draw(table_plot_high)
-
-# Close the pdf device
-dev.off()
-
-
-
-High_SE_grouped <- all_pre_splice %>%
-  pivot_longer(names_to = "seq_sample_id",
-               values_to = "SE",
-               cols = -(transcript_ID)) %>%
-  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
-  summarise(.by = c(transcript_ID, group),
-            mode = getmode(SE),
-            min = min(SE), 
-            max = max(SE)) %>%
-  filter(min == 1) %>%
-  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
-# confirm if they arent same with that above
-# x <- as.character(unique(High_SE_grouped$group))
-length(unique(High_SE_grouped$transcript_ID))
-
-# Extract thosse for participants aged 20 and below
-# They are 19 participants in that age group
-twenty_and_below <- High_SE_grouped %>%
-  filter(group == "<=20")
-
-length(unique(twenty_and_below$transcript_ID))
-
-
-twentyOne_to_thirty <- High_SE_grouped %>%
-  filter(group == ">20 & <=30")
-
-length(unique(twentyOne_to_thirty$transcript_ID))
-
-
-thirtyOne_to_forty <- High_SE_grouped %>%
-  filter(group == ">30 & <=40")
-
-
-length(unique(thirtyOne_to_forty$transcript_ID))
-
-fourtyOne_to_fifty <- High_SE_grouped %>%
-  filter(group == ">40 & <=50")
-length(unique(fourtyOne_to_fifty$transcript_ID))
-
-
-fiftyOne_to_sixty <-  High_SE_grouped %>%
-  filter(group == ">50 & <=60")
-length(unique(fiftyOne_to_sixty$transcript_ID))
-
-sixtyOne_to_seventy <-  High_SE_grouped %>%
-  filter(group == ">60 & <=70")
-length(unique(sixtyOne_to_seventy$transcript_ID))
-
-above_70 <- High_SE_grouped %>%
-  filter(group == "above 70")
-length(unique(above_70$transcript_ID))
 
 
 
@@ -376,13 +320,74 @@ annotation<- getBM(attributes = c("transcript_biotype", "external_transcript_nam
                                   "ensembl_gene_id", "ensembl_transcript_id_version", "external_gene_name", "transcript_length"),  mart = ensembl )
 annotation_low_SE <- inner_join(low_SE, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
+
+# save the poorly spliced introns as pdf
+table_plot_low <- tableGrob(annotation_low_SE %>%
+                              dplyr::select(transcript_ID, intron_ID, transcript_biotype,external_gene_name, mode, min, max, ))
+
+# Open a PNG device
+jpeg("Figures/Table1.jpeg", width = 780, height = 480, quality = 100)
+
+# Draw the table
+grid.draw(table_plot_low)
+
+# Close the pdf device
+dev.off()
+
+
+# Gene annotation
+ego_df <- enrichGO(gene = annotation_low_SE$ensembl_gene_id,
+                   keyType = "ENSEMBL",
+                   OrgDb = org.Hs.eg.db, 
+                   ont = "BP", 
+                   pAdjustMethod = "BH", 
+                   qvalueCutoff = 0.05, 
+                   readable = T)
+
+## Output results from GO analysis to a table
+ cluster_summary <- data.frame(ego_df)
+
+dotplot(ego_df,
+        
+        font.size = 8, title = "Enriched biological processes in poorly spliced out  introns") +
+  theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
+ggsave("Figures/GO_poorly_spliced_introns.png")
+
+
+
+
+
+# Perfectly spliced introns
+
+
+
 annotation_high_SE <- inner_join(High_SE, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
 annotation_high_SE %>%
   ggplot(aes(transcript_biotype, fill = transcript_biotype))+
   geom_bar()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5)
+  stat_count(geom = "Text", aes(label = ..count..), vjust = 1)
+
+
+ggsave("Images_tables/Figure_1.jpeg")
+
+
+table_plot_high <- tableGrob(annotation_high_SE %>%
+                               dplyr::select(transcript_ID, intron_ID, transcript_biotype,external_gene_name, mode, min, max))
+
+# Open a PNG device
+png("Images_tables/supplementary_table1.png", width = 700)
+
+# Draw the table
+grid.draw(table_plot_high)
+
+# Close the pdf device
+dev.off()
+
+length(unique(annotation_high_SE$transcript_ID))
+
+
 
 saveRDS(annotation_low_SE, "data_new/Pre_Exercise/annotated_low_SE_introns.RDS")
 
@@ -411,16 +416,18 @@ dotplot(ego_df,
 ggsave("Figures/GO_poorly_spliced_introns.png")
 
 
+
+# perfectly spliced introns
 ego_df_high <- enrichGO(gene = annotation_high_SE$ensembl_gene_id,
                    keyType = "ENSEMBL",
                    OrgDb = org.Hs.eg.db, 
-                   ont = "BP", 
+                   ont = "all", 
                    pAdjustMethod = "BH", 
                    qvalueCutoff = 0.05, 
                    readable = T)
 
 ## Output results from GO analysis to a table
-
+cluster_summary <- ego_df_high
 dotplot(ego_df_high,
         
         font.size = 8, title = "Enriched biological processes in perfectly spliced out  introns") +
@@ -488,6 +495,7 @@ unique(A_Omega_metadata$time)
 
 
 Relief_full_meta <- readRDS("data_new/processed_data/Relief_metadata.RDS")
+unique(Relief_full_meta$seq_sample_id)
 # Merge them all in one
 
 all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
@@ -498,22 +506,23 @@ all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
   
   mutate(across(c("age"), round, 0)) %>%
   
-  mutate(group = case_when(age <=20 ~ "<=20" ,
-                           age > 20 & age <= 30 ~ ">20 & <=30",
-                           age > 30 & age <= 40 ~ ">30 & <=40", 
-                           age > 40 & age <= 50 ~ ">40 & <=50",
-                           age > 50 & age <= 60 ~ ">50 & <=60",
-                           age > 60 & age <= 70 ~ ">60 & <=70",
-                           age > 70 ~ ">70")) %>%
+  # mutate(group = case_when(age <=20 ~ "<=20" ,
+  #                          age > 20 & age <= 30 ~ ">20 & <=30",
+  #                          age > 30 & age <= 40 ~ ">30 & <=40", 
+  #                          age > 40 & age <= 50 ~ ">40 & <=50",
+  #                          age > 50 & age <= 60 ~ ">50 & <=60",
+  #                          age > 60 & age <= 70 ~ ">60 & <=70",
+  #                          age > 70 ~ ">70")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
          time = factor(time, levels = c("PreExc", "PostExc")),
-         group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
-                                          ">50 & <=60",">60 & <=70", ">70"))) 
+         # group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
+         #                                  ">50 & <=60",">60 & <=70", ">70"))
+         ) 
 
 unique(all_full_metadata$sex)
 unique(all_full_metadata$study)
 unique(all_full_metadata$time)
-unique(all_full_metadata$group)
+
 
 saveRDS(all_full_metadata, "data_new/processed_data/all_full_metadata.RDS")
 

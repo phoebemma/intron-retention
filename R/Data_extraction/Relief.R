@@ -16,7 +16,6 @@ Relief_df[, idx] <- lapply(Relief_df[, idx], round, 2)
 
 
 
-
 # extraction sequence is that number following "R" on the sample name
 seq_df <- as.data.frame(colnames(Relief_df[, -1])) %>%
   mutate(seq_id = as.double(stri_extract_first_regex(colnames(Relief_df[, -1]), "\\d+")))
@@ -67,6 +66,7 @@ Relief_metadata <- Relief_metadata %>%
 saveRDS(Relief_metadata, "data_new/processed_data/Relief_metadata.RDS")
 
 hist(Relief_metadata$age)
+length(unique(Relief_metadata$participant))
 
 # Select the Prexercise metadata
 pre_Exc <- Relief_metadata %>%
@@ -74,6 +74,7 @@ pre_Exc <- Relief_metadata %>%
 
 saveRDS(pre_Exc, "data_new/Pre_Exercise/Relief_PreExc_metadata.RDS")
 
+length(unique(pre_Exc$participant))
 
 # Select the pre-exercise splicing data
 Relief_intersect <- intersect(colnames(Relief_df), pre_Exc$seq_sample_id)
