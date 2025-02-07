@@ -337,7 +337,7 @@ plot(df$SE_per_gene, df$transcript_length)
 cor.test(df$SE_per_gene, df$transcript_length)
 
 
-cor.test(df$avg, df$transcript_length)
+#cor.test(df$avg, df$transcript_length)
 # Explore what happens to those introns at post exercise
 
 #Load the full data of all types
@@ -378,6 +378,7 @@ unique(A_Omega_metadata$time)
 Relief_full_meta <- readRDS("data_new/processed_data/Relief_metadata.RDS")
 unique(Relief_full_meta$seq_sample_id)
 # Merge them all in one
+length(unique(Relief_full_meta$participant))
 
 all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
   rbind(ct_metadata) %>%
@@ -386,19 +387,11 @@ all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
   rbind(Relief_full_meta) %>%
   
   mutate(across(c("age"), round, 0)) %>%
-  
-  # mutate(group = case_when(age <=20 ~ "<=20" ,
-  #                          age > 20 & age <= 30 ~ ">20 & <=30",
-  #                          age > 30 & age <= 40 ~ ">30 & <=40", 
-  #                          age > 40 & age <= 50 ~ ">40 & <=50",
-  #                          age > 50 & age <= 60 ~ ">50 & <=60",
-  #                          age > 60 & age <= 70 ~ ">60 & <=70",
-  #                          age > 70 ~ ">70")) %>%
+  mutate(group = case_when(age <=50 ~ "Fifty and below" ,
+                           age > 50  ~ "Above fifty")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
-         time = factor(time, levels = c("PreExc", "PostExc")),
-         # group = factor(group, levels = c("<=20" ,">20 & <=30", ">30 & <=40", ">40 & <=50",
-         #                                  ">50 & <=60",">60 & <=70", ">70"))
-         ) 
+         group = factor(group, levels = c("Fifty and below" ,"Above fifty" )),
+         time = factor(time, levels = c("PreExc", "PostExc")))
 
 unique(all_full_metadata$sex)
 unique(all_full_metadata$study)
@@ -470,30 +463,4 @@ long_df_post <- post_splice_df%>%
 
 
 
-# Plot the relationship between age and splicing efficiency
- long_df_post %>%
-  group_by(group)%>%
-  summarise(avg = mean(SE)) %>%
-  ggplot(aes(group,avg))+
-  geom_point(mapping = aes(colour = group, size = 10))+ 
-  geom_smooth()+
-  ggtitle("Relationship between age group and splicing efficiency") +
-  ylab(" Average splicing efficiency at post exercise")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  theme_cowplot()
-ggsave("Figures/SE_post_exc.png", bg= "white")
-
-long_df_post %>%
-  group_by(age, sex, group)%>%
-  summarise(avg = mean(SE)) %>%
-  ggplot(aes(age, avg))+
-  geom_point(mapping = aes(colour = sex ,  size = 5))+ 
-  geom_smooth()+
-  ggtitle("Relationship between age, gender and splicing efficiency") +
-  ylab(" Average splicing efficiency at postexercise")+
-  theme(plot.title = element_text(hjust = 0.5))+
-  theme_cowplot()
-ggsave("Figures/SE_post_exc_age.png", bg= "white")
-# ggarrange(x, y, 
-#           legend = "top")
 

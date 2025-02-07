@@ -16,7 +16,7 @@ colnames(Pre_group)
 unique(Pre_group$coef)
 
 filt_pre_group <- Pre_group %>%
-  filter(Pr...z..<= 0.05 & fcthreshold == "s")
+  filter(Pr...z..<= 0.05 )
 
 
 

@@ -25,7 +25,7 @@ seq_df <- as.data.frame(colnames(AO_splice[, -1])) %>%
 # rename the first column to seq_sample_id to match the other datasets
 colnames(seq_df)[colnames(seq_df) == "colnames(AO_splice[, -1])"] <- "seq_sample_id"
 
- A_O_seq_list <- readxl::read_excel("data_new/Alpha_Omega_sample_list_transcriptomics.xlsx") %>%
+ A_O_seq_list <- readxl::read_excel("Alpha_Omega_sample_list_transcriptomics.xlsx") %>%
    filter(Tissue == "muscle") %>%
    mutate(time = case_when(time_rep == "T1rna1" ~ "PreExc",
           time_rep == "T4rna1" ~ "PostExc")) %>%

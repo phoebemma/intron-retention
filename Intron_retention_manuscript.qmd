@@ -21,43 +21,43 @@ prefer-html: true
 Correspondance: Chidimma Phoebe Echebiri (chidimma.echebiri\@inn.no), Daniel Hammarström (daniel.hammarstrom\@inn.no).
 :::
 
-```{r}
-#| label: setup
-#| include: false
-
-
-library(dplyr)
-library(tidyverse)
-library(gt)
-library(cowplot)
-library(ggpubr)
-library(ggplot2)
-library(gridExtra)
-
-color_scale <- c("#7fc97f",  "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f")
-
-
-
-source("R/Trainome_functions.R")
-
-knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```{# {r}
+# #| label: setup
+# #| include: false
+# 
+# 
+# library(dplyr)
+# library(tidyverse)
+# library(gt)
+# library(cowplot)
+# library(ggpubr)
+# library(ggplot2)
+# library(gridExtra)
+# 
+# color_scale <- c("#7fc97f",  "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f")
+# 
+# 
+# 
+# source("R/Trainome_functions.R")
+# 
+# knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| label: abstract
-
-all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
-
-descr_stat <- all_pre_metadata %>%
-  summarise(. by = study,
-            n = n(),
-            m_a = mean(age),
-            s_a = sd(age)) %>%
-  data.frame()
+# #| echo: false
+# #| message: false
+# #| warning: false
+# #| label: abstract
+# 
+# all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
+# 
+# descr_stat <- all_pre_metadata %>%
+#   summarise(. by = study,
+#             n = n(),
+#             m_a = mean(age),
+#             s_a = sd(age)) %>%
+#   data.frame()
 
 
 ```
@@ -68,33 +68,29 @@ Progressive resistance exercise training (RT) elicits a range of adaptive respon
 
 ## Introduction
 
-Aging is characterized by a progressive decline in most biological functions leading to reduced vitality, increased risk of diseases and eventually death [@lopez-otin_hallmarks_2013; @keshavarz_targeting_2023 ; @gyenis_genome-wide_2023; @schaum_ageing_2020] . Physiologically, aging is associated with the induction of different stress response pathways in different cells, tissues and species [@stegeman_transcriptional_2017; @welle_gene_2003]. Aging and aging-like phenotypes are also associated with increased mis-splicing [@angarola_splicing_2021 ; @garcia-ruiz_splicing_2023 ; @nishida_tissue-_2015 ; @mariotti_deterioration_2022; @stegeman_transcriptional_2017; @pabis_concerted_2024; @latorre_splicing_2017, @holly_changes_2013] as a result of alterations in the expression of splicing factors ; a resilience strategy aimed at counteracting aging-induced damages and loss of function [@ferrucci_energysplicing_2022 ; @ubaida-mohien_discovery_2019].
+Aging is characterized by a progressive decline in most biological functions leading to reduced vitality, increased risk of diseases and eventually death [@lopez-otin_hallmarks_2013; @keshavarz_targeting_2023 ; @gyenis_genome-wide_2023; @schaum_ageing_2020] . Physiologically, aging is associated with the induction of different stress response pathways in different cells, tissues and species [@stegeman_transcriptional_2017; @welle_gene_2003]. Aging and aging-like phenotypes are also associated with increased mis-splicing [@angarola_splicing_2021 ; @garcia-ruiz_splicing_2023 ; @nishida_tissue-_2015 ; @mariotti_deterioration_2022; @stegeman_transcriptional_2017; @pabis_concerted_2024; @latorre_splicing_2017; @holly_changes_2013] as a result of alterations in the expression of splicing factors ; a resilience strategy aimed at counteracting aging-induced damages and loss of function [@ferrucci_energysplicing_2022 ; @ubaida-mohien_discovery_2019].
 
-Intron retention (IR) is the major form of alternative splicing that is affected by aging [@kodama_systematic_2024; @mariotti_deterioration_2022; @bhadra_alternative_2020]. It mostly affects protein-coding genes thus resulting in a transcriptomic and proteomic diversity that could influence cellular plasticity. IR occurs when a full intron, or parts of an intron in a mature messenger RNA (mRNA) is retained during splicing, resulting in the presence of an unprocessed sequence in the mRNA. The retention leads either to the degradation of the IR-containing transcripts through nonsense-mediated decay or the action of nucleases; or to frameshifts that cause the generation of alternative protein isoforms [@baralle_age-related_2023 ; @zheng_intron_2020 ; @mauger_targeted_2016; @wong_intron_2022 ; @monteuuis_changing_2019; @jacob2017 ]. IR predominantly occurs in transcripts that lack physiological relevance in cells and tissues they are detected in [@braunschweig_widespread_2014]. Increase in IR is a signature of the aging process [@bhadra_alternative_2020; @adusumalli_increased_2019, @baralle_age-related_2023] and is often measured in terms of splicing efficiency which describes the amount of introns retained in a mature mRNA. Splicing efficiency is cell and tissue specific [@nishida_tissue-_2015; @baralle_age-related_2023] but tends to be similar between the introns of a gene [@sanchez-escabias_co-transcriptional_2022] . Besides aging, poor splicing efficiency has also been linked to human diseases like alpha thalassemia [@nelson_novel_2005] , inflammatory bowel disease [@hasler_alterations_2011] , neurodegenerative diseases [@sznajder_intron_2018; @ong_increased_2020 ] and an increased risk of certain cancers [@dvinge_widespread_2015 ; @inoue_minor_2021 ; @shah_towards_2022].
+Intron retention (IR) is the major form of alternative splicing that is affected by aging [@kodama_systematic_2024; @mariotti_deterioration_2022; @bhadra_alternative_2020]. It mostly affects protein-coding genes thus resulting in a transcriptomic and proteomic diversity that could influence cellular plasticity. IR occurs when a full intron, or parts of an intron in a mature messenger RNA (mRNA) is retained during splicing, resulting in the presence of an unprocessed sequence in the mRNA. The retention leads either to the degradation of the IR-containing transcripts through nonsense-mediated decay or the action of nucleases; or to frameshifts that cause the generation of alternative protein isoforms [@baralle_age-related_2023 ; @zheng_intron_2020 ; @mauger_targeted_2016; @wong_intron_2022 ; @monteuuis_changing_2019; @jacob_intron_2017 ]. IR predominantly occurs in transcripts that lack physiological relevance in cells and tissues they are detected in [@braunschweig_widespread_2014]. Increase in IR is a signature of the aging process [@bhadra_alternative_2020; @adusumalli_increased_2019; @baralle_age-related_2023] and is often measured in terms of splicing efficiency which describes the amount of introns retained in a mature mRNA. Splicing efficiency is cell and tissue specific [@nishida_tissue-_2015; @baralle_age-related_2023] but tends to be similar between the introns of a gene [@sanchez-escabias_co-transcriptional_2022] . Besides aging, poor splicing efficiency has also been linked to human diseases like alpha thalassemia [@nelson_novel_2005] , inflammatory bowel disease [@hasler_alterations_2011] , neurodegenerative diseases [@sznajder_intron_2018; @ong_increased_2020 ] and an increased risk of certain cancers [@dvinge_widespread_2015 ; @inoue_minor_2021 ; @shah_towards_2022].
 
-Progressive resistance exercise training (RT) describes the type of physical exercise training where the skeletal muscle is exercised against progressively increased types of resistance [@liu_progressive_2009]. The benefits of RT include improvements in muscle strength, muscle mass, bone density, mRNA splicing [@kodama_systematic_2024] and several other major hallmarks of aging @garatachea_exercise_2015 . RT could thus be a potent preventive or treatment strategy for improving aging-related functional disabilities associated with the aging skeletal muscle [@peterson_influence_2011 ; @kryger_resistance_2007 ; @lu_effects_2021 ]as well as for improving cardiorespiratory fitness in older persons [@smart_role_2022]. A lot is currently known about adaptive responses to RT. However, intron retention in response to RT is relatively unexplored in healthy individuals . If increased intron retention is linked to disease conditions and RT correlates to improved health condition, it should be important to investigate if the benefits of RT include improved splicing efficiency. This study is aimed at investigating differentially spliced introns in human *vastus lateralis* with increasing age, and how about 12 weeks of RT can affect splicing efficiency. This study will hopefully generate more insights into the molecular mediators of response to RT.
+Progressive resistance exercise training (RT) describes the type of physical exercise training where the skeletal muscle is exercised against progressively increased types of resistance [@liu_progressive_2009]. The benefits of RT include improvements in muscle strength, muscle mass, bone density, mRNA splicing [@kodama_systematic_2024] and several other major hallmarks of aging [@garatachea_exercise_2015 ]. RT could thus be a potent preventive or treatment strategy for improving aging-related functional disabilities associated with the aging skeletal muscle [@peterson_influence_2011 ; @kryger_resistance_2007 ; @lu_effects_2021 ]as well as for improving cardiorespiratory fitness in older persons [@smart_role_2022]. A lot is currently known about adaptive responses to RT. However, intron retention in response to RT is relatively unexplored in healthy individuals . If increased intron retention is linked to disease conditions and RT correlates to improved health condition, it should be important to investigate if the benefits of RT include improved splicing efficiency. This study is aimed at investigating differentially spliced introns in human *vastus lateralis* with increasing age, and how about 12 weeks of RT can affect splicing efficiency. This study will hopefully generate more insights into the molecular mediators of response to RT.
 
 # Results
 
-```{r}
-
-```
-
 #### Some introns have characteristically poor or perfect splicing efficiency
 
-To investigate if there were introns having same splicing efficiency patterns across all baseline samples, we investigated those with poor splicing efficiency, as well as those with perfect splicing efficiency across all samples. To identify introns with characteristically low splicing efficiency , we filtered the baseline dataset for introns whose splicing efficiency across all baseline samples have a maximum total splicing efficiency of 0.2 . Six introns belonging to six different transcripts were shown to be almost completely retained in all sample, with maximum splicing efficiency in any sample being 0.2. That is, over 80% of the six introns were retained across all samples. The introns are as shown in **Table 1** **.** 5 of the 6 transcripts containing the poorly spliced introns are long non-coding RNAs without functional annotation on the org.Hs.eg.db database @manual databases . The other transcript containing the poorly spliced intron is an alternatively spliced transcript of the MEIOC gene that lacks a coding sequence (CDS).
+To investigate if there were introns having same splicing efficiency patterns across all baseline samples, we investigated those with poor splicing efficiency, as well as those with perfect splicing efficiency across all samples. To identify introns with characteristically low splicing efficiency , we filtered the baseline dataset for introns whose splicing efficiency across all baseline samples have a maximum total splicing efficiency of 0.2 . Six introns belonging to six different transcripts were shown to be almost completely retained in all sample, with maximum splicing efficiency in any sample being 0.2. That is, over 80% of the six introns were retained across all samples. The introns are as shown in **Table 1** **.** 5 of the 6 transcripts containing the poorly spliced introns are long non-coding RNAs without functional annotation on the org.Hs.eg.db database @manual_orghsegdb_nodate databases . The other transcript containing the poorly spliced intron is an alternatively spliced transcript of the MEIOC gene that lacks a coding sequence (CDS).
 
-305 introns from 229 genes were perfectly spliced across all datasets. These genes were mostly protein_coding genes as can be seen in **Figure 1**. These genes were enriched for biological processes that are physiologically relevent to the skeletal muscle. The results suggest that the different age groups responded differently to RT, with the most diverse result obtained from those above 70, and those between 20 to 30
+239 introns from 179 transcripts were perfectly spliced across all datasets. These genes were mostly protein_coding genes as can be seen in **Figure 1**. These genes were enriched for biological processes that are physiologically relevent to the skeletal muscle as can be seen in **Figure 2**.
 
 there was
 
-At baseline, the splicing efficiency of 25322 introns were captured across all the 422 baseline samples in the data. , 1022 introns from 925 transcripts were differentially spliced. At the gene level, these corresponded to 132 genes. We explored
+At baseline, the splicing efficiency of 23063 introns were captured across all the 422 baseline samples in the data. , 1022 introns from 925 transcripts were differentially spliced. At the gene level, these corresponded to 132 genes. We explored
 
 ### Transcript length did not correlate to splicing efficiency
 
-To investigate if there was a correlation between transcript length and splicing efficiency at baseline, a pearson's product-moment correlation test was performed and a negligle correllation of -0.017 at a pvalue of 0.007 was found between the transcript length and splicing efficiency
+To investigate if there was a correlation between transcript length and splicing efficiency at baseline, a pearson's product-moment correlation test was performed and a negligle correllation of -0.018 at a pvalue of 0.007 was found between the transcript length and splicing efficiency
 
-When both post and preexercise data were included, 8906 introns were captured across all datasets
+When both post and preexercise data were included, 8738 introns were captured across all datasets
 
 We measured intron retention as splicing efficiency using SpliceQ @demelocosta2021. mis-splicing occurs more in non-protein coding genes than in protein-coding genes @garcia-ruiz_splicing_2023, this disagrees with the results we obtained . We however take cognisance of the limitations in RNA-Seq's reported ability to correctly quantify non-coding RNAs @stokes_transcriptomics_2023.
 

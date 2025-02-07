@@ -24,7 +24,7 @@ seq_df <- as.data.frame(colnames(Relief_df[, -1])) %>%
 colnames(seq_df)[colnames(seq_df) == "colnames(Relief_df[, -1])"] <- "seq_sample_id"
 
 # Get sequence information from the excel file obtained from Kristian
-Relief_metadata <- readxl::read_excel("data_new/Relief_sampleIDs.xlsx") 
+Relief_metadata <- readxl::read_excel("Relief_sampleIDs.xlsx") 
 
 Relief_metadata$subject <- as.character(Relief_metadata$subject)
 # Change the "sample" column name to seq_id
