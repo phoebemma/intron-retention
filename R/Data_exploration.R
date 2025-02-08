@@ -20,6 +20,7 @@ source("R/Trainome_functions.R")
 #Copd 
 copd_metadata <- readRDS("data_new/Pre_Exercise/copd_preExc_metadata.RDS") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
+
 # unique(copd_metadata$time)
 # colnames(copd_metadata)
 # length(unique(copd_metadata$participant))
@@ -84,11 +85,11 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
 unique(all_pre_metadata$sex)
 unique(all_pre_metadata$group)
 
+all_pre_metadata$participant <- paste0(all_pre_metadata$study, "_", all_pre_metadata$participant)
 
 
 
-
-
+length(unique(all_pre_metadata$participant))
 
  saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
  
@@ -257,27 +258,29 @@ dev.off()
 
 annotation_high_SE <- inner_join(High_SE, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
-annotation_high_SE %>%
+high_distribution <- annotation_high_SE %>%
   ggplot(aes(transcript_biotype, fill = transcript_biotype))+
-  geom_bar()+
+  geom_bar(width = 1, alpha =.8 )+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = 1)
+  stat_count(geom = "Text", aes(label = ..count..), vjust = 1)+
+  ggtitle("Biotypes of transcripts containing the perfectly spliced introns")+
+  ylab("Number of unique transcripts")
 
 
-ggsave("Images_tables/Figure_1.jpeg")
-
-
-table_plot_high <- tableGrob(annotation_high_SE %>%
-                               dplyr::select(transcript_ID, intron_ID, transcript_biotype,external_gene_name, mode, min, max))
-
-# Open a PNG device
-png("Images_tables/supplementary_table1.png", width = 700)
-
-# Draw the table
-grid.draw(table_plot_high)
-
-# Close the pdf device
-dev.off()
+# ggsave("Images_tables/Figure_1.jpeg")
+# 
+# 
+# table_plot_high <- tableGrob(annotation_high_SE %>%
+#                                dplyr::select(transcript_ID, intron_ID, transcript_biotype,external_gene_name, mode, min, max))
+# 
+# # Open a PNG device
+# png("Images_tables/supplementary_table1.png", width = 700)
+# 
+# # Draw the table
+# grid.draw(table_plot_high)
+# 
+# # Close the pdf device
+# dev.off()
 
 
 
@@ -305,12 +308,17 @@ ego_df_high <- enrichGO(gene = annotation_high_SE$ensembl_gene_id,
 
 ## Output results from GO analysis to a table
 cluster_summary <- ego_df_high
-dotplot(ego_df_high,
+ high_ontology <- dotplot(ego_df_high,
         
         font.size = 8, title = "Enriched biological processes in perfectly spliced out  introns") +
   theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 10))
 
-ggsave("Images_tables/Figure_2.png", dpi = 400, scale = 1)
+ggarrange(high_distribution, high_ontology, align = "hv")
+ 
+ 
+ 
+ 
+ ggsave("Images_tables/Figure_2Ontology_high_se.png", dpi = 400, scale = 2)
 
 
 
@@ -392,7 +400,7 @@ all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
   mutate(sex = factor(sex, levels = c("female", "male")),
          group = factor(group, levels = c("Fifty and below" ,"Above fifty" )),
          time = factor(time, levels = c("PreExc", "PostExc")))
-
+all_full_metadata$participant <- paste0(all_full_metadata$study, "_", all_full_metadata$participant)
 unique(all_full_metadata$sex)
 unique(all_full_metadata$study)
 unique(all_full_metadata$time)
@@ -447,15 +455,69 @@ saveRDS(all_spliceq_df, "data_new/processed_data/all_splice_data.RDS")
 
 
 
+low_SE_full <- post_splice_df %>%
+  pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID)) %>%
+  #  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
+  summarise(.by = transcript_ID, 
+            mode = getmode(SE),
+            min = min(SE), 
+            max = max(SE), 
+            mean = mean(SE)
+            # q20 = quantile(SE, 0.2), 
+            #  range = max(SE) - min(SE)
+  ) %>%
+  filter(max <= 0.2) %>%
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+
+
+
+
+
+
+High_SE_full <- post_splice_df %>%
+  pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID)) %>%
+  summarise(.by = transcript_ID, 
+            mode = getmode(SE),
+            min = min(SE), 
+            max = max(SE)) %>%
+  filter(min == 1) %>%
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+
+
+
+
 #a <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/s100_EKRN240058206.tsv")
 # Query the low and perfect spliced introns to see how they fared postexercise
 
 High_at_post <- all_spliceq_df[all_spliceq_df$transcript_ID %in% High_SE$transcript_ID,]
 
 
+
+intersect_high_SE <- High_SE[High_SE$transcript_ID %in% High_SE_full$transcript_ID, ]
+
+
+
+
+
+annotation_high_SE_full <- inner_join(High_SE_full, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
+
+annotation_high_SE_full %>%
+  ggplot(aes(transcript_biotype, fill = transcript_biotype))+
+  geom_bar(width = 1, alpha =.8 )+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = 1)+
+  ggtitle("Biotypes of transcripts containing the perfectly spliced introns")+
+  ylab("Number of unique transcripts")
+
+
+
 # Visualize the postexercise data to see if same pattern remains in postexercise
 # Visualization
-long_df_post <- post_splice_df%>%
+long_df_post <- all_splice_df%>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
                cols = -(transcript_ID) )%>%
@@ -463,4 +525,17 @@ long_df_post <- post_splice_df%>%
 
 
 
+df_post <- long_df_post %>%
+  group_by(transcript_ID) %>%
+  summarize(avg = round(mean(SE), digits = 2)) %>%
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+  inner_join(annotation, by = c("transcript_ID" = "ensembl_transcript_id_version"), copy = T) %>%
+  mutate(.by = external_transcript_name, 
+         SE_per_gene = mean(avg))
+
+
+
+plot(df_post$SE_per_gene, df_post$transcript_length)
+
+cor.test(df_post$SE_per_gene, df_post$transcript_length)
 

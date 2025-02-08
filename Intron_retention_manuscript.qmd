@@ -4,7 +4,7 @@ format:
   docx:
    reference-doc: resources/custom_reference.docx
 author:
-  - "Chidimma Phoebe Echebiri^a,b^, Kristian Lian^b^, Torkil Rogneflåten^b^, 
+  - "Chidimma Phoebe Echebiri^a,b^, Kristian Lian^b^, Torkil Rognefl&aring;ten^b^, 
  H&aring;vard Hamarsland^b^, Knut Sindre M&#248;lmen^b^, Rafi Ahmad^a^, Stian Ellefsen^b^, and Daniel Hammarstr&ouml;m^b^"
 editor: visual
 csl: resources/journal-of-cell-science.csl
@@ -21,50 +21,90 @@ prefer-html: true
 Correspondance: Chidimma Phoebe Echebiri (chidimma.echebiri\@inn.no), Daniel Hammarström (daniel.hammarstrom\@inn.no).
 :::
 
-```{# {r}
-# #| label: setup
-# #| include: false
-# 
-# 
-# library(dplyr)
-# library(tidyverse)
-# library(gt)
-# library(cowplot)
-# library(ggpubr)
-# library(ggplot2)
-# library(gridExtra)
-# 
-# color_scale <- c("#7fc97f",  "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f")
-# 
-# 
-# 
-# source("R/Trainome_functions.R")
-# 
-# knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```{r}
+#| label: setup
+#| include: false
+
+
+library(dplyr)
+library(tidyverse)
+library(gt)
+library(cowplot)
+library(ggpubr)
+library(ggplot2)
+library(gridExtra)
+library(knitr)
+
+color_scale <- c("#7fc97f",  "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f")
+
+
+
+source("R/Trainome_functions.R")
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```
+
+::: {custom-style="abstracttitle"}
+Abstract
+:::
+
+<div>
+
+</div>
 
 ```{r}
-# #| echo: false
-# #| message: false
-# #| warning: false
-# #| label: abstract
-# 
-# all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
-# 
-# descr_stat <- all_pre_metadata %>%
-#   summarise(. by = study,
-#             n = n(),
-#             m_a = mean(age),
-#             s_a = sd(age)) %>%
-#   data.frame()
+#| echo: false
+#| message: false
+#| warning: false
+#| label: abstract
 
-
+#source("R/Data_exploration.R")
+  
+  pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
+  
+  participants <- length(unique(pre_metadata$participant))
+  
+  desc_stat  <- pre_metadata %>%
+    distinct(sex, age, participant) %>%
+  
+    summarise(.by = c(sex),
+              n= n(),
+              range = range(age)) %>%
+    data.frame()
+  
+  females <- glue::glue(round(desc_stat[1,2], 0),
+                        " females aged ", round(desc_stat[1,3], 0),
+                        " to ", round(desc_stat[2, 3], 0))
+  
+  males <- glue::glue( round(desc_stat[3,2], 0),
+                        " males aged ", round(desc_stat[3,3], 0),
+                      " to ", round(desc_stat[4, 3], 0))
+  
+  
+  
+  full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
+  full_part <- length(unique(full_metadata$participant))
+  
+  desc_stat_full  <- full_metadata %>%
+    distinct(sex, age, participant) %>%
+  
+    summarise(.by = c(sex),
+              n= n(),
+              range = range(age)) %>%
+    data.frame()
+  
+  females_full <- glue::glue(round(desc_stat_full[1,2], 0),
+                        " females aged ", round(desc_stat_full[1,3], 0),
+                        " to ", round(desc_stat_full[2, 3], 0))
+  
+  males_full <- glue::glue( round(desc_stat_full[3,2], 0),
+                        " males aged ", round(desc_stat_full[3,3], 0),
+                      " to ", round(desc_stat_full[4, 3], 0))
+  
 ```
 
-## Abstract
-
-Progressive resistance exercise training (RT) elicits a range of adaptive responses in the human transcriptome, most of which have been studied in-depth. Several studies have shown that processes such as aging, disease conditions and physical exercise affect the pre-mRNA splicing machinery. There is however limited information about intron retention in healthy human skeletal muscle and how it is impacted by aging and resistance exercise training. This study investigates intron retention in the *vastus lateralis* muscle of individuals aged 19 to 93 ; and explores how \~12 week of resistance exercise training affects intron retention. Using SpliceQ, splicing efficiency of introns in paired_end RNA sequence data from six different RT intevrntion studies involving 367 partricipants. Differentially spliced introns at baseline and at post exercise were identified using betabinomial generalised linear models allowing for study and participant level intercepts. The differentially spliced introns were further investigated to identify patterns related to their gene lengths, ontology and functions.
+Progressive resistance exercise training (RT) elicits a range of adaptive responses in the human transcriptome, most of which have been studied in-depth. Several studies have shown that processes such as aging, disease conditions and physical exercise affect the pre-mRNA splicing machinery. There is however limited information about intron retention in healthy human skeletal muscle and how it is impacted by aging and resistance exercise training. This study investigates intron retention in the *vastus lateralis* muscle of `r participants` participants ( `r females` ; `r males`) ; and explores if and how resistance exercise training affects splicing efficiency in the `r  full_part` participants (( `r females_full` ; `r males_full`) who completed \~ 12 weeks of training . Using SpliceQ, splicing efficiency of introns in paired_end RNA sequence data from six different RT intevrntion studies involving 367 partricipants. Differentially spliced introns at baseline and at post exercise were identified using betabinomial generalised linear models allowing for study and participant level intercepts. The differentially spliced introns were further investigated to identify patterns related to their gene lengths, ontology and functions.
 
 ## Introduction
 
@@ -76,19 +116,38 @@ Progressive resistance exercise training (RT) describes the type of physical exe
 
 # Results
 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: Results
+
+# Load the poorly spliced introns table
+low_SE <- readRDS("data_new/Pre_Exercise/annotated_low_SE_introns.RDS") %>%
+  dplyr::select(transcript_ID, intron_ID, transcript_biotype,external_gene_name, mode, min, max)
+kable(low_SE, caption = " Table 1:Introns with poor splicing efficiency across all baseline samples")
+
+
+perfect_SE <- readRDS("data_new/Pre_Exercise/annotated_perfect_SE_introns.RDS")
+
+PE_introns <- length(perfect_SE$intron_ID)
+
+PE_transcripts <- length(unique(perfect_SE$transcript_ID))
+
+PE_genes <- length(unique(perfect_SE$ensembl_gene_id))
+```
+
 #### Some introns have characteristically poor or perfect splicing efficiency
 
-To investigate if there were introns having same splicing efficiency patterns across all baseline samples, we investigated those with poor splicing efficiency, as well as those with perfect splicing efficiency across all samples. To identify introns with characteristically low splicing efficiency , we filtered the baseline dataset for introns whose splicing efficiency across all baseline samples have a maximum total splicing efficiency of 0.2 . Six introns belonging to six different transcripts were shown to be almost completely retained in all sample, with maximum splicing efficiency in any sample being 0.2. That is, over 80% of the six introns were retained across all samples. The introns are as shown in **Table 1** **.** 5 of the 6 transcripts containing the poorly spliced introns are long non-coding RNAs without functional annotation on the org.Hs.eg.db database @manual_orghsegdb_nodate databases . The other transcript containing the poorly spliced intron is an alternatively spliced transcript of the MEIOC gene that lacks a coding sequence (CDS).
+To determine if there were introns having same splicing efficiency patterns across all baseline samples, we investigated those with poor splicing efficiency, as well as those with perfect splicing efficiency across all samples. To identify introns with characteristically low splicing efficiency , we filtered the baseline dataset for introns whose splicing efficiency across all baseline samples have a maximum total splicing efficiency of 0.2 . Six introns belonging to six different transcripts were shown to be almost 100% retained in all samples. The introns are as shown in **Table 1** **.** 5 of the 6 transcripts containing the poorly spliced introns are long non-coding RNAs without functional annotation on the org.Hs.eg.db database @manual_orghsegdb_nodate . The other transcript containing the poorly spliced intron is an alternatively spliced transcript of the MEIOC gene that lacks a coding sequence (CDS). GO analysis of the MEIOC transcript reveals it is involved in meiotic processes as seen in **Figure 1**. Only two of the poorly spliced introns were captured in the post exercise data where they still remained poorly spliced.
 
-239 introns from 179 transcripts were perfectly spliced across all datasets. These genes were mostly protein_coding genes as can be seen in **Figure 1**. These genes were enriched for biological processes that are physiologically relevent to the skeletal muscle as can be seen in **Figure 2**.
+`r PE_introns` introns from `r PE_transcripts` transcripts belonging to `r PE_genes` genes were perfectly spliced across all datasets. These genes were mostly protein_coding genes enriched for biological processes that are physiologically relevent to the skeletal muscle as can be seen in **Figure 2**. 227 of these introns were captured in the postexercise data
 
-there was
-
-At baseline, the splicing efficiency of 23063 introns were captured across all the 422 baseline samples in the data. , 1022 introns from 925 transcripts were differentially spliced. At the gene level, these corresponded to 132 genes. We explored
+In the postexercise data, 329 of the 8738 introns were perfectly spliced across all introns , 218 of which were among those perfectly spliced at baseline.
 
 ### Transcript length did not correlate to splicing efficiency
 
-To investigate if there was a correlation between transcript length and splicing efficiency at baseline, a pearson's product-moment correlation test was performed and a negligle correllation of -0.018 at a pvalue of 0.007 was found between the transcript length and splicing efficiency
+To investigate if there was a correlation between transcript length and splicing efficiency at baseline, a pearson's product-moment correlation test was performed and a negligible correllation of -0.018 at a pvalue of 0.007 was found between the transcript length and splicing efficiency. When tested in the post exercise data alone , it had a correlation estimate of -0,034 at a p value of 0.0. With the full dataset (baseline and postexercise), the correlation was -0.042 with a p.value of 0.0
 
 When both post and preexercise data were included, 8738 introns were captured across all datasets
 
@@ -108,6 +167,8 @@ Seven introns were shown to be differentially expressed by age when used as a co
 
 Of the 1693 ds introns captured in the full dataset, 135 were changed postexercise. Based on the Estimate values, they were all improvements
 
+At baseline, the splicing efficiency of 23063 introns were captured across all the 422 baseline samples in the data. , 1022 introns from 925 transcripts were differentially spliced. At the gene level, these corresponded to 132 genes. We explored
+
 ## Materials and methods
 
 #### Datasets
@@ -122,25 +183,25 @@ ContraTrain (ClinicalTrial.gov Identifier NCT03795025)
 
 The characteristics of included studies are presented in **Table 1**
 
-+--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
-| Dataset name | Number of participants. postexc in bracket | Age range (in years)   | RT duration (in weeks) | Linked Publication                  |
-+==============+============================================+========================+========================+=====================================+
-| COPD         | 53 (53)                                    | 56-79                  | 13                     | @molmen_chronic_2021                |
-+--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
-| Volume       | 25 (25)                                    | 20-37                  | 12                     | @khan_increased_2020                |
-+--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
-| Contratrain  | 32 (26)                                    | 19-35                  | 10                     | Hamarsland *et al* (in preparation) |
-+--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
-| Alpha/ Omega | 143                                        | 23-60                  | 12                     | Hamarsland *et al* (in preparation) |
-+--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
-| SRP102542    | 52                                         | 19-30 (Young cohort)   | 12                     | @robinson_enhanced_2017             |
-|              |                                            |                        |                        |                                     |
-|              |                                            | 65-78 (Old cohort)     |                        |                                     |
-+--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
-| Relief       | 73(66)                                     | 20 - 29 (Young cohort) | 12                     | Lian *et al* (in preparation)       |
-|              |                                            |                        |                        |                                     |
-|              |                                            | 72 - 93 (Old cohort)   |                        |                                     |
-+--------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
++------------------------------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Dataset name                       | Number of participants. postexc in bracket | Age range (in years)   | RT duration (in weeks) | Linked Publication                  |
++====================================+============================================+========================+========================+=====================================+
+| COPD                               | 53 (53)                                    | 56-79                  | 13                     | @molmen_chronic_2021                |
++------------------------------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Volume                             | 25 (25)                                    | 20-37                  | 12                     | @khan_increased_2020                |
++------------------------------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Contratrain                        | 32 (26)                                    | 19-35                  | 10                     | Hamarsland *et al* (in preparation) |
++------------------------------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Alpha/ Omega                       | 143                                        | 23-60                  | 12                     | Hamarsland *et al* (in preparation) |
++------------------------------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| SRP102542 (GEO Accession GSE97084) | 52                                         | 19-30 (Young cohort)   | 12                     | @robinson_enhanced_2017             |
+|                                    |                                            |                        |                        |                                     |
+|                                    |                                            | 65-78 (Old cohort)     |                        |                                     |
++------------------------------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
+| Relief                             | 73(66)                                     | 20 - 29 (Young cohort) | 12                     | Lian *et al* (in preparation)       |
+|                                    |                                            |                        |                        |                                     |
+|                                    |                                            | 72 - 93 (Old cohort)   |                        |                                     |
++------------------------------------+--------------------------------------------+------------------------+------------------------+-------------------------------------+
 
 The benjamin and hochberg method @benjamini_controlling_1995 was used to control for false discovery rates
 
@@ -173,6 +234,8 @@ As recommended by [@zhao2020] in scenerios where multiple datasets are combined,
 #### Exploration of the effects of RT on intron retention
 
 First, we analysed the effect of RT on the differentially spliced introns at baseline, using RT as a fixed effect while study and participants were random effects each having individual intercepts.
+
+introns that were not represented across all samples were excluded from the analyses. This happens largely due to the settings in SpliceQ [@de_melo_costa_splice-q_2021]. For the full RT model, participants that did not perform RT were excluded from the analyses. Such participants were found in the ContraTrain and SRP102542 studies
 
 The full dataset was filtered to select only introns measured across all samples. A model was built using generalized linear mixed beta regression model using the interaction between age group, RT and sex as fixed effects, while study and participant were used as random effect having individual intercepts.
 

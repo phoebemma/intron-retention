@@ -41,7 +41,7 @@ all_pre_metadata <- all_pre_metadata %>%
 all_pre_splice_reordered <- all_pre_splice[ , c("transcript_ID",all_pre_metadata$seq_sample_id)]
 
 colnames(all_pre_splice_reordered)
-rownames(all_pre_metadata)
+
 
 # Check if everything matches except the transcript_id
  match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
