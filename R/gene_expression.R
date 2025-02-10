@@ -30,7 +30,7 @@ download_ome(download = "none")
 # alpha_omega_counts <- read_csv("ome-data/alphaomega_transcript_rsem.csv")
 
 
-alpha_omega_counts <- extract_rsem_isoform_counts("data_new/gene_counts/Alpha_Omega_gene_counts/")
+alpha_omega_counts <- extract_rsem_isoform_counts("data_new/gene_counts/Alpha_Omega_RSEM_outputs/")
 
 # load the alpha omega metadata 
 alpha_omega_metadata <- readRDS("data_new/processed_data/Alpha_Omega_metadata.RDS")

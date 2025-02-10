@@ -11,7 +11,7 @@ library(cowplot)
 library(gridExtra)
 library(grid)
 library(gt)
-library(webshot)
+
 
 source("R/Trainome_functions.R")
 # metadata
@@ -21,10 +21,7 @@ source("R/Trainome_functions.R")
 copd_metadata <- readRDS("data_new/Pre_Exercise/copd_preExc_metadata.RDS") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
 
-# unique(copd_metadata$time)
-# colnames(copd_metadata)
-# length(unique(copd_metadata$participant))
-# length(unique(copd_metadata$seq_sample_id))
+
 
 
 #Volume
@@ -32,28 +29,15 @@ copd_metadata <- readRDS("data_new/Pre_Exercise/copd_preExc_metadata.RDS") %>%
 volume_metadata <- readRDS("data_new/Pre_Exercise/vol_preExc_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
 
-# colnames(volume_metadata)
-# unique(volume_metadata$time)
-# length(unique(volume_metadata$participant))
-# length(unique(volume_metadata$seq_sample_id))
+
 # Contratratrain
 Contratrain_metadata <- readRDS("data_new/Pre_Exercise/ct_PreExc_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-# colnames(Contratrain_metadata)
-# unique(Contratrain_metadata$sex)
-# length(unique(Contratrain_metadata$participant))
-# length(unique(Contratrain_metadata$seq_sample_id))
-# range(Contratrain_metadata$age)
+
 
 # SRP102542
 SRP102542_metadata <- readRDS("data_new/Pre_Exercise/SRP102542_preExc_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-
-# colnames(SRP102542_metadata)
-# unique(SRP102542_metadata$sex)
-# length(unique(SRP102542_metadata$participant))
-length(unique(SRP102542_metadata$seq_sample_id))
-# range(SRP102542_metadata$age)
 
 
 
@@ -64,9 +48,7 @@ length(unique(Alpha_Omega_metadata$seq_sample_id))
 # Relief
 
 Relief_metadata <- readRDS("data_new/Pre_Exercise/Relief_PreExc_metadata.RDS")
-# length(unique(Relief_metadata$seq_sample_id))
-# length(unique(Relief_metadata$participant))
-# hist(Relief_metadata$age)
+
 
 # Merge all in one
 all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
@@ -82,21 +64,18 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
                             age > 50  ~ "Above fifty")) %>%
   mutate(sex = factor(sex, levels = c("female", "male")),
           group = factor(group, levels = c("Fifty and below" ,"Above fifty" ))) 
-unique(all_pre_metadata$sex)
-unique(all_pre_metadata$group)
+
 
 all_pre_metadata$participant <- paste0(all_pre_metadata$study, "_", all_pre_metadata$participant)
 
 
-
-length(unique(all_pre_metadata$participant))
 
  saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
  
  
  
 
- ggplot(all_pre_metadata, aes(group, fill = group)) +
+ ggplot(all_pre_metadata, aes(age, fill = group)) +
   geom_bar()+
   ggtitle("Distribution of baseline data by group")+
   theme(plot.title = element_text(hjust = 0.5))+
@@ -121,16 +100,16 @@ length(unique(all_pre_metadata$participant))
 hist(all_pre_metadata$age)
 
 
-all_pre_metadata %>%
+pre_chart <- all_pre_metadata %>%
   ggplot(aes(x= age, fill = sex, colour = sex))+
-  geom_histogram(binwidth = 2, colour= "lightblue") +
+  geom_histogram(binwidth = 1, colour= "lightblue") +
   ylab("Number of participants")+
   facet_wrap(study ~.)+
   ggtitle(" Distribution of baseline samples across all studies")+
      theme(plot.title = element_text(hjust = 0.5))+
      theme_cowplot() # removes grid
 
-ggsave("Images_tables/Distribution_baseline_samples.png", bg = "white", scale = 1.5, dpi = 400)
+#ggsave("Images_tables/Distribution_baseline_samples.png", bg = "white", scale = 1.5, dpi = 400)
 
 
 
@@ -170,7 +149,7 @@ saveRDS(all_pre_splice, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 # Are there specific introns that charactaristically have low splicing efficiency
 
-low_SE <- all_pre_splice %>%
+low_SE_df <- all_pre_splice %>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
                cols = -(transcript_ID)) %>%
@@ -183,9 +162,11 @@ low_SE <- all_pre_splice %>%
            # q20 = quantile(SE, 0.2), 
            #  range = max(SE) - min(SE)
            ) %>%
-  filter(max <= 0.2) %>%
+  filter(max <= 0.2)
+
+
+low_SE <- low_SE_df %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
-# length(unique(low_SE$transcript_ID))
 
 
 
@@ -207,7 +188,7 @@ dev.off()
 
 
 # Get the perfectly spliced introns across all datasets
-High_SE <- all_pre_splice %>%
+High_SE_df <- all_pre_splice %>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
                cols = -(transcript_ID)) %>%
@@ -215,12 +196,11 @@ High_SE <- all_pre_splice %>%
             mode = getmode(SE),
             min = min(SE), 
             max = max(SE)) %>%
-  filter(min == 1) %>%
+  filter(min == 1) 
+
+
+High_SE <- High_SE_df %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
-
-# length(unique(High_SE$transcript_ID))
-
-
 
 
 
@@ -345,10 +325,6 @@ plot(df$SE_per_gene, df$transcript_length)
 cor.test(df$SE_per_gene, df$transcript_length)
 
 
-#cor.test(df$avg, df$transcript_length)
-# Explore what happens to those introns at post exercise
-
-#Load the full data of all types
 
 
 #COPD metadata
@@ -401,9 +377,7 @@ all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
          group = factor(group, levels = c("Fifty and below" ,"Above fifty" )),
          time = factor(time, levels = c("PreExc", "PostExc")))
 all_full_metadata$participant <- paste0(all_full_metadata$study, "_", all_full_metadata$participant)
-unique(all_full_metadata$sex)
-unique(all_full_metadata$study)
-unique(all_full_metadata$time)
+
 
 
 saveRDS(all_full_metadata, "data_new/processed_data/all_full_metadata.RDS")
@@ -445,11 +419,11 @@ post_splice_df <- all_splice_df %>%
 # select only the splicing samples captured in the metadata
 all_intersect <- intersect(colnames(all_splice_df), all_full_metadata$seq_sample_id)
 
-all_spliceq_df <- all_splice_df %>%
+all_splice_df <- all_splice_df %>%
   subset(select = c("transcript_ID", all_intersect))%>%
   drop_na()
 
-saveRDS(all_spliceq_df, "data_new/processed_data/all_splice_data.RDS")
+saveRDS(all_splice_df, "data_new/processed_data/all_splice_data.RDS")
 
 
 
@@ -459,15 +433,11 @@ low_SE_full <- post_splice_df %>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
                cols = -(transcript_ID)) %>%
-  #  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
   summarise(.by = transcript_ID, 
             mode = getmode(SE),
             min = min(SE), 
             max = max(SE), 
-            mean = mean(SE)
-            # q20 = quantile(SE, 0.2), 
-            #  range = max(SE) - min(SE)
-  ) %>%
+            mean = mean(SE)) %>%
   filter(max <= 0.2) %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 
@@ -493,7 +463,7 @@ High_SE_full <- post_splice_df %>%
 #a <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/s100_EKRN240058206.tsv")
 # Query the low and perfect spliced introns to see how they fared postexercise
 
-High_at_post <- all_spliceq_df[all_spliceq_df$transcript_ID %in% High_SE$transcript_ID,]
+High_at_post <- post_splice_df[post_splice_df$transcript_ID %in% High_SE_df$transcript_ID,]
 
 
 
@@ -517,7 +487,7 @@ annotation_high_SE_full %>%
 
 # Visualize the postexercise data to see if same pattern remains in postexercise
 # Visualization
-long_df_post <- all_splice_df%>%
+long_df_post <- all_spliceq_df %>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
                cols = -(transcript_ID) )%>%
@@ -537,5 +507,21 @@ df_post <- long_df_post %>%
 
 plot(df_post$SE_per_gene, df_post$transcript_length)
 
-cor.test(df_post$SE_per_gene, df_post$transcript_length)
+ x <- cor.test(df_post$SE_per_gene, df_post$transcript_length) %>%
+  as.dataframe() 
 
+ 
+post_chart <-   all_full_metadata %>%
+   ggplot(aes(x= age, fill = sex, colour = sex))+
+   geom_histogram(binwidth = 1, colour= "lightblue") +
+   ylab("Number of participants")+
+   facet_wrap(study ~.)+
+   ggtitle(" Distribution of postexercise samples across all studies")+
+   theme(plot.title = element_text(hjust = 0.5))+
+   theme_cowplot()
+
+ggarrange(pre_chart, post_chart, 
+          labels = "A", "B")
+
+ggsave("Images_tables/Distribution_samples.png", bg = "white", scale = 7, dpi = 400, 
+       limitsize = F)

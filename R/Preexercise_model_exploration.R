@@ -16,14 +16,23 @@ colnames(Pre_group)
 unique(Pre_group$coef)
 
 filt_pre_group <- Pre_group %>%
-  filter(Pr...z..<= 0.05 )
+  filter(Pr...z..<= 0.05  )
 
-
+hist(filt_pre_group$Estimate)
 
 filt_pre_group %>%
   ggplot(aes(x = coef)) +
-  geom_bar()+
+  geom_bar(width = 1)+
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
+
+
+
+filt_pre_group %>% ggplot(aes(x=Estimate))+
+  geom_histogram( colour= "lightblue") +
+  ylab("Number of introns per Estimate")+
+  ggtitle("Model Estimate of differentially spliced introns")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme_cowplot()
 
 
 
@@ -45,19 +54,26 @@ saveRDS(filt_pre_group, "data_new/models/filt_scaled_age_seperate_slope_intercep
 
 # Extract the transcript_Id of the ds introns
  
- filt <- filt_pre_group %>%
+ filt_positive <- filt_pre_group %>%
+   filter(Estimate > 0) %>%
    separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
     inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
    dplyr::select(Estimate, transcript_ID, transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)
+ 
+ 
+ filt_negative <- filt_pre_group %>%
+   filter(Estimate < 0) %>%
+   separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+   inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+   dplyr::select(Estimate, transcript_ID, transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)
 
- hist(filt$Estimate)
  # How many unique transcripts
 length(unique(filt$transcript_ID))
 
 # How many unique genes
 length(unique(filt$ensembl_gene_id))
 
-filt %>%
+filt_positive %>%
    ggplot(aes(transcript_biotype))+
    geom_bar()+
    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
@@ -70,10 +86,10 @@ cor(filt$Estimate, filt$transcript_length)
 cor.test(filt$Estimate, filt$transcript_length)
 
 
-ego_df_mf <- enrichGO(gene = filt$ensembl_gene_id,
+ego_df_mf <- enrichGO(gene = filt_positive$ensembl_gene_id,
                    keyType = "ENSEMBL",
                    OrgDb = org.Hs.eg.db, 
-                   ont = "MF", 
+                   ont = "BP", 
                    pAdjustMethod = "BH", 
                    qvalueCutoff = 0.05, 
                    readable = T)
@@ -81,13 +97,14 @@ ego_df_mf <- enrichGO(gene = filt$ensembl_gene_id,
 ## Output results from GO analysis to a table
  cluster_summary_mf <- data.frame(ego_df_mf)
 
-a <- dotplot(ego_df_mf,
+ dotplot(ego_df_mf,
         
-        font.size = 8, title = "Enriched molecular functions in genes containing differentially spliced introns at baseline") +
+        font.size = 8, title = "Enriched bioloical processes in genes with positive estimate") +
   theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
 
 
-ego_df_bp <- enrichGO(gene = filt$ensembl_gene_id,
+
+ ego_df_bp <- enrichGO(gene = filt_negative$ensembl_gene_id,
                       keyType = "ENSEMBL",
                       OrgDb = org.Hs.eg.db, 
                       ont = "BP", 
@@ -98,7 +115,7 @@ ego_df_bp <- enrichGO(gene = filt$ensembl_gene_id,
 cluster_summary_bp <- data.frame(ego_df_bp)
 b <- dotplot(ego_df_bp,
         
-        font.size = 8, title = "Enriched biological functions in genes containing differentially spliced introns at baseline") +
+        font.size = 8, title = "Enriched bioloical processes in genes with positive estimatee") +
   theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
 
 

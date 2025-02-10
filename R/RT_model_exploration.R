@@ -5,6 +5,8 @@ library(ggpubr)
 library(org.Hs.eg.db)
 library(clusterProfiler)
 
+
+
 # This model analyses the interaction between  the age_groups and RT, and sex
 model <- readRDS("data_new/models/full_data_RT_scaled_age_int_model.RDS") %>%
   # filter to only those with adjusted p values at or below 0.05
@@ -20,7 +22,12 @@ model %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
 
 
-
+RT_effects <- model %>%
+  filter(coef == "timePostExc" | coef == "scaled_age:timePostExc") %>%
+  #filter(fcthreshold == "s") %>%
+  separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+  dplyr::select(Estimate, coef,  transcript_ID, transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)
 
 
 #hist(sev_above$Estimate)
@@ -29,22 +36,13 @@ gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
 
 
 
-filt <- model %>%
-  # filter only those with training effect
-  filter(coef == "timePostExc" | coef == "scaled_age:timePostExc") %>%
-  separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
-  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) #%>%
-#  dplyr::select(Estimate, transcript_ID, coef, fcthreshold, transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)
-
-
-hist(filt$Estimate)
 # How many unique transcripts
-length(unique(filt$transcript_ID))
+length(unique(RT_effects$transcript_ID))
 
 # How many unique genes
-length(unique(filt$ensembl_gene_id))
+length(unique(RT_effects$ensembl_gene_id))
 
-filt %>%
+RT_effects %>%
   ggplot(aes(transcript_biotype))+
   geom_bar()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
@@ -56,12 +54,14 @@ filt %>%
 
 
 # Extract those ds by exercise
-filt_exc <- filt %>%
+filt_exc <- RT_effects %>%
   filter(coef == "timePostExc")
 hist(filt_exc$Estimate)
 
-cor.test(filt_exc$Estimate, filt_exc$transcript_length)
-plot(filt_exc$Estimate, filt_exc$transcript_length)
+
+filt_int <- RT_effects %>%
+  filter(coef == "scaled_age:timePostExc")
+hist(filt_exc$Estimate)
 
 
 ego_df_postEXC <- enrichGO(gene = filt_exc$ensembl_gene_id,

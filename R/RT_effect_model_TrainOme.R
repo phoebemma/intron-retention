@@ -5,6 +5,7 @@ library(seqwrap)
 library(gridExtra)
 library(ggpubr)
 library(cowplot)
+library(scales)
 
 
 # Load the Trainome functions
