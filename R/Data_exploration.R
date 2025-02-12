@@ -23,7 +23,6 @@ copd_metadata <- readRDS("data_new/Pre_Exercise/copd_preExc_metadata.RDS") %>%
 
 
 
-
 #Volume
 
 volume_metadata <- readRDS("data_new/Pre_Exercise/vol_preExc_metadata.RDS")%>%
@@ -68,11 +67,11 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
 
 all_pre_metadata$participant <- paste0(all_pre_metadata$study, "_", all_pre_metadata$participant)
 
-
+length(unique(all_pre_metadata$participant))
 
  saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
  
- 
+
  
 
  ggplot(all_pre_metadata, aes(age, fill = group)) +
@@ -141,8 +140,27 @@ all_pre_splice <- copd_data%>%
 saveRDS(all_pre_splice, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 
+# all_pre_splice<-  readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 
+# Those with very low standard deviation
+no_deviation <- all_pre_splice %>%
+  pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID)) %>%
+  #  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
+  summarise(.by = transcript_ID, 
+            sd = sd(SE),
+            min = min(SE), 
+            max = max(SE), 
+            mean = mean(SE)
+            # q20 = quantile(SE, 0.2), 
+            #  range = max(SE) - min(SE)
+  ) %>%
+  filter(sd <= 0.01)
+
+no_deviation_pre <- no_deviation %>%
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 
 
 
@@ -155,7 +173,7 @@ low_SE_df <- all_pre_splice %>%
                cols = -(transcript_ID)) %>%
 #  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
   summarise(.by = transcript_ID, 
-            mode = getmode(SE),
+           # mode = getmode(SE),
             min = min(SE), 
             max = max(SE), 
             mean = mean(SE)
@@ -186,14 +204,13 @@ dev.off()
 
 
 
-
 # Get the perfectly spliced introns across all datasets
 High_SE_df <- all_pre_splice %>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
                cols = -(transcript_ID)) %>%
   summarise(.by = transcript_ID, 
-            mode = getmode(SE),
+            #mode = getmode(SE),
             min = min(SE), 
             max = max(SE)) %>%
   filter(min == 1) 
@@ -213,7 +230,7 @@ attributes <- listAttributes(ensembl)
 
 # #extract GENE biotypes and  names
 annotation<- getBM(attributes = c("transcript_biotype", "external_transcript_name",
-                                  "ensembl_gene_id", "ensembl_transcript_id_version", "external_gene_name", "transcript_length"),  mart = ensembl )
+                                  "ensembl_gene_id", "ensembl_gene_id_version","ensembl_transcript_id_version", "external_gene_name", "transcript_length"),  mart = ensembl )
 annotation_low_SE <- inner_join(low_SE, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
 
@@ -230,8 +247,16 @@ grid.draw(table_plot_low)
 # Close the pdf device
 dev.off()
 
+annotation_no_dev <- inner_join(no_deviation_pre, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
+
+length(unique(annotation_no_dev$transcript_ID))
+
+length(annotation_no_dev$transcript_ID)
+
+length(unique(annotation_no_dev$ensembl_gene_id))
 
 
+saveRDS(annotation_no_dev, "data_new/processed_data/annotation_no_deviation_PreExc.RDS")
 # Perfectly spliced introns
 
 
@@ -243,7 +268,7 @@ high_distribution <- annotation_high_SE %>%
   geom_bar(width = 1, alpha =.8 )+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   stat_count(geom = "Text", aes(label = ..count..), vjust = 1)+
-  ggtitle("Biotypes of transcripts containing the perfectly spliced introns")+
+  ggtitle("Biotypes of transcripts containing the perfectly spliced introns at baseline")+
   ylab("Number of unique transcripts")
 
 
@@ -277,6 +302,8 @@ saveRDS(annotation, "data_new/ensembl_gene_annotation.RDS")
 
 
 
+
+
 # annotation of perfectly spliced introns
 ego_df_high <- enrichGO(gene = annotation_high_SE$ensembl_gene_id,
                    keyType = "ENSEMBL",
@@ -290,7 +317,7 @@ ego_df_high <- enrichGO(gene = annotation_high_SE$ensembl_gene_id,
 cluster_summary <- ego_df_high
  high_ontology <- dotplot(ego_df_high,
         
-        font.size = 8, title = "Enriched biological processes in perfectly spliced out  introns") +
+        font.size = 8, title = "Enriched biological processes in perfectly spliced out  introns at baseline") +
   theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 10))
 
 ggarrange(high_distribution, high_ontology, align = "hv")
@@ -415,7 +442,9 @@ post_splice_df <- all_splice_df %>%
   subset(select = c("transcript_ID", post_intersect))%>%
   drop_na()
 
+saveRDS(post_splice_df, "data_new/processed_data/PostEXc_splice_data.RDS")
 
+saveRDS(post_metadata, "data_new/processed_data/PostEXc_metadata.RDS")
 # select only the splicing samples captured in the metadata
 all_intersect <- intersect(colnames(all_splice_df), all_full_metadata$seq_sample_id)
 
@@ -434,7 +463,7 @@ low_SE_full <- post_splice_df %>%
                values_to = "SE",
                cols = -(transcript_ID)) %>%
   summarise(.by = transcript_ID, 
-            mode = getmode(SE),
+            #mode = getmode(SE),
             min = min(SE), 
             max = max(SE), 
             mean = mean(SE)) %>%
@@ -442,7 +471,7 @@ low_SE_full <- post_splice_df %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 
 
-
+saveRDS(low_SE_full, "data_new/processed_data/low_SE_postExc.RDS")
 
 
 
@@ -451,13 +480,13 @@ High_SE_full <- post_splice_df %>%
                values_to = "SE",
                cols = -(transcript_ID)) %>%
   summarise(.by = transcript_ID, 
-            mode = getmode(SE),
+            #mode = getmode(SE),
             min = min(SE), 
             max = max(SE)) %>%
   filter(min == 1) %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 
-
+saveRDS(High_SE_full, "data_new/processed_data/High_SE_postExc.RDS")
 
 
 #a <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/s100_EKRN240058206.tsv")
@@ -475,13 +504,54 @@ intersect_high_SE <- High_SE[High_SE$transcript_ID %in% High_SE_full$transcript_
 
 annotation_high_SE_full <- inner_join(High_SE_full, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
-annotation_high_SE_full %>%
+high_full <- annotation_high_SE_full %>%
   ggplot(aes(transcript_biotype, fill = transcript_biotype))+
   geom_bar(width = 1, alpha =.8 )+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   stat_count(geom = "Text", aes(label = ..count..), vjust = 1)+
-  ggtitle("Biotypes of transcripts containing the perfectly spliced introns")+
+  ggtitle("Biotypes of transcripts containing the perfectly spliced introns at postexercise")+
   ylab("Number of unique transcripts")
+
+
+length(unique(annotation_high_SE_full$ensembl_gene_id))
+
+length(unique(annotation_high_SE_full$transcript_ID))
+
+saveRDS(annotation_high_SE_full, "data_new/processed_data/annotation_High_SE_postEXc.RDS")
+
+ego_df_high <- enrichGO(gene = annotation_high_SE_full$ensembl_gene_id,
+                        keyType = "ENSEMBL",
+                        OrgDb = org.Hs.eg.db, 
+                        ont = "BP", 
+                        pAdjustMethod = "BH", 
+                        qvalueCutoff = 0.05, 
+                        readable = T)
+
+## Output results from GO analysis to a table
+cluster_summary<- ego_df_high
+high_ontology_full <- dotplot(ego_df_high,
+                         
+                         font.size = 8, title = "Enriched biological processes in perfectly spliced out  introns at postexercise") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 10))
+
+
+
+
+ggarrange(high_distribution, high_ontology, high_full, high_ontology_full,
+          labels = c("A", "B", "C", "D"),
+          align = "hv")
+
+
+
+
+ggsave("Images_tables/Figure_2Ontology_high_se.png", dpi = 400, scale = 2.5)
+
+
+
+
+
+
+
 
 
 

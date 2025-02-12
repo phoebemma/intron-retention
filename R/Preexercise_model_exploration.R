@@ -20,16 +20,12 @@ filt_pre_group <- Pre_group %>%
 
 hist(filt_pre_group$Estimate)
 
-filt_pre_group %>%
-  ggplot(aes(x = coef)) +
-  geom_bar(width = 1)+
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
 
 
 
 filt_pre_group %>% ggplot(aes(x=Estimate))+
   geom_histogram( colour= "lightblue") +
-  ylab("Number of introns per Estimate")+
+  ylab("Number of differentially spliced introns per Estimate")+
   ggtitle("Model Estimate of differentially spliced introns")+
   theme(plot.title = element_text(hjust = 0.5))+
   theme_cowplot()
@@ -68,7 +64,9 @@ saveRDS(filt_pre_group, "data_new/models/filt_scaled_age_seperate_slope_intercep
    dplyr::select(Estimate, transcript_ID, transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)
 
  # How many unique transcripts
-length(unique(filt$transcript_ID))
+length(unique(filt_negative$ensembl_gene_id))
+
+
 
 # How many unique genes
 length(unique(filt$ensembl_gene_id))
@@ -81,10 +79,24 @@ filt_positive %>%
   ggtitle("Annotation of genes containing differentially spliced introns at baseline") +
   ylab("Number of genes")
 
-cor(filt$Estimate, filt$transcript_length)
 
-cor.test(filt$Estimate, filt$transcript_length)
 
+filt_negative %>%
+  ggplot(aes(transcript_biotype))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Annotation of genes containing differentially spliced introns at baseline") +
+  ylab("Number of genes")
+
+
+
+
+
+
+cor.test(filt_positive$Estimate, filt_positive$transcript_length)
+
+plot(filt_positive$Estimate, filt_positive$transcript_length)
 
 ego_df_mf <- enrichGO(gene = filt_positive$ensembl_gene_id,
                    keyType = "ENSEMBL",
@@ -95,11 +107,11 @@ ego_df_mf <- enrichGO(gene = filt_positive$ensembl_gene_id,
                    readable = T)
 
 ## Output results from GO analysis to a table
- cluster_summary_mf <- data.frame(ego_df_mf)
+ cluster_summary_pos <- data.frame(ego_df_mf)
 
- dotplot(ego_df_mf,
+a<-  dotplot(ego_df_mf,
         
-        font.size = 8, title = "Enriched bioloical processes in genes with positive estimate") +
+        font.size = 8, title = "Enriched bioloical processes in genes with positive estimate at baseline") +
   theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
 
 
@@ -112,16 +124,17 @@ ego_df_mf <- enrichGO(gene = filt_positive$ensembl_gene_id,
                       qvalueCutoff = 0.05, 
                       readable = T)
 
-cluster_summary_bp <- data.frame(ego_df_bp)
+cluster_summary_neg <- data.frame(ego_df_bp)
 b <- dotplot(ego_df_bp,
         
-        font.size = 8, title = "Enriched bioloical processes in genes with positive estimatee") +
+        font.size = 8, title = "Enriched bioloical processes in genes with negative estimates at baseline") +
   theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
 
 
 
 
-ego_df_cc <- enrichGO(gene = filt$ensembl_gene_id,
+
+ego_df_mf_2 <- enrichGO(gene = filt_positive$ensembl_gene_id,
                       keyType = "ENSEMBL",
                       OrgDb = org.Hs.eg.db, 
                       ont = "CC", 
@@ -129,16 +142,40 @@ ego_df_cc <- enrichGO(gene = filt$ensembl_gene_id,
                       qvalueCutoff = 0.05, 
                       readable = T)
 
-cluster_summary_cc <- data.frame(ego_df_cc)
-c <- dotplot(ego_df_cc,
-        
-        font.size = 8, title = "Enriched cellular compartments in genes containing differentially spliced introns at baseline") +
+## Output results from GO analysis to a table
+cluster_summary_pos_2 <- data.frame(ego_df_mf_2)
+
+c<-  dotplot(ego_df_mf_2,
+             
+             font.size = 8, title = "Enriched cellular components in genes with positive estimate at baseline") +
   theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
 
 
-ggarrange(a, b, c, )
 
-ggsave("Figures/DS_introns_at_baseline.png", bg = "white" ,  scale = 2)
+ego_df_bp_2 <- enrichGO(gene = filt_negative$ensembl_gene_id,
+                      keyType = "ENSEMBL",
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "CC", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+cluster_summary_neg_2 <- data.frame(ego_df_bp_2)
+d <- dotplot(ego_df_bp_2,
+             
+             font.size = 8, title = "Enriched cellular components in genes with negative estimates at baseline") +
+  theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
+
+
+
+
+
+ggarrange(a, b, c, d ,
+          labels = c("A","B", "C", "D"),
+          align = "h")
+
+
+ggsave("Images_tables/DS_introns_at_baseline.png", bg = "white" ,  scale = 2)
 
 
 
@@ -147,11 +184,6 @@ ggsave("Figures/DS_introns_at_baseline.png", bg = "white" ,  scale = 2)
 
 # Apparently, a couple of introns improve with age
 
-improved_SE <- filt %>%
-  filter(Estimate > 0)
-
-decreased_SE <- filt %>%
-  filter(Estimate < 0)
 
 # investigate the enriched biological functions in the enriched versus decreased 
 
