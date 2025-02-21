@@ -1,5 +1,3 @@
-# Load the file with libraries
-# source("R/libraries.R")
 library(dplyr)
 library(tidyverse)
 library(seqwrap)
@@ -21,23 +19,22 @@ all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 all_pre_metadata$scaled_age <- round(rescale(all_pre_metadata$age), digits = 2)
 
 
+# visualization
 hist(all_pre_metadata$age)
 hist(all_pre_metadata$scaled_age)
 
-# splicing data
+# Load Splicing data
 all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
-colnames(all_pre_metadata)
-# Load Splicing data
 
-# reorder the column name to match how they occur in the metadata
 
-# Filter to remove missing values
+
+# select only samples present in the metadata
 all_pre_metadata <- all_pre_metadata %>%
-  filter((seq_sample_id %in% colnames(all_pre_splice[,-1]))) %>%
-  print()
+  filter((seq_sample_id %in% colnames(all_pre_splice[,-1]))) 
 
 
+# reorder the sample ids to match how they occur in the metadata
 all_pre_splice_reordered <- all_pre_splice[ , c("transcript_ID",all_pre_metadata$seq_sample_id)]
 
 colnames(all_pre_splice_reordered)
@@ -45,17 +42,14 @@ colnames(all_pre_splice_reordered)
 
 # Check if everything matches except the transcript_id
  match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
-# invert the data to create a dataframe suitable for zero inflated analyses
-# splice_df_inverted <- all_pre_splice_reordered %>%
-#   mutate(across(X102PreExcVLR12:X134.subj8sample4, function(x)1-x))
 
 
 
 # convert the 1.0 to 0.999. This is because beta-model accepts only values between 0 and one
 all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
-# This argument would estimate the intercept, and the slope seperately
-# uncorrelated random intercept and random slope within group
+# This argument would estimate the intercept, and the slope separately
+# with uncorrelated random intercept and random slope within each study
 
 arg_1<- list(formula = y ~  scaled_age + (1|study) + (scaled_age+0|study) +(1|participant), 
             family = glmmTMB::beta_family())

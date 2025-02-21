@@ -17,6 +17,7 @@ source("R/Trainome_functions.R")
 # metadata
 #Load the metadata of the the datasets
 
+ a <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/A_102.tsv")
 #Copd 
 copd_metadata <- readRDS("data_new/Pre_Exercise/copd_preExc_metadata.RDS") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
