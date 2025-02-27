@@ -41,7 +41,7 @@ Relief_metadata$study <- "ReLiEf"
 Relief_metadata <- Relief_metadata %>%
   inner_join(seq_df, by = "seq_id") %>%
   inner_join(relief_participants, by =  "participant") %>%
-  dplyr::select(study, participant, time_rep, age, sex, seq_sample_id) %>%
+  #dplyr::select(study, participant, time_rep, age, sex, seq_sample_id, allocation) %>%
   #Extract leg column
   mutate( 
     # leg = case_when(time_rep == "t1rnaL" ~ "L",
@@ -59,14 +59,11 @@ Relief_metadata <- Relief_metadata %>%
                            time_rep == "t3rnaR"  ~ "PostExc")) %>%
   # match it to the volume dataframe to extract condition
   # inner_join(relief_volume, by = c("participant", "leg")) %>%
-  dplyr::select(study, participant, sex, time, seq_sample_id, age) %>%
+  dplyr::select(study, participant, sex, time, seq_sample_id, age, allocation) %>%
   # filter only the pre and post exercise samples
   filter(time == "PreExc" | time == "PostExc")
 
-saveRDS(Relief_metadata, "data_new/processed_data/Relief_metadata.RDS")
 
-hist(Relief_metadata$age)
-length(unique(Relief_metadata$participant))
 
 # Select the Prexercise metadata
 pre_Exc <- Relief_metadata %>%
@@ -85,6 +82,22 @@ Relief_pre_splicing <-Relief_df %>%
 saveRDS(Relief_pre_splicing, "data_new/Pre_Exercise/Relief_PreExc_splicing_data.RDS")
 
 
+
+
+# For the postexercise model, extract the Relief samples that are controls
+Relief_metadata <- Relief_metadata %>%
+  filter(allocation == "int")
+
+unique(Relief_metadata$allocation)
+
+
+
+
+hist(Relief_metadata$age)
+length(unique(Relief_metadata$participant))
+
+
+
 # Select the pre-and post exercise splicing data
 Relief_intersect_full <- intersect(colnames(Relief_df), Relief_metadata$seq_sample_id)
 
@@ -92,4 +105,7 @@ Relief_df <-Relief_df %>%
   subset(select = c("transcript_ID", Relief_intersect_full))
 
 # Save splicing data 
-saveRDS(Relief_df, "data_new/processed_data/Relief_splicing_data")
+saveRDS(Relief_df, "data_new/processed_data/Relief_splicing_data.RDS")
+
+
+saveRDS(Relief_metadata, "data_new/processed_data/Relief_metadata.RDS")

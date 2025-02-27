@@ -19,9 +19,6 @@ all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 all_pre_metadata$scaled_age <- round(rescale(all_pre_metadata$age), digits = 2)
 
 
-# visualization
-hist(all_pre_metadata$age)
-hist(all_pre_metadata$scaled_age)
 
 # Load Splicing data
 all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
@@ -160,6 +157,15 @@ model_cont_2 <- mod_sum_2 %>%
 hist(model_cont_1$Pr...z..)
 
 saveRDS(model_cont_2, "data_new/models/scaled_model2.RDS")
+
+
+
+
+
+
+
+
+
 # # Argument for age group alone
 # arg_3<- list(formula = y ~  group + (1|study) +(1|participant), 
 #             family = glmmTMB::beta_family())

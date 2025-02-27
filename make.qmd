@@ -63,6 +63,9 @@ source("R/Data_extraction/Volume_data.R")
 # Extract the Public data; Srp102542
 source("R/Data_extraction/SRP102542_data.R")
 
+
+# Extract the REliEf data
+source("R/Data_extraction/Relief.R")
 ```
 
 Running the function above would save the following results in a `data_new` folder
@@ -89,6 +92,10 @@ Running the function above would save the following results in a `data_new` fold
 | `data_new/processed_data/SRP102542_metadata.RDS`             | SRP102542 metadata                |
 | `data_new/processed_data/SRP102542_splicing_data.RDS`        | SRP102542 SpliceQ data            |
 | `data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS`   | SRP102542 baseline SpliceQ data   |
+| `data_new/Pre_Exercise/Relief_PreExc_splicing_data.RDS`      | ReLiEf baseline SpliceQ data      |
+| `data_new/Pre_Exercise/Relief_PreExc_metadata.RDS`           | ReLiEf baseline metadata          |
+| `data_new/processed_data/Relief_splicing_data.RDS`           | ReLiEf SpliceQ data               |
+| `data_new/processed_data/Relief_metadata.RDS`                |  ReLiEf metadata                  |
 
 ### Basic data exploration
 
@@ -130,12 +137,12 @@ source("R/Preexercise_model.R")
 
 The script above produces the following files containing model outputs and the argument that produced the models
 
-| Data                                                                   | Argument                                                                                          |
-|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| `data_new/models/preExc_count_interaction_model.RDS`                   |  y \~ age\*sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                    |
-| `data_new/models/preExc_group_interaction_model.RDS`                   |  y \~ group\*sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                  |
-| `data_new/models/preExc_group_only_model.RDS`                          |  y \~ group + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                       |
-| `data_new/models/PreExc_count_no_interaction_model.RDS`                | y \~ age+sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                      |
+| Data                                                                   | Argument                                                                                           |
+|------------------------------|-----------------------------------------|
+| `data_new/models/preExc_count_interaction_model.RDS`                   | y \~ age\*sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                      |
+| `data_new/models/preExc_group_interaction_model.RDS`                   | y \~ group\*sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                    |
+| `data_new/models/preExc_group_only_model.RDS`                          | y \~ group + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                         |
+| `data_new/models/PreExc_count_no_interaction_model.RDS`                | y \~ age+sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                       |
 | `data_new/models/preExc_group_and_sex_without_interaction_model.RDS`   | y \~ group + sex  + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                 |
 | `data_new/models/Preexc_age_class_no_interaction_unique_intercept.RDS` | y \~ age_class + sex  + (1 + age_class\|study) +(1\|participant), family = glmmTMB::beta_family() |
 | `data_new/models/PreExc_age_class_sex_no_interaction.RDS`              | y \~age_class + sex  + (1\|study) +(1\|participant), family = glmmTMB::beta_family()              |

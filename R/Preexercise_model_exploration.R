@@ -18,14 +18,15 @@ unique(Pre_group$coef)
 filt_pre_group <- Pre_group %>%
   filter(Pr...z..<= 0.05  )
 
-hist(filt_pre_group$Estimate)
 
 
 
 
-filt_pre_group %>% ggplot(aes(x=Estimate))+
+# Visualize the EStimates
+plot_ds_introns <- filt_pre_group %>% 
+  ggplot(aes(x=Estimate))+
   geom_histogram( colour= "lightblue") +
-  ylab("Number of differentially spliced introns per Estimate")+
+  ylab("Number of ds introns per Estimate")+
   ggtitle("Model Estimate of differentially spliced introns")+
   theme(plot.title = element_text(hjust = 0.5))+
   theme_cowplot()
@@ -54,29 +55,25 @@ saveRDS(filt_pre_group, "data_new/models/filt_scaled_age_seperate_slope_intercep
    filter(Estimate > 0) %>%
    separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
     inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
-   dplyr::select(Estimate, transcript_ID, transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)
+   dplyr::select(Estimate, transcript_ID, intron_ID,  transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)%>%
+   # merge the intron_id back to the transcript ID so we track specific introns 
+   mutate(intron_ID = paste0(transcript_ID, "_", intron_ID))
  
  
  filt_negative <- filt_pre_group %>%
    filter(Estimate < 0) %>%
    separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
    inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
-   dplyr::select(Estimate, transcript_ID, transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)
+   dplyr::select(Estimate, transcript_ID,intron_ID,  transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)%>%
+   mutate(intron_ID = paste0(transcript_ID, "_", intron_ID))
 
- # How many unique transcripts
-length(unique(filt_negative$ensembl_gene_id))
-
-
-
-# How many unique genes
-length(unique(filt$ensembl_gene_id))
 
 filt_positive %>%
    ggplot(aes(transcript_biotype))+
    geom_bar()+
    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
    stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
-  ggtitle("Annotation of genes containing differentially spliced introns at baseline") +
+  ggtitle("Annotation of genes containing introns with improved SE upon aging") +
   ylab("Number of genes")
 
 
@@ -86,10 +83,91 @@ filt_negative %>%
   geom_bar()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
-  ggtitle("Annotation of genes containing differentially spliced introns at baseline") +
+  ggtitle("Annotation of genes containing introns with reduced SE upon aging") +
   ylab("Number of genes")
 
 
+
+# Explore if these negativesly impacted introns shared any genes in common
+
+
+common_genes_neg <- filt_negative[filt_negative$transcript_ID %in% filt_positive$transcript_ID,]
+
+common_genes_pos <- filt_positive[filt_positive$transcript_ID %in% filt_negative$transcript_ID,]
+
+length(intersect(filt_negative$transcript_ID, filt_positive$transcript_ID))
+
+
+length(common_genes_neg$intron_ID)
+
+dist_comm_neg <- as.data.frame(table(filt_negative$transcript_ID))
+
+# Load the full pre exercise splicing data
+all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
+
+df <- all_pre_splice%>%
+  pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID) )%>%
+  group_by(transcript_ID) %>%
+  summarize(avg = round(mean(SE), digits = 2)) %>%
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+  inner_join(annotation, by = c("transcript_ID" = "ensembl_transcript_id_version"), copy = T) %>%
+  mutate(.by = external_transcript_name, 
+         SE_per_gene = mean(avg))
+# How many introns in a transcript
+dist <- as.data.frame(table(df$transcript_ID))
+
+
+plot_all_introns <- dist %>%
+  ggplot(aes(Freq))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Introns per transcript in the baseline data") +
+  ylab("Number of transcripts")+
+  xlab("Number of introns")
+
+
+
+# Explore on average the intron-specificity of effects
+dist_com_pos <- as.data.frame(table(filt_positive$transcript_ID))
+
+dist_1 <- dist_com_pos %>%
+  ggplot(aes(Freq))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Introns per transcript with improved SE") +
+  ylab("Number of transcripts")+
+  xlab("Number of introns")+
+  scale_x_continuous()+
+  theme_cowplot()
+  
+
+
+
+dist_2 <- dist_comm_neg %>%
+  ggplot(aes(Freq))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Introns per transcript with reduced SE ") +
+  ylab("Number of transcripts")+
+  xlab("Number of introns")+
+  theme_cowplot()
+
+
+#  x <- ggarrange(dist_1 + rremove("x.title") + rremove("y.title"), dist_2 + rremove("x.title") + rremove("y.title"))
+# 
+# annotated_image <- annotate_figure(x, left = text_grob("Number of transcripts", rot = 90),
+#                 bottom = text_grob("Number of introns"))
+#  
+ggarrange(plot_ds_introns,
+          arrangeGrob(dist_2, dist_1, ncol = 2), # put both plots under the first
+          nrow = 2, labels = c("A", "B"))
+ 
+ ggsave("Images_tables/Improved_reduced_introns.png", dpi = 400, scale = 1.5, bg = "white")
 
 
 
@@ -97,6 +175,8 @@ filt_negative %>%
 cor.test(filt_positive$Estimate, filt_positive$transcript_length)
 
 plot(filt_positive$Estimate, filt_positive$transcript_length)
+
+
 
 ego_df_mf <- enrichGO(gene = filt_positive$ensembl_gene_id,
                    keyType = "ENSEMBL",
@@ -127,7 +207,7 @@ a<-  dotplot(ego_df_mf,
 cluster_summary_neg <- data.frame(ego_df_bp)
 b <- dotplot(ego_df_bp,
         
-        font.size = 8, title = "Enriched bioloical processes in genes with negative estimates at baseline") +
+        font.size = 8, title = "Enriched biological processes in genes with negative estimates at baseline") +
   theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
 
 
@@ -178,121 +258,4 @@ ggarrange(a, b, c, d ,
 ggsave("Images_tables/DS_introns_at_baseline.png", bg = "white" ,  scale = 2)
 
 
-
-# Some of the models had positive estimates , while others had negative
-# That is, those that increase with each scaled age, and those that decrease. 
-
-# Apparently, a couple of introns improve with age
-
-
-# investigate the enriched biological functions in the enriched versus decreased 
-
-
-ego_df_improved <- enrichGO(gene = improved_SE$ensembl_gene_id,
-                      keyType = "ENSEMBL",
-                      OrgDb = org.Hs.eg.db, 
-                      ont = "BP", 
-                      pAdjustMethod = "BH", 
-                      qvalueCutoff = 0.05, 
-                      readable = T)
-
-cluster_summary_improved <- data.frame(ego_df_improved)
-d <- dotplot(ego_df_improved,
-             
-             font.size = 8, title = "Enriched biological processes in genes with positive estimates at baseline") +
-  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 12))
-
-
-
-
-ego_df_decreased <- enrichGO(gene = decreased_SE$ensembl_gene_id,
-                            keyType = "ENSEMBL",
-                            OrgDb = org.Hs.eg.db, 
-                            ont = "BP", 
-                            pAdjustMethod = "BH", 
-                            qvalueCutoff = 0.05, 
-                            readable = T)
-
-cluster_summary_decreased <- data.frame(ego_df_decreased)
-e <- dotplot(ego_df_decreased,
-        
-        font.size = 8, title = "Enriched biological processes in genes with negative estimates at baseline") +
-  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 12))
-
-
-
-ego_df_improved <- enrichGO(gene = improved_SE$ensembl_gene_id,
-                            keyType = "ENSEMBL",
-                            OrgDb = org.Hs.eg.db, 
-                            ont = "MF", 
-                            pAdjustMethod = "BH", 
-                            qvalueCutoff = 0.05, 
-                            readable = T)
-
-cluster_summary_improved <- data.frame(ego_df_improved)
-f <- dotplot(ego_df_improved,
-             
-             font.size = 8, title = "Enriched molecular functions in genes with positive estimates at baseline") +
-  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 12))
-
-
-ego_df_decreased <- enrichGO(gene = decreased_SE$ensembl_gene_id,
-                             keyType = "ENSEMBL",
-                             OrgDb = org.Hs.eg.db, 
-                             ont = "MF", 
-                             pAdjustMethod = "BH", 
-                             qvalueCutoff = 0.05, 
-                             readable = T)
-
-cluster_summary_decreased <- data.frame(ego_df_decreased)
-g <- dotplot(ego_df_decreased,
-             
-             font.size = 8, title = "Enriched molecular functions in genes with negative estimates at baseline") +
-  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 12))
-
-
-
-
-
-
-
-ego_df_improved <- enrichGO(gene = improved_SE$ensembl_gene_id,
-                            keyType = "ENSEMBL",
-                            OrgDb = org.Hs.eg.db, 
-                            ont = "CC", 
-                            pAdjustMethod = "BH", 
-                            qvalueCutoff = 0.05, 
-                            readable = T)
-
-cluster_summary_improved <- data.frame(ego_df_improved)
-h <- dotplot(ego_df_improved,
-             
-             font.size = 8, title = "Enriched cellular_compartments in genes with positive estimates at baseline") +
-  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 12), axis.title.x = element_text(size = 12))
-
-
-
-
-ego_df_decreased <- enrichGO(gene = decreased_SE$ensembl_gene_id,
-                             keyType = "ENSEMBL",
-                             OrgDb = org.Hs.eg.db, 
-                             ont = "CC", 
-                             pAdjustMethod = "BH", 
-                             qvalueCutoff = 0.05, 
-                             readable = T)
-
-cluster_summary_decreased <- data.frame(ego_df_decreased)
-i <- dotplot(ego_df_decreased,
-             
-             font.size = 8, title = "Enriched cellular compartments in genes with negative estimates at baseline") +
-  theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 12), axis.title.x = element_text(size = 12))
-
-
-
-ggarrange(d, e, f, g, h,i,
-          ncol = 2,
-          nrow = 3, 
-          legend = "none")
-
-ggsave("Figures/ds_introns_based_on_estimates.png", bg = "white" ,  scale = 2)
 

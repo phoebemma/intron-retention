@@ -181,11 +181,11 @@ no_dev_genes <- length(unique(no_dev_pre$ensembl_gene_id))
 
 Furthermore, we filtered the baseline data for those with perfect SE scores across all samples `r PE_introns` introns from `r PE_transcripts` transcripts belonging to `r PE_genes` genes were perfectly spliced across all baseline samples. These genes were mostly protein_coding genes enriched for biological processes that are physiologically relevant to the skeletal muscle as can be seen in **Figure 2B**.
 
-In the post-exercise data, `r post_introns` of the `r all_post_introns` introns were perfectly spliced across all samples ,194 of which were among those perfectly spliced at baseline. These perfectly spliced introns belonged to `r post_transcripts` transcripts of `r post_genes`\` genes. The GO analyses of the genes revealed they are involved in some biological processes different from those at baseline as can be seen in **Figure 2B** and **Figure 2D**.
+In the post-exercise data, `r post_introns` of the `r all_post_introns` introns were perfectly spliced across all samples ,194 of which were among those perfectly spliced at baseline. These perfectly spliced introns belonged to `r post_transcripts` transcripts of `r post_genes` genes. The GO analyses of the genes revealed they are involved in some biological processes different from those at baseline as can be seen in **Figure 2B** and **Figure 2D**. Most of the genes belonged to the gene set involved in non-membrane bounded assembly. This suggests RT's involvement in improving splicing efficiency in genes beyond those physiologically relevant in the skeletal muscle
 
 The ontology of the transcripts containing the characteristically retained or completely spliced introns in the skeletal muscle samples appears to agree with @sanchez-escabias_co-transcriptional_2022, @saudemont_fitness_2017 and @braunschweig_widespread_2014 about a correlation between physiological relevance and splicing efficiency.
 
-### SE of introns in a gene tend to be similar
+### SE of introns in a gene tend to be similar 
 
 According to @sanchez-escabias_co-transcriptional_2022 SE tends to be similar between the introns of a gene . We investigated the presence of that similarity in the skeletal muscle by filtering for introns with standard deviation of 0.01 across all samples. Our results show that `r no_dev_introns` introns in `r no_dev_transcripts` transcripts of `r no_dev_genes` had similar SE across all samples. This suggests that more than half of the introns were similarly spliced and some, if not most were contained in same transcripts/genes
 
@@ -208,6 +208,9 @@ Top investigate the effects of aging on SE in the skeletal muscle of individuals
 ds_introns_pre <- readRDS("data_new/models/scaled_age_seperate_slope_intercept_model.RDS")  %>%
   filter(Pr...z..<= 0.05)
 
+# Load the gene annotation file
+ gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
+
 ds <- length(ds_introns_pre$target)
 
 ds_pos_ <- ds_introns_pre %>%
@@ -219,11 +222,41 @@ ds_neg_ <- ds_introns_pre %>%
    filter(Estimate < 0) 
 
 ds_neg <- length(ds_neg_$target)
+
+
+# EXplore the gene and transcript level information of the ds introns
+
+filt_positive <- ds_pos_ %>%
+   separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+    inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+   dplyr::select(Estimate, transcript_ID, intron_ID,  transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)%>%
+   mutate(intron_ID = paste0(transcript_ID, "_", intron_ID))
+
+
+
+filt_negative <- ds_neg_  %>%
+   separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+   inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+   dplyr::select(Estimate, transcript_ID,intron_ID,  transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)%>%
+   mutate(intron_ID = paste0(transcript_ID, "_", intron_ID))
+
+
+# get the intersect of both data
+pos_neg_intersect <- length(intersect(filt_negative$transcript_ID, filt_positive$transcript_ID))
+
+common_genes_neg <- filt_negative[filt_negative$transcript_ID %in% filt_positive$transcript_ID,]
+
+common_genes_pos <- filt_positive[filt_positive$transcript_ID %in% filt_negative$transcript_ID,]
+
+
+reduced_inte <- length(common_genes_neg$intron_ID)
+
+increased_inte <- length(common_genes_pos$intron_ID)
 ```
 
-Of the `r introns` introns captured across all samples at baseline, `r ds` were differentially spliced by aging. From the model estimate as seen in **Figures 3A** and **3B**, aging resulted more to poorer SE than it did to improved SE. Across all baseline samples in the study, `r ds_neg` introns revealed reduced SE with aging while `r ds_pos` had better IR with aging.
+Of the `r introns` introns captured across all samples at baseline, `r ds` were differentially spliced by aging. From the model estimate as seen in **Figures 3A** , aging resulted more to poorer SE than it did to improved SE. Across all baseline samples in the study, `r ds_neg` introns revealed reduced SE with aging while `r ds_pos` had better IR with aging. The effect of aging also showed to be intron-specific as `r pos_neg_intersect` transcripts contained introns in both the improved SE `r increased_inte` introns) and reduced SE (`r reduced_inte` introns) groups . Reduction in SE tended to affect more introns in a specific gene than improvements in SE as can be seen in **Figure 3B and 3C** . This suggests that while several introns in a gene could be affected by aging, the effect tends to be specific to each intron. Given that some transcripts in our dataset have as much as 58 introns as can be seen in supplementary **Figure 1**.
 
-Gene ontology analyses reveal that both the differentially spliced (ds) introns with negative estimates and those with positive estimates are involved in the same biological processes, but have somewhat different cellular components as can be seen in **Figure 3C** and **Figure 3D**. This suggests that while the two subgroups of ds introns are involved in same biological processes, their functional locations are somewhat different.
+Gene ontology analyses reveal that both the differentially spliced (ds) introns with negative estimates and those with positive estimates are involved in the same biological processes, but have somewhat different cellular components as can be seen in **Figure 4**. This suggests that while the two subgroups of ds introns are involved in same biological processes, their functional locations could vary.
 
 ### Resistance Exercise training elicits a different set of ds intron some of which are influenced by aging
 
@@ -299,7 +332,7 @@ The characteristics of included studies are presented in **Table 2** below
 +--------------+--------------------------+-------------------------------+------------------------+------------------------------------+
 | ReLiEf       | 73                       | 66                            | 20 - 29 (Young cohort) | @lian_relief_2021                  |
 |              |                          |                               |                        |                                    |
-|              |                          |                               | 72 - 93 (Old cohort)   |                                    |
+|              |                          |                               | 72 - 93 (Old cohort)   | NCT05063279                        |
 +--------------+--------------------------+-------------------------------+------------------------+------------------------------------+
 
 ### RNA sequence data processing
@@ -319,6 +352,8 @@ To examine the effect of \~12 weeks RT on SE, we fitted a GLMM to examine the ef
 ## Discussion
 
 IR is a physiological mechanism that controls gene expression [@wong_intron_2016 ; @schmitz_intron_2017 ]. Exercise counteracts the effects of aging and can offset aging-related changes to the splicing machinery [@ubaida-mohien_physical_2019; @ubaida-mohien_unbiased_2022]. In this study, we show that intron retention occurs in the *vastus lateralis* muscle, and is affected by aging, and by resistance exercise training. We also show that splicing efficiency has a relationship with the relevance of a gene to a particular tissue it is detected in, and that IR occurs more in protein-coding genes; a result that appears backed up mainly by short-read RNA sequencing data. However, similar to @stokes_transcriptomics_2023 debunking the long-held belief that long non-coding RNAs are sparsly expressed in comparison to protein-coding genes, it might be necessary to explore IR using microarray data. Results from @garcia-ruiz_splicing_2025 suggest that RNA sequencing may be underestimating IR.
+
+Our results suggest that while splicing efficiency tends to be similar across introns of a gene, the effect of aging tends to be intron-specific and can affect introns in a gene in a dissimilar fashion
 
 ### Shortcoming
 

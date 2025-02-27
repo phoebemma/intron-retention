@@ -17,7 +17,7 @@ source("R/Trainome_functions.R")
 # metadata
 #Load the metadata of the the datasets
 
- a <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/A_102.tsv")
+
 #Copd 
 copd_metadata <- readRDS("data_new/Pre_Exercise/copd_preExc_metadata.RDS") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
@@ -43,11 +43,11 @@ SRP102542_metadata <- readRDS("data_new/Pre_Exercise/SRP102542_preExc_metadata.R
 
 # Alpha_and_Omega
 Alpha_Omega_metadata <- readRDS("data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS")
-length(unique(Alpha_Omega_metadata$participant))
-length(unique(Alpha_Omega_metadata$seq_sample_id))
+
 # Relief
 
-Relief_metadata <- readRDS("data_new/Pre_Exercise/Relief_PreExc_metadata.RDS")
+Relief_metadata <- readRDS("data_new/Pre_Exercise/Relief_PreExc_metadata.RDS")%>%
+  dplyr::select(study, participant, sex, time, seq_sample_id, age)
 
 
 # Merge all in one
@@ -70,7 +70,8 @@ all_pre_metadata$participant <- paste0(all_pre_metadata$study, "_", all_pre_meta
 
 length(unique(all_pre_metadata$participant))
 
- saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
+
+saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
  
 
  
@@ -82,7 +83,6 @@ length(unique(all_pre_metadata$participant))
   xlab("Age group of participants")+
   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
 
- ggsave("Figures/Baseline_data.png")
 
 
  
@@ -95,15 +95,12 @@ length(unique(all_pre_metadata$participant))
   stat_count(geom = "Text", aes(label = ..count..), vjust = 1.5)
 
 
- 
-
-hist(all_pre_metadata$age)
-
 
 pre_chart <- all_pre_metadata %>%
   ggplot(aes(x= age, fill = sex, colour = sex))+
   geom_histogram(binwidth = 1, colour= "lightblue") +
   ylab("Number of participants")+
+  xlab("Age of participants") +
   facet_wrap(study ~.)+
   ggtitle(" Distribution of baseline samples across all studies")+
      theme(plot.title = element_text(hjust = 0.5))+
@@ -154,14 +151,16 @@ no_deviation <- all_pre_splice %>%
             sd = sd(SE),
             min = min(SE), 
             max = max(SE), 
-            mean = mean(SE)
-            # q20 = quantile(SE, 0.2), 
+            mean = mean(SE),
+             mode = getmode(SE), 
             #  range = max(SE) - min(SE)
   ) %>%
   filter(sd <= 0.01)
 
 no_deviation_pre <- no_deviation %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+
+
 
 
 
@@ -177,8 +176,8 @@ low_SE_df <- all_pre_splice %>%
            # mode = getmode(SE),
             min = min(SE), 
             max = max(SE), 
-            mean = mean(SE)
-           # q20 = quantile(SE, 0.2), 
+            mean = mean(SE),
+           mode = getmode(SE),
            #  range = max(SE) - min(SE)
            ) %>%
   filter(max <= 0.2)
@@ -211,7 +210,7 @@ High_SE_df <- all_pre_splice %>%
                values_to = "SE",
                cols = -(transcript_ID)) %>%
   summarise(.by = transcript_ID, 
-            #mode = getmode(SE),
+            mode = getmode(SE),
             min = min(SE), 
             max = max(SE)) %>%
   filter(min == 1) 
@@ -230,7 +229,8 @@ ensembl <- useMart(biomart = "ENSEMBL_MART_ENSEMBL",
 attributes <- listAttributes(ensembl)
 
 # #extract GENE biotypes and  names
-annotation<- getBM(attributes = c("transcript_biotype", "external_transcript_name",
+annotation<- getBM(attributes = c("transcript_biotype", "external_transcript_name",	
+                                  "ensembl_transcript_id",
                                   "ensembl_gene_id", "ensembl_gene_id_version","ensembl_transcript_id_version", "external_gene_name", "transcript_length"),  mart = ensembl )
 annotation_low_SE <- inner_join(low_SE, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
@@ -250,12 +250,6 @@ dev.off()
 
 annotation_no_dev <- inner_join(no_deviation_pre, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
-length(unique(annotation_no_dev$transcript_ID))
-
-length(annotation_no_dev$transcript_ID)
-
-length(unique(annotation_no_dev$ensembl_gene_id))
-
 
 saveRDS(annotation_no_dev, "data_new/processed_data/annotation_no_deviation_PreExc.RDS")
 # Perfectly spliced introns
@@ -273,22 +267,9 @@ high_distribution <- annotation_high_SE %>%
   ylab("Number of unique transcripts")
 
 
-# ggsave("Images_tables/Figure_1.jpeg")
-# 
-# 
-# table_plot_high <- tableGrob(annotation_high_SE %>%
-#                                dplyr::select(transcript_ID, intron_ID, transcript_biotype,external_gene_name, mode, min, max))
-# 
-# # Open a PNG device
-# png("Images_tables/supplementary_table1.png", width = 700)
-# 
-# # Draw the table
-# grid.draw(table_plot_high)
-# 
-# # Close the pdf device
-# dev.off()
 
 
+hist(dist$Freq)
 
 length(unique(annotation_high_SE$transcript_ID))
 
@@ -300,10 +281,9 @@ saveRDS(annotation_high_SE, "data_new/Pre_Exercise/annotated_perfect_SE_introns.
 
 saveRDS(annotation, "data_new/ensembl_gene_annotation.RDS")
 
-
-
-
-
+# 
+# x <- list(annotation_no_dev$ensembl_transcript_id)
+# write.csv(x, "no_dev_gene_list.csv")
 
 # annotation of perfectly spliced introns
 ego_df_high <- enrichGO(gene = annotation_high_SE$ensembl_gene_id,
@@ -346,13 +326,29 @@ df <- long_df %>%
   mutate(.by = external_transcript_name, 
            SE_per_gene = mean(avg))
 
+# How many introns in a transcript
+dist <- as.data.frame(table(df$transcript_ID))
 
+
+dist %>%
+  ggplot(aes(Freq))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Introns per transcript in the baseline data") +
+  ylab("Number of transcripts")+
+  xlab("Number of introns")
+
+
+ggsave("Images_tables/supplementary_intron_per_transcript_at_baseline.png", dpi = 400, scale = 1.5)
+ range(dist$Freq)
 
 plot(df$SE_per_gene, df$transcript_length)
 
 cor.test(df$SE_per_gene, df$transcript_length)
 
-
+dist_no_dev <- as.data.frame(table(annotation_no_dev$transcript_ID))
+hist(dist_no_dev$Freq)
 
 
 #COPD metadata
@@ -387,10 +383,11 @@ A_Omega_metadata <- readRDS("data_new/processed_data/Alpha_Omega_metadata.RDS")%
 unique(A_Omega_metadata$time)
 
 
-Relief_full_meta <- readRDS("data_new/processed_data/Relief_metadata.RDS")
+Relief_full_meta <- readRDS("data_new/processed_data/Relief_metadata.RDS")%>%
+  dplyr::select(study, participant, sex, time, seq_sample_id, age)
 unique(Relief_full_meta$seq_sample_id)
-# Merge them all in one
-length(unique(Relief_full_meta$participant))
+
+
 
 all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
   rbind(ct_metadata) %>%
@@ -459,12 +456,13 @@ saveRDS(all_splice_df, "data_new/processed_data/all_splice_data.RDS")
 
 
 
+# get the introns with poor splicing in the post_exercise data
 low_SE_full <- post_splice_df %>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
                cols = -(transcript_ID)) %>%
   summarise(.by = transcript_ID, 
-            #mode = getmode(SE),
+            mode = getmode(SE),
             min = min(SE), 
             max = max(SE), 
             mean = mean(SE)) %>%
@@ -481,7 +479,7 @@ High_SE_full <- post_splice_df %>%
                values_to = "SE",
                cols = -(transcript_ID)) %>%
   summarise(.by = transcript_ID, 
-            #mode = getmode(SE),
+            mode = getmode(SE),
             min = min(SE), 
             max = max(SE)) %>%
   filter(min == 1) %>%
@@ -514,9 +512,6 @@ high_full <- annotation_high_SE_full %>%
   ylab("Number of unique transcripts")
 
 
-length(unique(annotation_high_SE_full$ensembl_gene_id))
-
-length(unique(annotation_high_SE_full$transcript_ID))
 
 saveRDS(annotation_high_SE_full, "data_new/processed_data/annotation_High_SE_postEXc.RDS")
 
@@ -583,9 +578,11 @@ plot(df_post$SE_per_gene, df_post$transcript_length)
 
  
 post_chart <-   all_full_metadata %>%
+  filter(time == "PostExc") %>%
    ggplot(aes(x= age, fill = sex, colour = sex))+
    geom_histogram(binwidth = 1, colour= "lightblue") +
    ylab("Number of participants")+
+  xlab("Age of participants") +
    facet_wrap(study ~.)+
    ggtitle(" Distribution of postexercise samples across all studies")+
    theme(plot.title = element_text(hjust = 0.5))+
@@ -594,5 +591,4 @@ post_chart <-   all_full_metadata %>%
 ggarrange(pre_chart, post_chart, 
           labels = "A", "B")
 
-ggsave("Images_tables/Distribution_samples.png", bg = "white", scale = 7, dpi = 400, 
-       limitsize = F)
+ggsave("Images_tables/Distribution_samples.png", bg = "white", scale = 2)
