@@ -39,12 +39,12 @@ alpha_omega <- alpha_omega_counts %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
   
   # drop transcript_id, select transcripte_name and any of the sample names that match sample name in metadata
-  dplyr::select(gene_id, all_of(alpha_omega_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(alpha_omega_metadata$seq_sample_id))
 
 
 ## Keep nonzero rows
-nonzero <- alpha_omega %>%
-  dplyr::filter(rowSums(alpha_omega[, -1]) != 0)
+ nonzero <- alpha_omega %>%
+   dplyr::filter(rowSums(alpha_omega[, -1]) != 0)
 
 # saveRDS(nonzero, file = "data_new/gene_counts/nonzero_alphaomega_counts.RDS")
 # Keep filtered genes (based on time)
@@ -56,8 +56,8 @@ filtered <- nonzero %>%
   dplyr::filter(filterByExpr(nonzero[,-1], # exclude the first column
                              min.count = 1,
                           #   min.total.count = 15,
-                             large.n = 10, 
-                             min.prop = 0.7,
+                           #  large.n = 10, 
+                          #   min.prop = 0.7,
                              group = paste(alpha_omega_metadata$time)))  
 
 
@@ -77,12 +77,12 @@ dge_ao  <- calcNormFactors(dge_ao, method = "TMM")
 
 normalised_ao_counts <- as.data.frame(cpm(dge_ao, normalized.lib.sizes = T))
 
-normalised_ao_counts$gene_ID <- filtered$gene_id
+normalised_ao_counts$gene_name <- filtered$gene_name
 
 # Make the transcript_ID the first column
 
 normalised_ao_counts <- normalised_ao_counts %>%
-  dplyr::select(gene_ID, everything())
+  dplyr::select(gene_name, everything())
 
 
 #saveRDS(normalised_ao_counts, "data_new/gene_counts/cpm_normalised_AO_counts.RDS")
@@ -107,7 +107,7 @@ volume <- Vol_counts %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
   
   # drop transcript_id, select transcripte_name and any of the sample names that match sample name in metadata
-  dplyr::select(gene_id, all_of(volume_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(volume_metadata$seq_sample_id))
 
 
 ## Keep nonzero rows
@@ -124,8 +124,8 @@ filtered_vol <- nonzero_vol %>%
   dplyr::filter(filterByExpr(nonzero_vol[,-1], 
                              min.count = 1,
                              #   min.total.count = 15,
-                             large.n = 10, 
-                             min.prop = 0.7,
+                            # large.n = 10, 
+                            # min.prop = 0.7,
                              group = paste(volume_metadata$time)))  
 
 
@@ -144,12 +144,12 @@ dge_vol  <- calcNormFactors(dge_vol, method = "TMM")
 
 normalised_vol_counts <- as.data.frame(cpm(dge_vol, normalized.lib.sizes = T))
 
-normalised_vol_counts$gene_ID <- filtered_vol$gene_id
+normalised_vol_counts$gene_name <- filtered_vol$gene_name
 
 # Make the transcript_ID the first column
 
 normalised_vol_counts <- normalised_vol_counts %>%
-  dplyr::select(gene_ID, everything())
+  dplyr::select(gene_name, everything())
 
 
 #saveRDS(normalised_vol_counts, "data_new/gene_counts/cpm_normalised_vol_counts.RDS")
@@ -173,7 +173,7 @@ Contratrain <- Ct_counts %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
   
   # drop transcript_id, select transcripte_name and any of the sample names that match sample name in metadata
-  dplyr::select(gene_id, all_of(ct_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(ct_metadata$seq_sample_id))
 
 
 ## Keep nonzero rows
@@ -190,8 +190,8 @@ filtered_ct <- nonzero_ct %>%
   dplyr::filter(filterByExpr(nonzero_ct[,-1], 
                              min.count = 1,
                              #   min.total.count = 15,
-                             large.n = 10, 
-                             min.prop = 0.7,
+                             # large.n = 10, 
+                             # min.prop = 0.7,
                              group = paste(ct_metadata$time)))  
 
 
@@ -210,12 +210,12 @@ dge_ct  <- calcNormFactors(dge_ct, method = "TMM")
 
 normalised_ct_counts <- as.data.frame(cpm(dge_ct, normalized.lib.sizes = T))
 
-normalised_ct_counts$gene_ID <- filtered_ct$gene_id
+normalised_ct_counts$gene_name <- filtered_ct$gene_name
 
 # Make the transcript_ID the first column
 
 normalised_ct_counts <- normalised_ct_counts %>%
-  dplyr::select(gene_ID, everything())
+  dplyr::select(gene_name, everything())
 
 
 #saveRDS(normalised_ct_counts, "data_new/gene_counts/cpm_normalised_contratrain_counts.RDS")
@@ -236,7 +236,7 @@ Copd <- Copd_counts %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
   
   # drop transcript_id, select transcripte_name and any of the sample names that match sample name in metadata
-  dplyr::select(gene_id, all_of(copd_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(copd_metadata$seq_sample_id))
 
 
 ## Keep nonzero rows
@@ -253,8 +253,8 @@ filtered_copd <- nonzero_copd %>%
   dplyr::filter(filterByExpr(nonzero_copd[,-1], 
                              min.count = 1,
                              #   min.total.count = 15,
-                             large.n = 10, 
-                             min.prop = 0.7,
+                             # large.n = 10, 
+                             # min.prop = 0.7,
                              group = paste(copd_metadata$time)))  
 
 
@@ -273,12 +273,12 @@ dge_copd  <- calcNormFactors(dge_copd, method = "TMM")
 
 normalised_copd_counts <- as.data.frame(cpm(dge_copd, normalized.lib.sizes = T))
 
-normalised_copd_counts$gene_ID <- filtered_copd$gene_id
+normalised_copd_counts$gene_name <- filtered_copd$gene_name
 
 # Make the transcript_ID the first column
 
 normalised_copd_counts <- normalised_copd_counts %>%
-  dplyr::select(gene_ID, everything())
+  dplyr::select(gene_name, everything())
 
 
 #saveRDS(normalised_copd_counts, "data_new/gene_counts/cpm_normalised_COPD_counts.RDS")
@@ -302,7 +302,7 @@ Relief <- Relief_counts %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
   
   # drop transcript_id, select transcripte_name and any of the sample names that match sample name in metadata
-  dplyr::select(gene_id, all_of(Relief_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(Relief_metadata$seq_sample_id))
 
 
 ## Keep nonzero rows
@@ -319,8 +319,8 @@ filtered_Relief <- nonzero_Relief %>%
   dplyr::filter(filterByExpr(nonzero_Relief[,-1], 
                              min.count = 1,
                              #   min.total.count = 15,
-                             large.n = 10, 
-                             min.prop = 0.7,
+                             # large.n = 10, 
+                             # min.prop = 0.7,
                              group = paste(Relief_metadata$time)))  
 
 
@@ -339,12 +339,12 @@ dge_Relief  <- calcNormFactors(dge_Relief, method = "TMM")
 
 normalised_Relief_counts <- as.data.frame(cpm(dge_Relief, normalized.lib.sizes = T))
 
-normalised_Relief_counts$gene_ID <- filtered_Relief$gene_id
+normalised_Relief_counts$gene_name <- filtered_Relief$gene_name
 
 # Make the transcript_ID the first column
 
 normalised_Relief_counts <- normalised_Relief_counts %>%
-  dplyr::select(gene_ID, everything())
+  dplyr::select(gene_name, everything())
 
 
 #saveRDS(normalised_Relief_counts, "data_new/gene_counts/cpm_normalised_Relief_counts.RDS")
@@ -370,7 +370,7 @@ SRP102542 <- SRP102542_counts %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
   
   # drop transcript_id, select transcripte_name and any of the sample names that match sample name in metadata
-  dplyr::select(gene_id, all_of(SRP102542_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(SRP102542_metadata$seq_sample_id))
 
 
 ## Keep nonzero rows
@@ -387,8 +387,8 @@ filtered_SRP102542 <- nonzero_SRP102542 %>%
   dplyr::filter(filterByExpr(nonzero_SRP102542[,-1], 
                              min.count = 1,
                              #   min.total.count = 15,
-                             large.n = 10, 
-                             min.prop = 0.7,
+                             # large.n = 10, 
+                             # min.prop = 0.7,
                              group = paste(SRP102542_metadata$time)))  
 
 
@@ -407,12 +407,12 @@ dge_SRP102542  <- calcNormFactors(dge_SRP102542, method = "TMM")
 
 normalised_SRP102542_counts <- as.data.frame(cpm(dge_SRP102542, normalized.lib.sizes = T))
 
-normalised_SRP102542_counts$gene_ID <- filtered_SRP102542$gene_id
+normalised_SRP102542_counts$gene_name <- filtered_SRP102542$gene_name
 
 # Make the transcript_ID the first column
 
 normalised_SRP102542_counts <- normalised_SRP102542_counts %>%
-  dplyr::select(gene_ID, everything())
+  dplyr::select(gene_name, everything())
 
 
 #saveRDS(normalised_SRP102542_counts, "data_new/gene_counts/cpm_normalised_SRP102542_counts.RDS")
@@ -422,11 +422,11 @@ normalised_SRP102542_counts <- normalised_SRP102542_counts %>%
  # Merge the normalised gene counts into one
 
 all_normalised_transcripts <- normalised_copd_counts %>%
-  full_join(normalised_vol_counts, by = "gene_ID") %>%
-  full_join(normalised_ct_counts, by = "gene_ID") %>%
-  full_join(normalised_ao_counts, by = "gene_ID") %>%
-  full_join(normalised_SRP102542_counts, by = "gene_ID") %>%
-  full_join(normalised_Relief_counts, by = "gene_ID") %>%
+  full_join(normalised_vol_counts, by = "gene_name") %>%
+  full_join(normalised_ct_counts, by = "gene_name") %>%
+  full_join(normalised_ao_counts, by = "gene_name") %>%
+  full_join(normalised_SRP102542_counts, by = "gene_name") %>%
+  full_join(normalised_Relief_counts, by = "gene_name") %>%
   drop_na() 
   
 
@@ -437,7 +437,7 @@ all_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
 # Check if everything matches except the transcript_id
 match(colnames(all_normalised_transcripts), all_metadata$seq_sample_id)
 
-all_transcripts_reordered <- all_normalised_transcripts[ , c("gene_ID",all_metadata$seq_sample_id)] 
+all_transcripts_reordered <- all_normalised_transcripts[ , c("gene_name",all_metadata$seq_sample_id)] 
 
 all_transcripts_reordered[,-1] <- round(all_transcripts_reordered[,-1], 2)
 
@@ -446,7 +446,7 @@ match(colnames(all_transcripts_reordered), all_metadata$seq_sample_id)
 
 #saveRDS(all_transcripts_reordered, "data_new/gene_counts/all_normalised_counts.RDS")
 # all_transcripts_reordered <- readRDS("data_new/gene_counts/all_normalised_counts.RDS")
- saveRDS(all_transcripts_reordered, "data_new/gene_counts/all_normalised_gene_counts.RDS")
+ saveRDS(all_transcripts_reordered, "data_new/gene_counts/all_normalised_genename_counts.RDS")
  
 # Define the batch, which in this case is the styd
 batch <- factor(all_metadata$study)

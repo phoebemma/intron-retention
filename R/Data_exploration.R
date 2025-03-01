@@ -374,8 +374,6 @@ SRP102542_metadata <- readRDS("data_new/processed_data/SRP102542_metadata.RDS")%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
 unique(SRP102542_metadata$time)
 
-
-
 # Alpha and Omega data
 
 A_Omega_metadata <- readRDS("data_new/processed_data/Alpha_Omega_metadata.RDS")%>%
@@ -388,13 +386,11 @@ Relief_full_meta <- readRDS("data_new/processed_data/Relief_metadata.RDS")%>%
 unique(Relief_full_meta$seq_sample_id)
 
 
-
 all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
   rbind(ct_metadata) %>%
   rbind(A_Omega_metadata) %>%
   rbind(SRP102542_metadata) %>%
   rbind(Relief_full_meta) %>%
-  
   mutate(across(c("age"), round, 0)) %>%
   mutate(group = case_when(age <=50 ~ "Fifty and below" ,
                            age > 50  ~ "Above fifty")) %>%

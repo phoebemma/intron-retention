@@ -36,6 +36,7 @@ RT_effects <- model %>%
 saveRDS(RT_effects, "data_new/processed_data/annotation_RT_effects.RDS")
 
 
+hist(RT_effects$Estimate)
 # How many unique transcripts
 length(unique(RT_effects$transcript_ID))
 
@@ -51,7 +52,7 @@ RT_effects %>%
   ylab("Number of genes")
 
 
-
+hist()
 
 # Extract those ds by exercise
 filt_exc <- RT_effects %>%
@@ -63,6 +64,12 @@ filt_int <- RT_effects %>%
   filter(coef == "scaled_age:timePostExc")
 hist(filt_int$Estimate)
 
+filt_int_neg <- filt_int %>%
+  filter(Estimate < 0)
+
+
+
+int <- intersect(filt_exc$transcript_ID, filt_int$transcript_ID)
 # Which introns are captured in both datasets
 inter_both <-  filt_exc[filt_exc$transcript_ID %in% filt_int$transcript_ID,]
 
@@ -131,4 +138,22 @@ ggsave("Images_tables/DS_introns_at_PostExc.png", bg = "white" ,  scale = 2)
 
 
 
+# explore the negatives and the positives
+
+
+ego_df_int_neg <- enrichGO(gene = filt_int$ensembl_gene_id,
+                           keyType = "ENSEMBL",
+                           OrgDb = org.Hs.eg.db, 
+                           ont = "BP", 
+                           pAdjustMethod = "BH", 
+                           qvalueCutoff = 0.05, 
+                           readable = T)
+
+## Output results from GO analysis to a table
+cluster_summary_int_neg <- data.frame(ego_df_int_neg)
+
+ dotplot(ego_df_int_neg,
+             
+             font.size = 8, title = "reduced biological processess due to interaction between age and RT") +
+  theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
 

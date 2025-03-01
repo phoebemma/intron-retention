@@ -215,7 +215,7 @@ extract_lncRNAs <- function(folder){
 #function to read Rsem .gene.results files
 read_Rsem_genes <- function(file){
   df <- readr::read_delim(file)
-  df <- df %>% select(gene_id, length, effective_length, expected_count)
+  df <- df %>% dplyr::select(gene_id, length, effective_length, expected_count)
   return(df)
 }
 
