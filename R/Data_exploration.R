@@ -74,7 +74,6 @@ length(unique(all_pre_metadata$participant))
 saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
  
 
- 
 
  ggplot(all_pre_metadata, aes(age, fill = group)) +
   geom_bar()+
