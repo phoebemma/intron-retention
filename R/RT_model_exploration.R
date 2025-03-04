@@ -24,7 +24,7 @@ model %>%
 # Load the gene annotation extracted from Ensemble
 gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
 
-RT_effects <- model %>%
+RT_effects  <- model %>%
   filter(coef == "timePostExc" | coef == "scaled_age:timePostExc") %>%
   #filter(fcthreshold == "s") %>%
   separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
@@ -33,6 +33,7 @@ RT_effects <- model %>%
 
 
 
+intersect(x$target)
 saveRDS(RT_effects, "data_new/processed_data/annotation_RT_effects.RDS")
 
 
@@ -52,7 +53,7 @@ RT_effects %>%
   ylab("Number of genes")
 
 
-hist()
+
 
 # Extract those ds by exercise
 filt_exc <- RT_effects %>%

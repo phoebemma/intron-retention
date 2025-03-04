@@ -72,7 +72,7 @@ length(unique(all_pre_metadata$participant))
 
 
 saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
- 
+# all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 
 
  ggplot(all_pre_metadata, aes(age, fill = group)) +
@@ -101,11 +101,11 @@ pre_chart <- all_pre_metadata %>%
   ylab("Number of participants")+
   xlab("Age of participants") +
   facet_wrap(study ~.)+
-  ggtitle(" Distribution of baseline samples across all studies")+
+  ggtitle(" Distribution of participants across all studies")+
      theme(plot.title = element_text(hjust = 0.5))+
      theme_cowplot() # removes grid
 
-#ggsave("Images_tables/Distribution_baseline_samples.png", bg = "white", scale = 1.5, dpi = 400)
+ggsave("Images_tables/Distribution_baseline_samples.png", bg = "white", scale = 3, dpi = 900)
 
 
 
@@ -160,9 +160,16 @@ no_deviation_pre <- no_deviation %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 
 
+no_deviation_dist <- as.data.frame(table(no_deviation_pre$transcript_ID))
 
-
-
+no_deviation_dist %>%
+  ggplot(aes(Freq))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Introns per transcript in similarly spliced introns") +
+  ylab("Number of transcripts")+
+  xlab("Number of introns")
 
 # Are there specific introns that charactaristically have low splicing efficiency
 
@@ -268,7 +275,7 @@ high_distribution <- annotation_high_SE %>%
 
 
 
-hist(dist$Freq)
+
 
 length(unique(annotation_high_SE$transcript_ID))
 
@@ -280,9 +287,7 @@ saveRDS(annotation_high_SE, "data_new/Pre_Exercise/annotated_perfect_SE_introns.
 
 saveRDS(annotation, "data_new/ensembl_gene_annotation.RDS")
 
-# 
-# x <- list(annotation_no_dev$ensembl_transcript_id)
-# write.csv(x, "no_dev_gene_list.csv")
+
 
 # annotation of perfectly spliced introns
 ego_df_high <- enrichGO(gene = annotation_high_SE$ensembl_gene_id,
@@ -326,12 +331,12 @@ df <- long_df %>%
            SE_per_gene = mean(avg))
 
 # How many introns in a transcript
-dist <- as.data.frame(table(df$transcript_ID))
+dist <- as.data.frame(table(df$ensembl_gene_id))
 
 
 dist %>%
   ggplot(aes(Freq))+
-  geom_bar()+
+  geom_bar(width = 0.1)+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
   ggtitle("Introns per transcript in the baseline data") +
@@ -483,7 +488,7 @@ High_SE_full <- post_splice_df %>%
 saveRDS(High_SE_full, "data_new/processed_data/High_SE_postExc.RDS")
 
 
-#a <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/s100_EKRN240058206.tsv")
+
 # Query the low and perfect spliced introns to see how they fared postexercise
 
 High_at_post <- post_splice_df[post_splice_df$transcript_ID %in% High_SE_df$transcript_ID,]
