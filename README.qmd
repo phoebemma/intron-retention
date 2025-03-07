@@ -54,3 +54,5 @@ and
 -   `Relief_sampleIDs.xlsx` Annotation of relief samples/participants.
 
 -    `Alpha_Omega_sample_list_transcriptomics.xlsx`
+
+-   `make.qmd` Running this file is supposed to run the relevant codes and save the produced files

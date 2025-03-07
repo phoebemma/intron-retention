@@ -12,9 +12,6 @@ model <- readRDS("data_new/models/full_data_RT_scaled_age_int_model.RDS") %>%
   # filter to only those with adjusted p values at or below 0.05
   filter(Pr...z..<= 0.05)
 
-length(unique(model$target))
-
-hist(model$Estimate)
 
 model %>%
   ggplot(aes(x = coef)) +
@@ -35,6 +32,14 @@ RT_effects  <- model %>%
 
 intersect(x$target)
 saveRDS(RT_effects, "data_new/processed_data/annotation_RT_effects.RDS")
+
+
+
+
+
+
+
+
 
 
 hist(RT_effects$Estimate)

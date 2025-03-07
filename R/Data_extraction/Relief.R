@@ -57,8 +57,6 @@ Relief_metadata <- Relief_metadata %>%
                            time_rep == "t1rnaR"  ~ "PreExc",
                            time_rep == "t2rnaR"  ~ "MidExc",
                            time_rep == "t3rnaR"  ~ "PostExc")) %>%
-  # match it to the volume dataframe to extract condition
-  # inner_join(relief_volume, by = c("participant", "leg")) %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age, allocation) %>%
   # filter only the pre and post exercise samples
   filter(time == "PreExc" | time == "PostExc")

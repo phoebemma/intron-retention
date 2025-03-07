@@ -71,7 +71,7 @@ source("R/Data_extraction/Relief.R")
 Running the function above would save the following results in a `data_new` folder
 
 | Data                                                         | Description                       |
-|---------------------------------------------|---------------------------|
+|--------------------------------------------------------------|-----------------------------------|
 | `data_new/processed_data/Alpha_Omega_splicing_data.RDS`      | Alpha_Omega SpliceQ data          |
 | `data_new/processed_data/Alpha_Omega_metadata.RDS`           | Alpha_Omega metadata              |
 | `data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS`      | Alpha_Omega baseline metadata     |
@@ -95,7 +95,7 @@ Running the function above would save the following results in a `data_new` fold
 | `data_new/Pre_Exercise/Relief_PreExc_splicing_data.RDS`      | ReLiEf baseline SpliceQ data      |
 | `data_new/Pre_Exercise/Relief_PreExc_metadata.RDS`           | ReLiEf baseline metadata          |
 | `data_new/processed_data/Relief_splicing_data.RDS`           | ReLiEf SpliceQ data               |
-| `data_new/processed_data/Relief_metadata.RDS`                |  ReLiEf metadata                  |
+| `data_new/processed_data/Relief_metadata.RDS`                | ReLiEf metadata                   |
 
 ### Basic data exploration
 
@@ -109,7 +109,7 @@ source("R/Data_exploration.R")
 The code block above would produce and save the following files and images
 
 | Data                                                     | Description                                                                                |
-|----------------------------|--------------------------------------------|
+|----------------------------------------------------------|--------------------------------------------------------------------------------------------|
 | `data_new/Pre_Exercise/all_prexercise_metadata.RDS`      | All the baseline datasets combined in one dataframe                                        |
 | `data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS`    | All baseline splicing data in one dataframe                                                |
 | `data_new/Pre_Exercise/annotated_low_SE_introns.RDS`     | Annotation of genes containing introns with poor splicing efficiency across all samples    |
@@ -138,7 +138,7 @@ source("R/Preexercise_model.R")
 The script above produces the following files containing model outputs and the argument that produced the models
 
 | Data                                                                   | Argument                                                                                           |
-|------------------------------|-----------------------------------------|
+|------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
 | `data_new/models/preExc_count_interaction_model.RDS`                   | y \~ age\*sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                      |
 | `data_new/models/preExc_group_interaction_model.RDS`                   | y \~ group\*sex + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                    |
 | `data_new/models/preExc_group_only_model.RDS`                          | y \~ group + (1\|study) +(1\|participant), family = glmmTMB::beta_family()                         |

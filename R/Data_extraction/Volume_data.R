@@ -3,6 +3,7 @@ library(dplyr)
 library(tidyverse)
 source("R/Trainome_functions.R")
 
+# This file extracts the Volume data in the desired format
 
 
 Vol_metadata <- vol_samples %>%
