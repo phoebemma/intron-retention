@@ -245,7 +245,7 @@ plot_ds_introns <- aging_model %>%
     ylab("Number of genes")
   
 
-  
+  intersect(filt_positive$transcript_ID, filt_negative$transcript_ID)
   
 
   # Explore on average the intron-specificity of effects
