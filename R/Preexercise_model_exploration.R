@@ -1,3 +1,4 @@
+# This explores the baseline model outputs
 library(dplyr)
 library(ggplot2)
 library(clusterProfiler)
@@ -10,11 +11,11 @@ library(grid)
 
 # Load the primary pre-exercise model
 # This was built using the formula y ~  scaled_age + (1|study) + (scaled_age+0|study) +(1|participant)
-Pre_group <- readRDS("data_new/models/scaled_age_seperate_slope_intercept_model.RDS") # %>%
- # drop_na()
-colnames(Pre_group)
-unique(Pre_group$coef)
+Pre_group <- readRDS("data_new/models/scaled_age_seperate_slope_intercept_model.RDS") 
 
+
+
+# filter based on p values
 filt_pre_group <- Pre_group %>%
   filter(Pr...z..<= 0.05  )
 
@@ -33,11 +34,6 @@ plot_ds_introns <- filt_pre_group %>%
 
 
 
-unique(filt_pre_group$coef)
-length(unique(filt_pre_group$target))
-
-
- # Appears to be the best model
 saveRDS(filt_pre_group, "data_new/models/filt_scaled_age_seperate_slope_intercept_model.RDS")
 
 
@@ -49,7 +45,7 @@ saveRDS(filt_pre_group, "data_new/models/filt_scaled_age_seperate_slope_intercep
 
 
 
-# Extract the transcript_Id of the ds introns
+# Extract the transcript_Id of the ds introns with positive Estimates
  
  filt_positive <- filt_pre_group %>%
    filter(Estimate > 0) %>%
@@ -60,6 +56,7 @@ saveRDS(filt_pre_group, "data_new/models/filt_scaled_age_seperate_slope_intercep
    mutate(intron_ID = paste0(transcript_ID, "_", intron_ID))
  
  
+ # Filter those with negative estimates
  filt_negative <- filt_pre_group %>%
    filter(Estimate < 0) %>%
    separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
@@ -68,6 +65,8 @@ saveRDS(filt_pre_group, "data_new/models/filt_scaled_age_seperate_slope_intercep
    mutate(intron_ID = paste0(transcript_ID, "_", intron_ID))
 
 
+ 
+ # Visualization 
 filt_positive %>%
    ggplot(aes(transcript_biotype))+
    geom_bar()+
@@ -88,19 +87,19 @@ filt_negative %>%
 
 
 
-# Explore if these negativesly impacted introns shared any genes in common
 
+# Explore if these negativesly impacted introns shared any genes in common
+length(intersect(filt_negative$transcript_ID, filt_positive$transcript_ID))
 
 common_genes_neg <- filt_negative[filt_negative$transcript_ID %in% filt_positive$transcript_ID,]
 
 common_genes_pos <- filt_positive[filt_positive$transcript_ID %in% filt_negative$transcript_ID,]
 
-length(intersect(filt_negative$transcript_ID, filt_positive$transcript_ID))
 
 
-length(common_genes_neg$intron_ID)
-
+# check distribution of introns with negative estimates
 dist_comm_neg <- as.data.frame(table(filt_negative$transcript_ID))
+
 
 # Load the full pre exercise splicing data
 all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
@@ -115,7 +114,9 @@ df <- all_pre_splice%>%
   inner_join(annotation, by = c("transcript_ID" = "ensembl_transcript_id_version"), copy = T) %>%
   mutate(.by = external_transcript_name, 
          SE_per_gene = mean(avg))
-# How many introns in a transcript
+
+
+# How many introns in a transcript of baselne data
 dist <- as.data.frame(table(df$transcript_ID))
 
 
@@ -171,13 +172,7 @@ ggarrange(plot_ds_introns,
 
 
 
-
-cor.test(filt_positive$Estimate, filt_positive$transcript_length)
-
-plot(filt_positive$Estimate, filt_positive$transcript_length)
-
-
-
+# Functional annotation of the positive estimates 
 ego_df_mf <- enrichGO(gene = filt_positive$ensembl_gene_id,
                    keyType = "ENSEMBL",
                    OrgDb = org.Hs.eg.db, 
@@ -185,6 +180,7 @@ ego_df_mf <- enrichGO(gene = filt_positive$ensembl_gene_id,
                    pAdjustMethod = "BH", 
                    qvalueCutoff = 0.05, 
                    readable = T)
+
 
 ## Output results from GO analysis to a table
  cluster_summary_pos <- data.frame(ego_df_mf)
@@ -196,6 +192,8 @@ a<-  dotplot(ego_df_mf,
 
 
 
+
+# Negative estimates
  ego_df_bp <- enrichGO(gene = filt_negative$ensembl_gene_id,
                       keyType = "ENSEMBL",
                       OrgDb = org.Hs.eg.db, 
@@ -213,7 +211,7 @@ b <- dotplot(ego_df_bp,
 
 
 
-
+# Cellular compartments, introns with positive estimates
 ego_df_mf_2 <- enrichGO(gene = filt_positive$ensembl_gene_id,
                       keyType = "ENSEMBL",
                       OrgDb = org.Hs.eg.db, 
@@ -232,6 +230,8 @@ c<-  dotplot(ego_df_mf_2,
 
 
 
+
+# CC of the negative estimates
 ego_df_bp_2 <- enrichGO(gene = filt_negative$ensembl_gene_id,
                       keyType = "ENSEMBL",
                       OrgDb = org.Hs.eg.db, 
