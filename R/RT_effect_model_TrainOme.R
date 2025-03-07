@@ -23,76 +23,6 @@ all_full_metadata$scaled_age <- round(rescale(all_full_metadata$age), digits = 2
 # Load full splice data
 all_splice_df <- readRDS("data_new/processed_data/all_splice_data.RDS")
 
-# Get the ds introns by group and sex without interaction
-# That proved to be the best performing model
-# introns_of_int <- readRDS("data_new/models/filt_scaled_age_seperate_slope_intercept_model.RDS")%>%
-#   pull(target)
-# 
-# 
-# 
-# full_splice_df <- all_splice_df[all_splice_df$transcript_ID %in% introns_of_int,]
-# 
-# # Check if everything matches except the transcript_id
-# match(colnames(full_splice_df), all_full_metadata$seq_sample_id)
-# 
-# full_splice_reordered <- full_splice_df[ , c("transcript_ID", all_full_metadata$seq_sample_id)]
-# 
-# # Check if everything matches except the transcript_id
-# match(colnames(full_splice_reordered), all_full_metadata$seq_sample_id)
-# 
-# 
-# 
-# # convert the 1.0 to 0.999. This is becasue beta-model accepts only values between 0 and one
-# full_splice_reordered[full_splice_reordered == 1 ] <- 0.999
-# 
-# # model  age_group, time, volume and its interaction with condition
-# 
-# args<- list(formula = y ~  time + (1|study) +(1|participant), 
-#             family = glmmTMB::beta_family())
-# 
-# 
-# 
-# RT_impact_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
-#                         arguments = args,
-#                         data = full_splice_reordered,
-#                         metadata = all_full_metadata,
-#                         samplename = "seq_sample_id",
-#                         summary_fun = sum_fun,
-#                         eval_fun = eval_mod,
-#                         exported = list(),
-#                         save_models = FALSE,
-#                         return_models = FALSE,
-#                         # subset = 1:10,
-#                         cores = ncores-2)
-# RT_impact_model$summaries
-# 
-# 
-#  missing <- names(which(RT_impact_model$summaries == "NULL"))
-#  avail <- names(which(RT_impact_model$summaries != "NULL"))
-# 
-# #Remove all that have output NULL
-# 
-# 
-# 
-#  mod_sum <- bind_rows(within(RT_impact_model$summaries, rm(missing))) %>%
-#    mutate(target = rep(avail, each = 2)) %>%
-#    subset(coef != "(Intercept)")  %>%
-#    mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
-#           log2fc = Estimate/log(2),
-#           fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
-#  
-#  
-#  
-#  mod_eval <- bind_rows(within(RT_impact_model$evaluations, rm(missing)))%>%
-#    mutate(target = avail)
-#  
-#  
-#  model_cont <- mod_sum %>%
-#    inner_join(mod_eval, by = "target") # %>%
-# # filter(Pr...z.. <= 0.05)
-#  hist(model_cont$Estimate)
-# 
-# saveRDS(model_cont, "data_new/models/RT_impact_model.RDS")
 
 
 # Evaluate the impact of RT on the full dataset
@@ -106,65 +36,12 @@ all_full_metadata <- all_full_metadata %>%
 # REORDER THE SEQUENCE ID TO MATCH BOTH DATAFRAMMES
 all_splice_reordered <- all_splice_df[, c("transcript_ID",all_full_metadata$seq_sample_id)]
 
-colnames(all_splice_reordered)
-rownames(all_pre_metadata)
 
 # Check if everything matches except the transcript_id
 match(colnames(all_splice_reordered), all_full_metadata$seq_sample_id)
 
 # convert the 1.0 to 0.999. This is becasue beta-model accepts only values between 0 and one
 all_splice_reordered[all_splice_reordered == 1 ] <- 0.999
-
-# args<- list(formula = y ~  scaled_age + time + (1|study) + (scaled_age+0|study) +(1|participant), 
-#             family = glmmTMB::beta_family())
-# 
-# 
-# 
-# RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
-#                            arguments = args,
-#                            data = all_splice_reordered,
-#                            metadata = all_full_metadata,
-#                            samplename = "seq_sample_id",
-#                            summary_fun = sum_fun,
-#                            eval_fun = eval_mod,
-#                            exported = list(),
-#                            save_models = FALSE,
-#                            return_models = FALSE,
-#                            # subset = 1:10,
-#                            cores = ncores-2)
-# 
-# RT_model$summaries
-# 
-# 
-# missing <- names(which(RT_model$summaries == "NULL"))
-# avail <- names(which(RT_model$summaries != "NULL"))
-# 
-# 
-# 
-# mod_sum <- bind_rows(within(RT_model$summaries, rm(missing))) %>%
-#   mutate(target = rep(avail, each = 3)) %>%
-#   subset(coef != "(Intercept)")  %>%
-#    mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
-#  log2fc = Estimate/log(2),
-#  fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
-# 
-# 
-# 
-# mod_eval <- bind_rows(within(RT_model$evaluations, rm(missing)))%>%
-#   mutate(target = avail)
-# 
-# 
-# model_cont <- mod_sum %>%
-#   inner_join(mod_eval, by = "target") # %>%
-#   #filter(adj.p <= 0.05)
-# 
-# hist(model_cont$Estimate)
-# length(unique(model_cont$target))
-# saveRDS(model_cont, "data_new/models/full_data_RT_no_int_model.RDS")
-
-
-
-
 
 
 # Since only few of the ds by age introns were contained in the full data, might be nice to look at the 
@@ -217,15 +94,13 @@ model_cont <- mod_sum %>%
   inner_join(mod_eval, by = "target") # %>%
 # filter(Pr...z..<= 0.05)
 
-length(unique(model_cont$target))
-hist(model_cont$Estimate)
-
+# visualise
 model_cont %>%
   ggplot(aes(x = coef)) +
   geom_bar()+
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
 
-unique(model_cont$coef)
+
 saveRDS(model_cont, "data_new/models/full_data_RT_scaled_age_int_model.RDS")
 
 
