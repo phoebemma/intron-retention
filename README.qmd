@@ -25,10 +25,32 @@ and
 
 ## Repository Organisation
 
-`/R`
+-   `/R`This contains the following sub-folders and scripts with codes usedin the data analyses.
 
-This contains the scripts with codes used for data analyses.
+    1.  `/Data_extraction` A folder containing six different R scripts that shows the extraction of the data from the different RT studies . The scripts are named to match their corresponding RT intervention studies.
 
-1.  \`/Data_extraction\` A folder containing six different R scripts that shows the extraction of the data from the different RT studies
+    2.  `/archive` Old scripts used but not wished to be discarded
 
-    \
+    3.  `Data_exploration.R` Basic exploration of the intron retention data used in this study
+
+    4.  `Figures.R` Codes used to produce the figures/images used in the manuscript
+
+    5.  `Preexercise_model.R` Codes for building the baseline model
+
+    6.  `Preexercise_model_exploration.R` Exploration of the baseline model outputs
+
+    7.  `RT_effect_model_TrainOme.R` Codes for building the RT model
+
+    8.  `RT_model_exploration.R` Exploration of the RT model
+
+    9.  `Trainome_functions.R` Functions created for use in this study or other TrainOme studies
+
+    10. `beta-reg-sim-notes.qmd` Codes used in model simulation
+
+-   `/public_data` Contains the files/documents/articles of publicly available data used or previously intended to be used in the study
+
+-   `/resources` Contains the reference library, csl, and template used for the manuscript
+
+-   `Relief_sampleIDs.xlsx` Annotation of relief samples/participants.
+
+-    `Alpha_Omega_sample_list_transcriptomics.xlsx`
