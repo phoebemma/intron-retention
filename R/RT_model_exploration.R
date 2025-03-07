@@ -1,3 +1,4 @@
+# This script explores the output of the RT model
 library(dplyr)
 library(tidyverse)
 library(gridExtra)
@@ -17,7 +18,9 @@ model %>%
   ggplot(aes(x = coef)) +
   geom_bar()+
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))
-#hist(sev_above$Estimate)
+
+
+
 # Load the gene annotation extracted from Ensemble
 gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
 
@@ -29,26 +32,11 @@ RT_effects  <- model %>%
   dplyr::select(Estimate, coef,  transcript_ID, transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)
 
 
-
-intersect(x$target)
 saveRDS(RT_effects, "data_new/processed_data/annotation_RT_effects.RDS")
 
 
 
-
-
-
-
-
-
-
-hist(RT_effects$Estimate)
-# How many unique transcripts
-length(unique(RT_effects$transcript_ID))
-
-# How many unique genes
-length(unique(RT_effects$ensembl_gene_id))
-
+# Visualize
 RT_effects %>%
   ggplot(aes(transcript_biotype))+
   geom_bar()+
@@ -63,25 +51,33 @@ RT_effects %>%
 # Extract those ds by exercise
 filt_exc <- RT_effects %>%
   filter(coef == "timePostExc")
-hist(filt_exc$Estimate)
+
 
 
 filt_int <- RT_effects %>%
   filter(coef == "scaled_age:timePostExc")
-hist(filt_int$Estimate)
 
+# Filter those with negative estimates
 filt_int_neg <- filt_int %>%
   filter(Estimate < 0)
 
 
-
+# Are there transcripts with introns in both dataframes
 int <- intersect(filt_exc$transcript_ID, filt_int$transcript_ID)
+
+
 # Which introns are captured in both datasets
 inter_both <-  filt_exc[filt_exc$transcript_ID %in% filt_int$transcript_ID,]
 
 # Which introns are unique to RT effect alone
 exc_not_int <- filt_exc[!filt_exc$transcript_ID %in% filt_int$transcript_ID,]
 
+
+
+
+
+
+# Annotation of those ds by exercise
 
 ego_df_postEXC <- enrichGO(gene = filt_exc$ensembl_gene_id,
                       keyType = "ENSEMBL",
@@ -102,7 +98,7 @@ a <- dotplot(ego_df_postEXC,
 
 
 
-
+# Annotation of those ds by interaction effect
 ego_df_postEXC_2 <- enrichGO(gene = filt_int$ensembl_gene_id,
                            keyType = "ENSEMBL",
                            OrgDb = org.Hs.eg.db, 
@@ -118,6 +114,8 @@ b <- dotplot(ego_df_postEXC_2,
         
         font.size = 8, title = "Enriched biological processes based on interaction between age and RT") +
   theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
+
+
 
 
 
