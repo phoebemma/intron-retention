@@ -68,11 +68,12 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
 
 all_pre_metadata$participant <- paste0(all_pre_metadata$study, "_", all_pre_metadata$participant)
 
-length(unique(all_pre_metadata$participant))
+
+
 
 
 saveRDS(all_pre_metadata, "data_new/Pre_Exercise/all_prexercise_metadata.RDS")
-# all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
+
 
 
  ggplot(all_pre_metadata, aes(age, fill = group)) +
@@ -137,7 +138,7 @@ all_pre_splice <- copd_data%>%
 saveRDS(all_pre_splice, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 
-# all_pre_splice<-  readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
+
 
 
 # Those with very low standard deviation
@@ -156,10 +157,14 @@ no_deviation <- all_pre_splice %>%
   ) %>%
   filter(sd <= 0.01)
 
+# Split the ID to seperate the transcript ID, intron_Id and chromosome number
 no_deviation_pre <- no_deviation %>%
   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
 
 
+
+
+# make into a dataframe, to count number of introns in transcripts
 no_deviation_dist <- as.data.frame(table(no_deviation_pre$transcript_ID))
 
 no_deviation_dist %>%
@@ -170,6 +175,8 @@ no_deviation_dist %>%
   ggtitle("Introns per transcript in similarly spliced introns") +
   ylab("Number of transcripts")+
   xlab("Number of introns")
+
+
 
 # Are there specific introns that charactaristically have low splicing efficiency
 
@@ -194,17 +201,6 @@ low_SE <- low_SE_df %>%
 
 
 
-table_plot_low <- tableGrob(low_SE)
-
-# Open a PNG device
-pdf("Figures/low_se_ints.pdf")
-
-# Draw the table
-grid.draw(table_plot_low)
-
-# Close the pdf device
-dev.off()
-
 
 
 
@@ -227,6 +223,9 @@ High_SE <- High_SE_df %>%
 
 
 
+
+
+
 # Get the ensemble annotation of genes
 ensembl <- useMart(biomart = "ENSEMBL_MART_ENSEMBL",
                    dataset = "hsapiens_gene_ensembl",
@@ -238,6 +237,7 @@ attributes <- listAttributes(ensembl)
 annotation<- getBM(attributes = c("transcript_biotype", "external_transcript_name",	
                                   "ensembl_transcript_id",
                                   "ensembl_gene_id", "ensembl_gene_id_version","ensembl_transcript_id_version", "external_gene_name", "transcript_length"),  mart = ensembl )
+# Get annotation of poorly spliced introns
 annotation_low_SE <- inner_join(low_SE, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
 
@@ -254,6 +254,8 @@ grid.draw(table_plot_low)
 # Close the pdf device
 dev.off()
 
+
+# get annotation of similarly spliced introns
 annotation_no_dev <- inner_join(no_deviation_pre, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
 
@@ -262,6 +264,9 @@ saveRDS(annotation_no_dev, "data_new/processed_data/annotation_no_deviation_PreE
 
 
 
+
+
+# annotation of perfectly spliced introns
 annotation_high_SE <- inner_join(High_SE, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
 high_distribution <- annotation_high_SE %>%
@@ -277,10 +282,6 @@ high_distribution <- annotation_high_SE %>%
 
 
 
-length(unique(annotation_high_SE$transcript_ID))
-
-
-
 saveRDS(annotation_low_SE, "data_new/Pre_Exercise/annotated_low_SE_introns.RDS")
 
 saveRDS(annotation_high_SE, "data_new/Pre_Exercise/annotated_perfect_SE_introns.RDS")
@@ -289,7 +290,7 @@ saveRDS(annotation, "data_new/ensembl_gene_annotation.RDS")
 
 
 
-# annotation of perfectly spliced introns
+# functional annotation of perfectly spliced introns
 ego_df_high <- enrichGO(gene = annotation_high_SE$ensembl_gene_id,
                    keyType = "ENSEMBL",
                    OrgDb = org.Hs.eg.db, 
@@ -314,8 +315,6 @@ ggarrange(high_distribution, high_ontology, align = "hv")
 
 
 
-
-# check if there is a relationship between splicing efficiency and transcript length
 long_df <- all_pre_splice%>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
@@ -345,51 +344,59 @@ dist %>%
 
 
 ggsave("Images_tables/supplementary_intron_per_transcript_at_baseline.png", dpi = 400, scale = 1.5)
- range(dist$Freq)
 
+ 
+ 
+ # check if there is a relationship between splicing efficiency and transcript length
 plot(df$SE_per_gene, df$transcript_length)
 
 cor.test(df$SE_per_gene, df$transcript_length)
 
-dist_no_dev <- as.data.frame(table(annotation_no_dev$transcript_ID))
-hist(dist_no_dev$Freq)
 
+
+# distribution of introns in transcripts in similarly spliced introns
+dist_no_dev <- as.data.frame(table(annotation_no_dev$transcript_ID))
+
+
+
+
+
+
+
+# Eploring the full dataset. that is, pre and post exercise
 
 #COPD metadata
 copd_metadata <- readRDS("data_new/processed_data/copd_metadata.RDS") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-length(unique(copd_metadata$participant))
+
 
 # Volume_data
 Vol_metadata <- readRDS("data_new/processed_data/volume_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age) 
-length(unique(Vol_metadata$participant))
-unique(Vol_metadata$time)
+
 
 # Contratrain_data
 ct_metadata <- readRDS("data_new/processed_data/contratrain_metadata.RDS") %>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-length(unique(ct_metadata$participant))
 
-unique(ct_metadata$time)
 
 # Publicly available data
 SRP102542_metadata <- readRDS("data_new/processed_data/SRP102542_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-unique(SRP102542_metadata$time)
+
 
 # Alpha and Omega data
 
 A_Omega_metadata <- readRDS("data_new/processed_data/Alpha_Omega_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-unique(A_Omega_metadata$time)
+
 
 
 Relief_full_meta <- readRDS("data_new/processed_data/Relief_metadata.RDS")%>%
   dplyr::select(study, participant, sex, time, seq_sample_id, age)
-unique(Relief_full_meta$seq_sample_id)
 
 
+ # Merge the metadata into one
 all_full_metadata <- rbind(copd_metadata, Vol_metadata)%>%
   rbind(ct_metadata) %>%
   rbind(A_Omega_metadata) %>%
@@ -414,7 +421,7 @@ post_metadata <- all_full_metadata %>%
 
 
 
-
+# Load the full splicing data
 copd_splice_df <- readRDS("data_new/processed_data/copd_splicing_data.RDS")
 
 vol_splice_df <- readRDS("data_new/processed_data/volume_splicing_data.RDS")
@@ -423,6 +430,8 @@ SRP102542_splice_df <- readRDS("data_new/processed_data/SRP102542_splicing_data.
 AOD_splice_df <- readRDS("data_new/processed_data/Alpha_Omega_splicing_data.RDS")
 Relief_full_splice <- readRDS("data_new/processed_data/Relief_splicing_data")
 
+
+# Merge the splicing data into one
 all_splice_df <-copd_splice_df  %>%
   inner_join(vol_splice_df, by = "transcript_ID") %>%
   inner_join(ct_splice_df, by = "transcript_ID") %>%
@@ -432,7 +441,7 @@ all_splice_df <-copd_splice_df  %>%
 
 
 # Get the post exercise splicing data
-# Getting it before removing the NAs in the full data ensures more introns are captured
+# Getting it before removing the NAs in the full data probably ensures more introns are captured
 
 post_intersect <- intersect(colnames(all_splice_df),post_metadata$seq_sample_id)
 
@@ -443,6 +452,8 @@ post_splice_df <- all_splice_df %>%
 saveRDS(post_splice_df, "data_new/processed_data/PostEXc_splice_data.RDS")
 
 saveRDS(post_metadata, "data_new/processed_data/PostEXc_metadata.RDS")
+
+
 # select only the splicing samples captured in the metadata
 all_intersect <- intersect(colnames(all_splice_df), all_full_metadata$seq_sample_id)
 
@@ -474,6 +485,7 @@ saveRDS(low_SE_full, "data_new/processed_data/low_SE_postExc.RDS")
 
 
 
+# perfect SE in post exercise data
 High_SE_full <- post_splice_df %>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
@@ -514,6 +526,10 @@ high_full <- annotation_high_SE_full %>%
 
 
 saveRDS(annotation_high_SE_full, "data_new/processed_data/annotation_High_SE_postEXc.RDS")
+
+
+
+# Annotation
 
 ego_df_high <- enrichGO(gene = annotation_high_SE_full$ensembl_gene_id,
                         keyType = "ENSEMBL",
@@ -571,10 +587,6 @@ df_post <- long_df_post %>%
 
 
 
-plot(df_post$SE_per_gene, df_post$transcript_length)
-
- x <- cor.test(df_post$SE_per_gene, df_post$transcript_length) %>%
-  as.dataframe() 
 
  
 post_chart <-   all_full_metadata %>%
