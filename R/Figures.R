@@ -1,3 +1,4 @@
+# Script to reproduce the figures used in the manuscript
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
@@ -17,7 +18,8 @@ source("R/Trainome_functions.R")
 
 all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
-
+# Figure 1
+# Extract the poorly spliced introns
 
 low_SE_df <- all_pre_splice %>%
   pivot_longer(names_to = "seq_sample_id",
@@ -56,6 +58,9 @@ grid.draw(table_plot_low)
 
 # Close the png device
 dev.off()
+
+
+
 
 
 
@@ -107,23 +112,6 @@ high_ontology <- dotplot(ego_df_high,
                          
                          font.size = 8, title = "Enriched biological processes preexercise") +
   theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 10))
-
-
-
-#Poorly spliced intron at bas
-# ego_df_low <- enrichGO(gene = annotation_low_SE$ensembl_gene_id,
-#                        keyType = "ENSEMBL",
-#                        OrgDb = org.Hs.eg.db, 
-#                        ont = "BP", 
-#                        pAdjustMethod = "BH", 
-#                        qvalueCutoff = 0.05, 
-#                        readable = T)
-# 
-# cluster_summary_low <- ego_df_low
-# low_ontology <- dotplot(ego_df_low,
-#                          
-#                          font.size = 8, title = "Enriched biological processes in completely retained  introns at baseline") +
-#   theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 10))
 
 
 
@@ -184,6 +172,8 @@ ggarrange(high_distribution + rremove("x.title"), high_ontology + rremove("x.tit
 
 
 ggsave("Images_tables/Figure_1_data_vis.png", dpi = 400, scale = 1.8)
+
+
 
 
 
@@ -322,6 +312,7 @@ plot_ds_introns <- aging_model %>%
   
   
  
+  
   
   
   
@@ -636,69 +627,3 @@ plot_ds_introns <- aging_model %>%
  
  
  
- 
-  
-  # # Those with very low standard deviation
-# no_deviation <- all_pre_splice %>%
-#   pivot_longer(names_to = "seq_sample_id",
-#                values_to = "SE",
-#                cols = -(transcript_ID)) %>%
-#   #  inner_join(all_pre_metadata, by = "seq_sample_id") %>%
-#   summarise(.by = transcript_ID, 
-#             sd = sd(SE),
-#             min = min(SE), 
-#             max = max(SE), 
-#             mean = mean(SE),
-#             mode = getmode(SE), 
-#             #  range = max(SE) - min(SE)
-#   ) %>%
-#   filter(sd <= 0.01)
-# 
-# no_deviation_pre <- no_deviation %>%
-#   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
-#   inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
-#   
-# 
-# 
-# no_deviation_dist <- as.data.frame(table(no_deviation_pre$external_gene_name))
-# 
-# no_deviation_dist %>%
-#   ggplot(aes(Freq))+
-#   geom_bar(width = 5)+
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
-# #  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
-#   ggtitle("Introns per transcript in similarly spliced introns") +
-#   ylab("Number of transcripts")+
-#   xlab("Number of introns")+
-#   coord_flip()
-# 
-# 
-# range(no_deviation_dist$Freq)
-# # check if there is a relationship between splicing efficiency and transcript length
-# long_df <- all_pre_splice%>%
-#   pivot_longer(names_to = "seq_sample_id",
-#                values_to = "SE",
-#                cols = -(transcript_ID) ) #%>%
-# #  inner_join(all_pre_metadata, by = "seq_sample_id")
-# 
-# df <- long_df %>%
-#   group_by(transcript_ID) %>%
-#   summarize(avg = round(mean(SE), digits = 2)) %>%
-#   separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
-#   inner_join(gene_annotation, by = c("transcript_ID" = "ensembl_transcript_id_version"), copy = T) %>%
-#   mutate(.by = external_transcript_name, 
-#          SE_per_gene = mean(avg))
-# 
-# # How many introns in a transcript
-# dist <- as.data.frame(table(df$external_gene_name))
-# 
-# range(dist$Freq)
-# dist %>%
-#   ggplot(aes(Freq))+
-#   geom_bar(width = 10)+
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
-# #  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
-#   ggtitle("Introns per transcript in the baseline data") +
-#   ylab("Number of transcripts")+
-#   xlab("Number of introns")+
-#   coord_flip()
