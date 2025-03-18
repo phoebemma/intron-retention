@@ -12,9 +12,9 @@ normalized_counts <- readRDS("data_new/gene_counts/all_normalised_genename_count
 
 # get the lowly SE genes in the normalised counts
 
-low_SE_counts <- normalized_counts[normalized_counts$gene_name %in% low_SE$external_gene_name,]
+low_SE_counts <- normalized_counts[normalized_counts$transcript_ID %in% low_SE$transcript_ID,]
 
-high_SE_counts <- normalized_counts[normalized_counts$gene_name %in% high_Se$external_gene_name,]
+high_SE_counts <- normalized_counts[normalized_counts$transcript_ID %in% high_Se$transcript_ID,]
 
 
 RT_affected_genes <- readRDS("data_new/processed_data/annotation_RT_effects.RDS")

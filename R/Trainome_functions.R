@@ -135,13 +135,13 @@ extract_all_transcripts <- function(folder){
   for(i in 1:length(files)){
     
     transcripts[[i]] <- read_kallisto_output(paste0(folder,"/", files[i])) %>% 
-      mutate(file_id = gsub("^[^-]*-", "", gsub(".tsv", "", files[i]))) %>% ## This removes the file number
-      dplyr::select(transcript_ID, file_id, tpm)
+      mutate(file_id = gsub(".tsv", "", files[i])) %>% ## This removes the file number
+      dplyr::select(transcript_ID, file_id, est_counts)
   }
   
   comd.df <- data.table::rbindlist(transcripts)
   
-  comb.df <- data.table::dcast(comd.df, transcript_ID ~ file_id, value.var = "tpm")
+  comb.df <- data.table::dcast(comd.df, transcript_ID ~ file_id, value.var = "est_counts")
   
   return(data.frame(comb.df))
 }
