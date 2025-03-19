@@ -288,7 +288,7 @@ all_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
 # Check if everything matches except the transcript_id
 match(colnames(all_normalised_transcripts), all_metadata$seq_sample_id)
 
-all_transcripts_reordered <- all_normalised_transcripts[ , c("transcript_ID",all_metadata$seq_sample_id)] 
+all_transcripts_reordered <- all_normalised_transcripts[ , c("transcript_id",all_metadata$seq_sample_id)] 
 
 all_transcripts_reordered[,-1] <- round(all_transcripts_reordered[,-1], 2)
 
@@ -297,7 +297,7 @@ match(colnames(all_transcripts_reordered), all_metadata$seq_sample_id)
 
 #saveRDS(all_transcripts_reordered, "data_new/gene_counts/all_normalised_counts.RDS")
 # all_transcripts_reordered <- readRDS("data_new/gene_counts/all_normalised_counts.RDS")
-saveRDS(all_transcripts_reordered, "data_new/gene_counts/all_normalised_genename_counts.RDS")
+saveRDS(all_transcripts_reordered, "data_new/gene_counts/all_normalised_RSEM_counts.RDS")
 
 # Define the batch, which in this case is the styd
 batch <- factor(all_metadata$study)
@@ -308,4 +308,4 @@ corrected_counts$transcript_ID <- all_transcripts_reordered$transcript_id
 
 #boxplot(corrected_counts, main = "batch corrected data")
 
-saveRDS(corrected_counts, "data_new/gene_counts/batch_corrected_counts")
+saveRDS(corrected_counts, "data_new/gene_counts/batch_corrected_RSEM_counts")
