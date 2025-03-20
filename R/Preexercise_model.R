@@ -98,16 +98,45 @@ saveRDS(model_cont_1, "data_new/models/scaled_age_seperate_slope_intercept_model
 
 
 
-# Test a second model
-arg_2<- list(formula = y ~  scaled_age +  (scaled_age|study) +(1|participant),
-            family = glmmTMB::beta_family())
 
 
 
 
 
-model_2 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
-                   arguments = arg_2,
+
+# The second model will group the participants into age-groups
+
+hist(all_pre_metadata$age)
+
+all_pre_metadata <- all_pre_metadata %>%
+  mutate(group = case_when(age <=20 ~ "20 and below" ,
+                           age > 20 & age < 30 ~ "21 to 29",
+                           age >= 30 & age < 40 ~ "30 to 39", 
+                           age >= 40 & age < 50 ~ "40 to 49",
+                           age >= 50 & age < 60 ~ "50 to 59",
+                           age >= 60 & age < 70 ~ "60 to 69",
+                           age >= 70 & age < 80 ~ "70 to 79",
+                           age >= 80 ~ "80 and above")) %>%
+  mutate(group = factor(group, levels = c("20 and below", "21 to 29", "30 to 39",
+                                          "40 to 49", "50 to 59",  "60 to 69",
+                                          "70 to 79", "80 and above" )))
+
+
+ggplot(all_pre_metadata, aes(age, fill = group )) +
+  geom_bar()+
+  ggtitle("Distribution of baseline data")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Build the third model
+
+# Initialize argument
+
+arg_3 <- list(formula = y ~ group + (1|study)+(1|participant),
+              family = glmmTMB::beta_family())
+
+
+model_3 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                   arguments = arg_3,
                    data = all_pre_splice_reordered,
                    metadata = all_pre_metadata,
                    samplename = "seq_sample_id",
@@ -119,51 +148,34 @@ model_2 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                    # subset = 1:10,
                    cores = ncores-2)
 
-model_2$summaries
 
-model_2$summaries$ENST00000023939.8_6_20
+model_3$summaries
 
-
-
-excl_2<- names(which(model_2$summaries == "NULL"))
-geneids_2 <- names(which(model_2$summaries != "NULL"))
+model_3$summaries$ENST00000023939.8_6_20
 
 
+#Remove all that have output NULL
+excl_3<- names(which(model_3$summaries == "NULL"))
+geneids_3 <- names(which(model_3$summaries != "NULL"))
 
 
-mod_sum_2 <- bind_rows(within(model_2$summaries, rm(excl_2))) %>%
-  mutate(target = rep(geneids_2, each = 2)) %>%
+# Collect all model summaries
+mod_sum_3 <- bind_rows(within(model_3$summaries, rm(excl_3))) %>%
+  mutate(target = rep(geneids_3, each = 8)) %>%
   subset(coef != "(Intercept)")  %>%
   mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
          log2fc = Estimate/log(2),
          fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))
 
 
-
-mod_eval_2 <- bind_rows(within(model_2$evaluations, rm(excl_2)))%>%
-  mutate(target = geneids_2)
-
-
-model_cont_2 <- mod_sum_2 %>%
-  inner_join(mod_eval_2, by = "target")# %>%
-#  filter(adj.p <= 0.05)
+# Bind all model evaluations
+mod_eval_3 <- bind_rows(within(model_3$evaluations, rm(excl_3)))%>%
+  mutate(target = geneids_3)
 
 
+# Merge the evaluations and summaries
+model_cont_3 <- mod_sum_3 %>%
+  inner_join(mod_eval_3, by = "target") # %>%
+# filter(Pr...z.. <= 0.05)
 
-saveRDS(model_cont_2, "data_new/models/scaled_model2.RDS")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+saveRDS(model_cont_3, "data_new/models/grouped_model.RDS")
