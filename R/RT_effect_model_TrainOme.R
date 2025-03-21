@@ -27,7 +27,6 @@ all_full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")%>%
                                           "40 to 49", "50 to 59",  "60 to 69",
                                           "70 to 79", "80 and above" )))
 
-length(unique(all_pre_metadata$participant))
 # Standardize the age by scaling them 0 to 1
 
 all_full_metadata$scaled_age <- round(rescale(all_full_metadata$age), digits = 2)
