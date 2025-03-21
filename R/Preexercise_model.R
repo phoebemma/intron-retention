@@ -122,7 +122,7 @@ all_pre_metadata <- all_pre_metadata %>%
                                           "70 to 79", "80 and above" )))
 
 
-ggplot(all_pre_metadata, aes(age, fill = group )) +
+ggplot(all_pre_metadata, aes(group, fill = group )) +
   geom_bar()+
   ggtitle("Distribution of baseline data")+
   theme(plot.title = element_text(hjust = 0.5))

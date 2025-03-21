@@ -22,7 +22,6 @@ filt_pre_group <- Pre_group %>%
 
 
 
-
 # Visualize the EStimates
 plot_ds_introns <- filt_pre_group %>% 
   ggplot(aes(x=Estimate))+
@@ -37,15 +36,12 @@ plot_ds_introns <- filt_pre_group %>%
 saveRDS(filt_pre_group, "data_new/models/filt_scaled_age_seperate_slope_intercept_model.RDS")
 
 
-
-# explore the annotations of the ds introns
-
 # Load the gene annotation file
  gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
 
 
-
-# Extract the transcript_Id of the ds introns with positive Estimates
+ 
+ # Extract the transcript_Id of the ds introns with positive Estimates
  
  filt_positive <- filt_pre_group %>%
    filter(Estimate > 0) %>%
@@ -159,10 +155,7 @@ dist_2 <- dist_comm_neg %>%
   theme_cowplot()
 
 
-#  x <- ggarrange(dist_1 + rremove("x.title") + rremove("y.title"), dist_2 + rremove("x.title") + rremove("y.title"))
-# 
-# annotated_image <- annotate_figure(x, left = text_grob("Number of transcripts", rot = 90),
-#                 bottom = text_grob("Number of introns"))
+
 #  
 ggarrange(plot_ds_introns,
           arrangeGrob(dist_2, dist_1, ncol = 2), # put both plots under the first
@@ -171,10 +164,18 @@ ggarrange(plot_ds_introns,
  ggsave("Images_tables/Improved_reduced_introns.png", dpi = 400, scale = 1.5, bg = "white")
 
 
+# Load the batch corrected gene expression data
+ 
+ gene_counts <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS") %>%
+   # remove the version number to match gene_id
+   mutate(gene_id = gsub("\\..*", "",  gene_id))
 
+ 
+ 
 # Functional annotation of the positive estimates 
 ego_df_mf <- enrichGO(gene = filt_positive$ensembl_gene_id,
                    keyType = "ENSEMBL",
+                   universe = gene_counts$gene_id,
                    OrgDb = org.Hs.eg.db, 
                    ont = "BP", 
                    pAdjustMethod = "BH", 
@@ -197,6 +198,7 @@ a<-  dotplot(ego_df_mf,
  ego_df_bp <- enrichGO(gene = filt_negative$ensembl_gene_id,
                       keyType = "ENSEMBL",
                       OrgDb = org.Hs.eg.db, 
+                      universe = gene_counts$gene_id,
                       ont = "BP", 
                       pAdjustMethod = "BH", 
                       qvalueCutoff = 0.05, 
