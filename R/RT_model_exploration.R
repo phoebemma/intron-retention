@@ -160,4 +160,8 @@ cluster_summary_int_neg <- data.frame(ego_df_int_neg)
              
              font.size = 8, title = "reduced biological processess due to interaction between age and RT") +
   theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
+ 
+ 
+ 
+ 
 

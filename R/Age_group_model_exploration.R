@@ -10,9 +10,7 @@ library(gridExtra)
 library(grid)
 
 # Load the gene annotation file
-gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")%>%
-  # remove the version number to match gene_id
-  mutate(gene_id = gsub("\\..*", "",  gene_id))
+gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
 
 
 # The second model looks at the change in Se by age groups
