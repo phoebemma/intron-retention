@@ -5,7 +5,7 @@ library(seqwrap)
 library(gridExtra)
 library(ggpubr)
 library(cowplot)
-library(scales)
+
 
 
 # Load the Trainome functions
@@ -16,8 +16,7 @@ source("R/Trainome_functions.R")
 # Load metadata
 all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 
-# Standardize the age by scaling them 0 to 1
-all_pre_metadata$scaled_age <- round(rescale(all_pre_metadata$age), digits = 2)
+
 
 
 
@@ -54,7 +53,7 @@ model_1 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                  data = all_pre_splice_reordered,
                  metadata = all_pre_metadata,
                  samplename = "seq_sample_id",
-                 summary_fun = sum_fun,
+                 summary_fun = sum_fun2,
                  eval_fun = eval_mod,
                  exported = list(),
                  save_models = FALSE,

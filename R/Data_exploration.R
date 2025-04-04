@@ -11,6 +11,7 @@ library(cowplot)
 library(gridExtra)
 library(grid)
 library(gt)
+library(scales)
 
 
 source("R/Trainome_functions.R")
@@ -60,15 +61,24 @@ all_pre_metadata <- rbind(copd_metadata, volume_metadata)%>%
   mutate(across(c("age"), round, 0)) %>%
   # Create age groups where we have those above 50, and those below 50 
   
-   mutate(group = case_when(age <=50 ~ "Fifty and below" ,
-                            age > 50  ~ "Above fifty")) %>%
-  mutate(sex = factor(sex, levels = c("female", "male")),
-          group = factor(group, levels = c("Fifty and below" ,"Above fifty" ))) 
+  mutate(group = case_when(age <=20 ~ "20 and below" ,
+                           age > 20 & age < 30 ~ "21 to 29",
+                           age >= 30 & age < 40 ~ "30 to 39", 
+                           age >= 40 & age < 50 ~ "40 to 49",
+                           age >= 50 & age < 60 ~ "50 to 59",
+                           age >= 60 & age < 70 ~ "60 to 69",
+                           age >= 70 & age < 80 ~ "70 to 79",
+                           age >= 80 ~ "80 and above")) %>%
+  mutate(group = factor(group, levels = c("20 and below", "21 to 29", "30 to 39",
+                                          "40 to 49", "50 to 59",  "60 to 69",
+                                          "70 to 79", "80 and above" )),
+         sex = factor(sex, levels = c("female", "male"))) 
 
 
 all_pre_metadata$participant <- paste0(all_pre_metadata$study, "_", all_pre_metadata$participant)
 
-
+# Standardize the age by scaling them 0 to 1
+all_pre_metadata$scaled_age <- round(rescale(all_pre_metadata$age), digits = 2)
 
 
 
@@ -223,8 +233,39 @@ High_SE <- High_SE_df %>%
 
 
 
+# Exclude the introns with perfect splicing efficiency across all samples
+
+non_perfect_SE <- all_pre_splice %>%
+  filter(!(transcript_ID %in% High_SE_df$transcript_ID))
+
+# remove those that were also zeros across all samples
+# non_perfect_SE <- non_perfect_SE %>%
+#   filter(!(transcript_ID %in% low_SE_df$transcript_ID))
 
 
+saveRDS(non_perfect_SE, "data_new/Pre_Exercise/non_perfect_Pre_splicing_data.RDS")
+
+
+
+
+# long_df <- non_perfect_SE %>%
+#   pivot_longer(names_to = "seq_sample_id",
+#                values_to = "SE",
+#                cols = -(transcript_ID) )%>%
+#   inner_join(all_pre_metadata, by = "seq_sample_id")
+# 
+# # group_by(transcript_ID) %>%
+# #   
+# 
+long_df %>%
+  group_by(scaled_age, sex, transcript_ID)%>%
+  summarize(avg = round(mean(SE), digits = 2)) %>%
+  ggplot(aes(avg, scaled_age))+
+  geom_point(mapping = aes(colour = sex))+
+  geom_smooth()+
+  ggtitle("Relationship between age and splicing efficiency") +
+  ylab(" Average splicing efficiency")+
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Get the ensemble annotation of genes
 ensembl <- useMart(biomart = "ENSEMBL_MART_ENSEMBL",

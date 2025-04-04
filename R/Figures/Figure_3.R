@@ -269,7 +269,7 @@ RT_age_group <- readRDS("data_new/models/agegroup_RT_model.RDS") %>%
 
 
 # Visualize the coefficients
-ggplot( RT_age_group , aes(coef, fill = coef )) +
+RT_effect <- ggplot( RT_age_group , aes(coef, fill = coef )) +
   geom_bar()+
   ggtitle("Effect of RT by age group")+
   xlab(" Age group of participants")+
@@ -520,11 +520,14 @@ eighties_RT_plot<-  dotplot(ego_eighties_Rt ,
   theme(axis.text = element_text(size = 12), axis.text.y = element_text(size = 12), axis.title.x = element_text(size = 12))
 
  
-ggarrange(tw + rremove("xy.title"), th + rremove("xy.title"), fo + rremove("xy.title"), fi + rremove("xy.title"),
+ggarrange(RT_effect,  tw + rremove("xy.title"), th + rremove("xy.title"), fo + rremove("xy.title"), fi + rremove("xy.title"),
           si + rremove("xy.title"), se + rremove("y.title"),
           ei + rremove("y.title"),
           ncol = 2,
-          nrow = 4)
+          nrow = 4,
+          labels = c("A", "B", "C",
+                     "D", "E", "F",
+                     "G", "H"))
 ggsave("Images_tables/Figure3_grouped_RT_effect.png", bg = "white" ,  scale = 2, dpi = 400)
 
 

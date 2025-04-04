@@ -1,23 +1,31 @@
 library(marginaleffects)
-
-
-all_splice_df <- readRDS("data_new/processed_data/all_splice_data.RDS")
-all_full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
-
-long_df <- all_splice_df %>%
-  pivot_longer(names_to = "seq_sample_id",
-               values_to = "SE",
-               cols = -(transcript_ID) )%>%
-  inner_join(all_full_metadata, by = "seq_sample_id")
-
-ggplot(long_df, aes(z = SE, y = age, x = as.numeric(time)))+
-  geom_contour_filled() +
-  labs(title = "Contour Plot of Interaction Effects", x = "time", y = "age")
+library(dplyr)
+library(tidyverse)
+library(seqwrap)
+library(gridExtra)
+library(ggpubr)
+library(cowplot)
+library(scales)
 
 
 # Load the Trainome functions
 # Contains functions needed for model building
 source("R/Trainome_functions.R")
+
+
+all_splice_df <- readRDS("data_new/processed_data/all_splice_data.RDS")
+all_full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
+# 
+# long_df <- all_splice_df %>%
+#   pivot_longer(names_to = "seq_sample_id",
+#                values_to = "SE",
+#                cols = -(transcript_ID) )%>%
+#   inner_join(all_full_metadata, by = "seq_sample_id")
+# 
+# ggplot(long_df, aes(z = SE, y = age, x = as.numeric(time)))+
+#   geom_contour_filled() +
+#   labs(title = "Contour Plot of Interaction Effects", x = "time", y = "age")
+
 
 
 # Load metadata
@@ -64,16 +72,22 @@ model_1 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                    summary_fun = sum_fun2,
                    eval_fun = eval_mod,
                    exported = list(),
-                   save_models = FALSE,
-                   return_models = FALSE,
-                    subset = 1:100,
-                   cores = ncores-2)
+                   save_models = F,
+                   return_models = T,
+                   # subset = 1:10,
+                   cores = 1)
 
 
-model_1$summaries
 
-model_1$summaries$ENST00000023939.8_6_20
 
+# 
+# model_1$summaries
+# 
+# model_1$summaries$ENST00000023939.8_6_20
+# x <- data.frame(scaled_age = all_pre_metadata$scaled_age, sex = factor(all_pre_metadata$sex),
+#                 study = factor(all_pre_metadata$study), participant = factor(all_pre_metadata$participant)) 
+# 
+# predicted_prob <- predict(model_1$models$ENST00000007516.8_2_16, type = "response", re.form = NA, newdata = x)
 
 
 #Remove all that have output NULL
@@ -89,30 +103,118 @@ mod_sum_1 <- bind_rows(within(model_1$summaries, rm(excl_1))) %>%
   mutate(adj.p = p.adjust( p.val, method = "fdr"),
          log2fc = estimate/log(2),
          fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"),
-         odds_ratio = exp(estimate))
+         odds_ratio = exp(estimate),
+         probability = plogis(estimate))
 
 
-# Bind all model evaluations
-mod_eval_1 <- bind_rows(within(model_1$evaluations, rm(excl_1)))%>%
-  mutate(target = geneids_1)
+# # Bind all model evaluations
+ mod_eval_1 <- bind_rows(within(model_1$evaluations, rm(excl_1)))%>%
+   mutate(target = geneids_1)
+# 
+# 
+# # Merge the evaluations and summaries
+# model_cont_1 <- mod_sum_1 %>%
+#   inner_join(mod_eval_1, by = "target") # %>%
+# # filter(adj.p <= 0.05)
 
-
-# Merge the evaluations and summaries
-model_cont_1 <- mod_sum_1 %>%
-  inner_join(mod_eval_1, by = "target") # %>%
-# filter(adj.p <= 0.05)
-
-
+saveRDS(mod_sum_1, "data_new/models/new_edition/scaled_age_baseline.RDS")
 
 # filter based on p values
-filt_pre_group <- model_cont_1 %>%
+filt_pre_group <- mod_sum_1 %>%
   filter(p.val<= 0.05  ) %>%
-  subset(coef == "scaled_age") %>%
+  subset(coef != "(Intercept)") %>%
   drop_na()
 
 ggplot(filt_pre_group, aes(x = estimate, y = odds_ratio)) +
   geom_point()+
+  facet_wrap(~coef)
   geom_ribbon(aes(ymin = exp(cil), ymax = exp(ciu)),fill = "grey", alpha = 0.5) 
+
+
+
+
+
+
+# The second model will group the participants into age-groups
+
+hist(all_pre_metadata$age)
+
+all_pre_metadata <- all_pre_metadata %>%
+  mutate(group = case_when(age <=20 ~ "20 and below" ,
+                           age > 20 & age < 30 ~ "21 to 29",
+                           age >= 30 & age < 40 ~ "30 to 39", 
+                           age >= 40 & age < 50 ~ "40 to 49",
+                           age >= 50 & age < 60 ~ "50 to 59",
+                           age >= 60 & age < 70 ~ "60 to 69",
+                           age >= 70 & age < 80 ~ "70 to 79",
+                           age >= 80 ~ "80 and above")) %>%
+  mutate(group = factor(group, levels = c("20 and below", "21 to 29", "30 to 39",
+                                          "40 to 49", "50 to 59",  "60 to 69",
+                                          "70 to 79", "80 and above" )))
+
+
+ggplot(all_pre_metadata, aes(group, fill = group )) +
+  geom_bar()+
+  ggtitle("Distribution of baseline data")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Build the third model
+
+# Initialize argument
+
+arg_3 <- list(formula = y ~ group +  (1|study)+(1|participant),
+              family = glmmTMB::beta_family())
+
+
+model_3 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
+                   arguments = arg_3,
+                   data = all_pre_splice_reordered,
+                   metadata = all_pre_metadata,
+                   samplename = "seq_sample_id",
+                   summary_fun = sum_fun2,
+                   eval_fun = eval_mod,
+                   exported = list(),
+                   save_models = FALSE,
+                   return_models = FALSE,
+                   # subset = 1:10,
+                   cores = ncores-2)
+
+
+model_3$summaries
+
+model_3$summaries$ENST00000023939.8_6_20
+
+
+#Remove all that have output NULL
+excl_3<- names(which(model_3$summaries == "NULL"))
+geneids_3 <- names(which(model_3$summaries != "NULL"))
+
+
+# Collect all model summaries
+mod_sum_3 <- bind_rows(within(model_3$summaries, rm(excl_3))) %>%
+  mutate(target = rep(geneids_3, each = 8)) %>%
+#  subset(coef != "(Intercept)")  %>%
+  mutate(adj.p = p.adjust( p.val, method = "fdr"),
+         log2fc = estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"),
+         odds_ratio = exp(estimate))
+
+# 
+# # Bind all model evaluations
+# mod_eval_3 <- bind_rows(within(model_3$evaluations, rm(excl_3)))%>%
+#   mutate(target = geneids_3)
+# 
+# 
+# # Merge the evaluations and summaries
+# model_cont_3 <- mod_sum_3 %>%
+#   inner_join(mod_eval_3, by = "target") # %>%
+
+
+saveRDS(mod_sum_3 , "data_new/models/new_edition/grouped_age_baseline.RDS")
+
+
+
+
 
 
 
@@ -178,7 +280,7 @@ full_RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                          exported = list(),
                          save_models = FALSE,
                          return_models = FALSE,
-                          subset = 1:100,
+                         # subset = 1:100,
                          cores = ncores-2)
 
 
@@ -208,6 +310,7 @@ mod_sum <- bind_rows(within(full_RT_model$summaries, rm(missing_full))) %>%
 # model_cont <- mod_sum %>%
 #   inner_join(mod_eval, by = "target") # %>%
 # filter(Pr...z..<= 0.05)
+saveRDS(mod_sum , "data_new/models/new_edition/RT_full_scaledage_model.RDS")
 
 filt_pre_group <- mod_sum %>%
   filter(p.val<= 0.05  ) %>%
@@ -234,12 +337,12 @@ group_RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                           data = all_splice_reordered,
                           metadata = all_full_metadata,
                           samplename = "seq_sample_id",
-                          summary_fun = sum_fun,
+                          summary_fun = sum_fun2,
                           eval_fun = eval_mod,
                           exported = list(),
                           save_models = FALSE,
                           return_models = FALSE,
-                          # subset = 1:10,
+                         #  subset = 1:100,
                           cores = ncores-2)
 
 
@@ -254,17 +357,28 @@ avail_group <- names(which(group_RT_model$summaries != "NULL"))
 mod_sum_group <- bind_rows(within(group_RT_model$summaries, rm(missing_group))) %>%
   mutate(target = rep(avail_group, each = 16)) %>%
   subset(coef != "(Intercept)")  %>%
-  mutate(.by = coef,
-         adj.p = p.adjust(Pr...z.., method = "fdr"),
-         log2fc = Estimate/log(2),
-         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns")) 
+  mutate(adj.p = p.adjust( p.val, method = "fdr"),
+         log2fc = estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"),
+         odds_ratio = exp(estimate))
 
 
+# 
+# mod_eval_group <- bind_rows(within(group_RT_model$evaluations, rm(missing_group)))%>%
+#   mutate(target = avail_group)
+# 
+# 
+# 
+# model_cont_group <- mod_sum_group %>%
+#   inner_join(mod_eval_group, by = "target") 
+saveRDS(mod_sum_group , "data_new/models/new_edition/RT_full_groupedage_model.RDS")
 
-mod_eval_group <- bind_rows(within(group_RT_model$evaluations, rm(missing_group)))%>%
-  mutate(target = avail_group)
+filt_pre_group <- mod_sum_group %>%
+  filter(p.val<= 0.05  ) %>%
+  subset(coef != "(Intercept)") %>%
+  drop_na()
 
-
-
-model_cont_group <- mod_sum_group %>%
-  inner_join(mod_eval_group, by = "target") 
+ggplot(filt_pre_group, aes(x = estimate, y = odds_ratio)) +
+  geom_point()+
+  geom_ribbon(aes(ymin = exp(cil), ymax = exp(ciu)),fill = "grey", alpha = 0.5) +
+  facet_wrap(~coef)

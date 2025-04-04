@@ -58,7 +58,7 @@ all_splice_reordered[all_splice_reordered == 1 ] <- 0.999
 # Impact of age and exercise in one go
 
 
-args_full <-list(formula = y ~  scaled_age*time + (1|study) + (scaled_age+0|study) +(1|participant), 
+args_full <-list(formula = y ~  scaled_age*time + sex*time + (1|study) + (scaled_age+0|study) +(1|participant), 
                         family = glmmTMB::beta_family())
 
 

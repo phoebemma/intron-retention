@@ -32,6 +32,88 @@ eval_mod <- function(x) {
 
 
 
+# A summary function that calculates the confidence interval the 
+sum_fun2 <- function(x) {
+  
+  # How many rows in the cond effects?
+  nrows <- nrow(data.frame(coef(summary(x))$cond))
+  
+  # Save model coefficients
+  modcoefs <- coef(summary(x))$cond |>
+    data.frame()  |>
+    tibble::rownames_to_column(var = "coef")  |>
+    cbind(data.frame(confint(x))[1:nrows,c(1,2)])  |>
+    data.frame(row.names = NULL)  |>
+    dplyr::select(coef,
+                  estimate = Estimate, 
+                  se = Std..Error, 
+                  z.val = z.value,
+                  p.val = Pr...z.., 
+                  cil = X2.5.., 
+                  ciu =  X97.5..) # |>
+    # tibble::add_case(coef = "dispersion", 
+    #                  estimate = summary(x)$sigma)
+  
+  if(!is.null(coef(summary(x))$disp)) {
+    
+    modcoefs <-  dplyr::bind_rows(
+      
+      modcoefs,
+      
+      coef(summary(x))$disp |>
+        data.frame() |>
+        tibble::rownames_to_column(var = "coef") |>
+        dplyr::select(coef, estimate = Estimate, 
+                      se = Std..Error, 
+                      z.val = z.value,
+                      p.val = Pr...z..) |>
+        dplyr::mutate(coef = paste0("dispersion:", coef),
+                      cil = NA, 
+                      ciu = NA))
+    
+    
+    
+  }
+  
+  
+  return(modcoefs)
+  
+  
+}
+# 
+
+
+sumfun_ME <- function(x) {
+  all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
+  q <- datagrid(scaled_age = all_pre_metadata$scaled_age, sex = factor(all_pre_metadata$sex),
+                  study = factor(all_pre_metadata$study), participant = factor(all_pre_metadata$participant))
+  df <-  marginaleffects::predictions(x, newdata = q ,
+                                      type = "response",
+                                      re.form=NA)
+
+  preds <- data.frame(df)[,c(2, 3, 4, 5)]
+  preds$type <- "prediction"
+
+
+
+  # Save model coefficients
+  modcoefs <- data.frame(coef(summary(x)), row.names = NULL)
+  modcoefs$type <- "modelcoef"
+
+  colnames(modcoefs) <- c("estimate", "se", "zval", "pval", "type")
+  colnames(preds) <- c("estimate", "se", "zval", "pval", "type")
+
+
+  out <- rbind( modcoefs, preds)
+  return(out)
+
+
+}
+
+
+
+
+
 #check number of cores. Used in seq_model
 ncores <- parallel::detectCores()
 

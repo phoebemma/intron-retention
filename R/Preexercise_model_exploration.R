@@ -8,10 +8,12 @@ library(ggpubr)
 library(cowplot)
 library(gridExtra)
 library(grid)
+library(marginaleffects)
 
 # Load the primary pre-exercise model
 # This was built using the formula y ~  scaled_age + (1|study) + (scaled_age+0|study) +(1|participant)
-Pre_group <- readRDS("data_new/models/scaled_age_seperate_slope_intercept_model.RDS") 
+Pre_group <- readRDS("data_new/models/scaled_age_seperate_slope_intercept_model.RDS") %>%
+  mutate(odds_ratio = exp(Estimate))
 
 
 
@@ -19,8 +21,10 @@ Pre_group <- readRDS("data_new/models/scaled_age_seperate_slope_intercept_model.
 filt_pre_group <- Pre_group %>%
   filter(Pr...z..<= 0.05  )
 
-
-
+ggplot(filt_pre_group, aes(x = Estimate, y = odds_ratio)) +
+  geom_point()
+  scale_y_log10()
+hist(filt_pre_group$odds_ratio)
 
 # Visualize the EStimates
 plot_ds_introns <- filt_pre_group %>% 
@@ -31,7 +35,7 @@ plot_ds_introns <- filt_pre_group %>%
   theme(plot.title = element_text(hjust = 0.5))+
   theme_cowplot()
 
-
+ggplot(filt_pre_group, aes(Estimate))+ stat_ecdf()
 
 saveRDS(filt_pre_group, "data_new/models/filt_scaled_age_seperate_slope_intercept_model.RDS")
 

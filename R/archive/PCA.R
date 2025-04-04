@@ -10,7 +10,7 @@ library(ggfortify)
 
 # Load all splice data from the Pre_exercise.R
 #pre_sp <- # readRDS("data/preexercise_data/all_splice_data.RDS")
-pca_matrix <- all_pre_splice_cont %>%
+pca_matrix <- non_perfect_SE %>%
   column_to_rownames("transcript_ID") %>% 
   as.matrix() %>%
   t()
@@ -82,7 +82,7 @@ pc_loadings
 
 top_genes <- pc_loadings %>% 
   # select only the PCs we are interested in
-  select(transcript_ID, PC1, PC2) %>%
+ dplyr::select(transcript_ID, PC1, PC2) %>%
   # convert to a "long" format
   pivot_longer(matches("PC"), names_to = "PC", values_to = "loading") %>% 
   # for each PC
@@ -90,7 +90,7 @@ top_genes <- pc_loadings %>%
   # arrange by descending order of loading
   arrange(desc(abs(loading))) %>% 
   # take the 10 top rows
-  slice(1:10) %>% 
+  dplyr::slice(1:10) %>% 
   # pull the gene column as a vector
   pull(transcript_ID) %>% 
   # ensure only unique genes are retained
@@ -112,4 +112,4 @@ autoplot(sample_pca)
 met_df <-  all_pre_metadata#readRDS("data/preexercise_data/all_metadata.RDS") 
 
 unique(met_df$study)
-autoplot(sample_pca, data = met_df, colour = "study", shape ="age_group" )
+autoplot(sample_pca, data = met_df, colour = "study" )
