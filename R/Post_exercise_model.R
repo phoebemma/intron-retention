@@ -77,7 +77,69 @@ full_RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                          summary_fun = sum_fun2,
                          eval_fun = eval_mod,
                          exported = list(),
-                         save_models = FALSE,
-                         return_models = FALSE,
+                         save_models = F,
+                         return_models = T,
                          # subset = 1:100,
                          cores = ncores-2)
+
+
+names(full_RT_model$models)
+# plot(effect_plot)
+
+#exclude those whose summaries are not Null
+model_list <- full_RT_model$models[which(full_RT_model$summaries != "NULL")]
+
+baseline_predictions <- data.frame()
+
+for (i in 1:length(model_list)) {
+  model_name <- names(model_list)[i]
+  
+  # Extract the effect of predictors and catch those with null
+  effect_plot <- # tryCatch({
+    allEffects(model_list[[i]], xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
+  # }, error = function(e) {
+  #   print(paste("Error in allEffects for model", model_name, ":", e$message))
+  #   return(NULL)
+  # })
+  # 
+  
+  # # Check if 'scaled_age' exists in effect_plot
+  # if (!is.null(effect_plot) && !is.null(effect_plot$scaled_age)) {
+  # Convert the effect plot to a dataframe
+  effect_df <- as.data.frame(effect_plot$scaled_age)
+  
+  # Add a column for the model name
+  effect_df$target <- model_name
+  
+  # define a type to differentiate it from the model coefficient
+ 
+  # Append to the baseline_predictions dataframe
+  baseline_predictions <- rbind(baseline_predictions, effect_df)
+  # } else {
+  # print(paste("scaled_age not found in effect_plot for model", model_name))
+  # }
+  baseline_predictions$type <- "prediction"
+}
+
+# plot(allEffects(full_RT_model$models$ENST00000023939.8_5_20), 
+#      main = "Interaction Effects Plot", xlab = "Predictor", ylab = "Response")
+full_RT_model$summaries
+
+
+missing_full <- names(which(full_RT_model$summaries == "NULL"))
+avail_full <- names(which(full_RT_model$summaries != "NULL"))
+
+
+
+mod_sum <- bind_rows(within(full_RT_model$summaries, rm(missing_full))) %>%
+  mutate(target = rep(avail_full, each = 6)) %>%
+ # subset(coef != "(Intercept)")  %>%
+  mutate(adj.p = p.adjust( p.val, method = "fdr"),
+         log2fc = estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"),
+         odds_ratio = exp(estimate),
+         type = "model coefficient")
+
+
+model_df <- baseline_predictions %>%
+  inner_join(mod_sum, by = "target")
