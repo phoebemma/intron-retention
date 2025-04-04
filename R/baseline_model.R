@@ -84,16 +84,16 @@ for (i in 1:length(model_list)) {
   model_name <- names(model_list)[i]
   
   # Extract the effect of predictors and catch those with null
-  effect_plot <- tryCatch({
+  effect_plot <- # tryCatch({
     allEffects(model_list[[i]], xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
-  }, error = function(e) {
-    print(paste("Error in allEffects for model", model_name, ":", e$message))
-    return(NULL)
-  })
+  # }, error = function(e) {
+  #   print(paste("Error in allEffects for model", model_name, ":", e$message))
+  #   return(NULL)
+  # })
+  # 
   
-  
-  # Check if 'scaled_age' exists in effect_plot
-  if (!is.null(effect_plot) && !is.null(effect_plot$scaled_age)) {
+  # # Check if 'scaled_age' exists in effect_plot
+  # if (!is.null(effect_plot) && !is.null(effect_plot$scaled_age)) {
     # Convert the effect plot to a dataframe
     effect_df <- as.data.frame(effect_plot$scaled_age)
     
@@ -102,9 +102,9 @@ for (i in 1:length(model_list)) {
     
     # Append to the baseline_predictions dataframe
     baseline_predictions <- rbind(baseline_predictions, effect_df)
-  } else {
-    print(paste("scaled_age not found in effect_plot for model", model_name))
-  }
+  # } else {
+    # print(paste("scaled_age not found in effect_plot for model", model_name))
+  # }
 }
 
 
