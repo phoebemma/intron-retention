@@ -43,7 +43,11 @@ all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
 # This argument would estimate the intercept, and the slope separately
 # with uncorrelated random intercept and random slope within each study
+<<<<<<< HEAD
 arg_1<- list(formula = y ~  scaled_age  + (1|study) + (scaled_age+0|study) +(1|participant), 
+=======
+arg_1<- list(formula = y ~  scaled_age + (1|study) + (scaled_age+0|study) +(1|participant), 
+>>>>>>> a5265ac924e41ee4df97d3e02786f00a60fd0943
              family = glmmTMB::beta_family())
 
 
@@ -57,18 +61,17 @@ model_1 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                    exported = list(),
                    save_models = F,
                    return_models = T,
+<<<<<<< HEAD
                    #   subset = 1:100,
                    cores = ncores-2)
 model_1$summaries$
+=======
+                   # subset = 1:10,
+                   cores = ncores)
 
-# 
-# new_df = data.frame(x = seq(from = 0, to = 1, by = 0.1))
-# model_1$summaries$ENST00000023939.8_6_20
-# predict(model_1$models$ENST00000014935.7_5_X , type = "response", newdata = new_df)
-# effect_plot <- allEffects(model_1$models$ENST00000014935.7_5_X, xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
-# 
-# x <- as.data.frame(effect_plot$scaled_age)
-# y<- as.data.frame(effect_plot$sex)
+model_1$summaries$ENST00000001008.6_5_12
+>>>>>>> a5265ac924e41ee4df97d3e02786f00a60fd0943
+
 
 names(model_1$models)
 # plot(effect_plot)
@@ -85,33 +88,27 @@ for (i in 1:length(model_list)) {
   # Extract the effect of predictors and catch those with null
   effect_plot <- # tryCatch({
     allEffects(model_list[[i]], xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
-  # }, error = function(e) {
-  #   print(paste("Error in allEffects for model", model_name, ":", e$message))
-  #   return(NULL)
-  # })
-  # 
-  
-  # # Check if 'scaled_age' exists in effect_plot
-  # if (!is.null(effect_plot) && !is.null(effect_plot$scaled_age)) {
-    # Convert the effect plot to a dataframe
+
     effect_df <- as.data.frame(effect_plot$scaled_age)
     
     # Add a column for the model name
     effect_df$target <- model_name
+
     
     # Append to the baseline_predictions dataframe
     baseline_predictions <- rbind(baseline_predictions, effect_df)
-  # } else {
-    # print(paste("scaled_age not found in effect_plot for model", model_name))
-  # }
 }
 
 
+<<<<<<< HEAD
 
 
 saveRDS(baseline_predictions, "data_new/baseline_model_predictions.RDS")
+=======
+saveRDS(model_1, "data_new/baseline_model.RDS")
+>>>>>>> a5265ac924e41ee4df97d3e02786f00a60fd0943
 
-
+saveRDS(baseline_predictions, "data_new/baseline_predictions.RDS")
 
 #Remove all that have output NULL
 excl_1<- names(which(model_1$summaries == "NULL"))
@@ -127,6 +124,7 @@ mod_sum_1 <- bind_rows(within(model_1$summaries, rm(excl_1))) %>%
          fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))
 
 
+<<<<<<< HEAD
 # Bind all model evaluations
 # mod_eval_1 <- bind_rows(within(model_1$evaluations, rm(excl_1)))%>%
 #   mutate(target = geneids_1)
@@ -139,5 +137,9 @@ mod_sum_1 <- bind_rows(within(model_1$summaries, rm(excl_1))) %>%
 
 
 saveRDS(mod_sum_1, "data_new/baseline_model_summary.RDS")
+=======
+
+saveRDS(mod_sum_1 , "data_new/baseline_model_summary.RDS")
+>>>>>>> a5265ac924e41ee4df97d3e02786f00a60fd0943
 
 
