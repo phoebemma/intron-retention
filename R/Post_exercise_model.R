@@ -8,6 +8,7 @@ library(gridExtra)
 library(ggpubr)
 library(cowplot)
 library(effects)
+library(scales)
 
 
 # Load the Trainome functions
@@ -63,8 +64,80 @@ all_splice_reordered[all_splice_reordered == 1 ] <- 0.999
 # Since only few of the ds by age introns were contained in the full data, might be nice to look at the 
 # Impact of age and exercise in one go
 
+# 
+# testdata <- cbind(data.frame(y = as.numeric(all_splice_reordered[1, -1])), 
+#                        all_full_metadata) %>% 
+#   mutate(scaled_age = age / max (age))
+# 
+# 
+# 
+# 
+# m <- glmmTMB::glmmTMB(formula = y ~  scaled_age * time +  (time*scaled_age||study) +(1|participant), 
+#                       family = glmmTMB::beta_family, 
+#                       data = testdata)
+# 
+# 
+# summary(m)
+# 
+# 
+# sf <- function(m) {
+#   
+#   predict(m, newdata = data.frame(scaled_age = c(0.1, 0.9)))
+#   
+#   
+#   xage <- seq(from = 0, to = 1, by = 0.1)
+#   time <- c("PreExc", "PostExc")
+#   
+#   
+#  marginaleffects::predictions(m, 
+#                               newdata = marginaleffects::datagrid(scaled_age = rep(xage, 2),
+#                                                                   time = rep(time, 11),
+#                                                                   model = m), 
+#                               re.form=NULL)
+#   
+#  
+#  eff <- as.data.frame(effects::allEffects(m, xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1))))$`scaled_age:time`
+#  
+#  eff$coef <- paste0(eff$scaled_age, "_", eff$time)
+#  eff$type <- "predict"
+#  
+#  
+# s <- data.frame(coef(summary(m))$cond)
+# s$coef <- rownames(s) 
+#  
+# results <- rbind(sum, predict)
+#  
+# return(results)
+# }
+# 
+# sum_fun_predict <- function(x){
+#   
+#   cond_effects <- data.frame(cbind(data.frame(coef = rownames(coef(summary(x))$cond))),
+#                              coef(summary(x))$cond, 
+#                              
+#                              row.names = NULL)
+#   
+#   effect_plot <- effects::allEffects(x, xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
+#   
+#   effect_df <- as.data.frame(effect_plot$scaled_age)
+#   
+#   # Add a column for the model name
+#   # effect_df$target <- model_name
+#   effect_df$type <- "predict"
+#   
+#   cond_effects$type <- "coef"
+#   results <- rbind(cond_effects, effect_df)
+#   
+#   return(results)
+#   
+# }
+# eff %>% 
+#   separate(coef, into = c("age", "time"), sep = "_") %>% 
+#   ggplot(aes(age, fit, color = time, group = time)) + geom_line()
 
-args_full <-list(formula = y ~  scaled_age*time + sex*time + (1|study) + (scaled_age+0|study) +(1|participant), 
+
+
+args_full <-list(formula = y ~  scaled_age * time + sex + (1|study) +(1|participant), 
                  family = glmmTMB::beta_family())
 
 
@@ -74,38 +147,33 @@ full_RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                          data = all_splice_reordered,
                          metadata = all_full_metadata,
                          samplename = "seq_sample_id",
-                         summary_fun = sum_fun2,
+                         summary_fun = sum_fun,
                          eval_fun = eval_mod,
                          exported = list(),
                          save_models = F,
                          return_models = T,
-                         # subset = 1:100,
+                          subset = 1:10,
                          cores = ncores-2)
 
+full_RT_model$summaries
 
+#saveRDS(full_RT_model, "data_new/full_RT_model.RDS")
 names(full_RT_model$models)
 # plot(effect_plot)
 
 #exclude those whose summaries are not Null
 model_list <- full_RT_model$models[which(full_RT_model$summaries != "NULL")]
 
-baseline_predictions <- data.frame()
+baseline_predictions <- data.frame(scaled_age = numeric(),
+                                   target = character(), type = character(), stringsAsFactors = FALSE)
 
 for (i in 1:length(model_list)) {
   model_name <- names(model_list)[i]
   
   # Extract the effect of predictors and catch those with null
-  effect_plot <- # tryCatch({
-    allEffects(model_list[[i]], xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
-  # }, error = function(e) {
-  #   print(paste("Error in allEffects for model", model_name, ":", e$message))
-  #   return(NULL)
-  # })
-  # 
-  
-  # # Check if 'scaled_age' exists in effect_plot
-  # if (!is.null(effect_plot) && !is.null(effect_plot$scaled_age)) {
-  # Convert the effect plot to a dataframe
+  effect_plot <- allEffects(model_list[[i]], xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
+ 
+ 
   effect_df <- as.data.frame(effect_plot$scaled_age)
   
   # Add a column for the model name
@@ -114,13 +182,27 @@ for (i in 1:length(model_list)) {
   # define a type to differentiate it from the model coefficient
  
   # Append to the baseline_predictions dataframe
-  baseline_predictions <- rbind(baseline_predictions, effect_df)
+ # baseline_predictions <- rbind(baseline_predictions, effect_df)
+ 
+  effect_df$type <- "prediction"
+  
+  # # Ensure column names match
+  # if (ncol(baseline_predictions) == 0) {
+  #   baseline_predictions <- effect_df
   # } else {
-  # print(paste("scaled_age not found in effect_plot for model", model_name))
+  #   if (all(names(effect_df) %in% names(baseline_predictions))) {
+  #     baseline_predictions <- rbind(baseline_predictions, effect_df)
+  #   } else {
+  #     warning("Column names do not match. Skipping this model.")
+  #   }
   # }
-  baseline_predictions$type <- "prediction"
+  
+  # Append to the baseline_predictions dataframe
+  baseline_predictions <- rbind(baseline_predictions, effect_df)
+  
 }
 
+saveRDS(baseline_predictions, "data_new/predictions_RT_model.RDS")
 # plot(allEffects(full_RT_model$models$ENST00000023939.8_5_20), 
 #      main = "Interaction Effects Plot", xlab = "Predictor", ylab = "Response")
 full_RT_model$summaries
@@ -141,5 +223,6 @@ mod_sum <- bind_rows(within(full_RT_model$summaries, rm(missing_full))) %>%
          type = "model coefficient")
 
 
+saveRDS(mod_sum, "data_new/model_summary_RT_model.RDS")
 model_df <- baseline_predictions %>%
   inner_join(mod_sum, by = "target")

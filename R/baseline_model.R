@@ -1,6 +1,5 @@
 # This is the updated baseline model
 # Here, the models will be built after removing the data that score perfectly across all samples
-
 library(dplyr)
 library(tidyverse)
 library(seqwrap)
@@ -44,7 +43,7 @@ all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
 # This argument would estimate the intercept, and the slope separately
 # with uncorrelated random intercept and random slope within each study
-arg_1<- list(formula = y ~  scaled_age + sex + (1|study) + (scaled_age+0|study) +(1|participant), 
+arg_1<- list(formula = y ~  scaled_age  + (1|study) + (scaled_age+0|study) +(1|participant), 
              family = glmmTMB::beta_family())
 
 
@@ -58,9 +57,8 @@ model_1 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                    exported = list(),
                    save_models = F,
                    return_models = T,
-                 #   subset = 1:100,
+                   #   subset = 1:100,
                    cores = ncores-2)
-
 model_1$summaries$
 
 # 
@@ -78,7 +76,8 @@ names(model_1$models)
 #exclude those whose summaries are not Null
 model_list <- model_1$models[which(model_1$summaries != "NULL")]
 
-baseline_predictions <- data.frame()
+baseline_predictions <- data.frame(scaled_age = numeric(),
+                                   target = character(), type = character(), stringsAsFactors = FALSE)
 
 for (i in 1:length(model_list)) {
   model_name <- names(model_list)[i]
@@ -110,7 +109,7 @@ for (i in 1:length(model_list)) {
 
 
 
-saveRDS(model_1, "data_new/baseline_model.RDS")
+saveRDS(baseline_predictions, "data_new/baseline_model_predictions.RDS")
 
 
 
@@ -129,26 +128,16 @@ mod_sum_1 <- bind_rows(within(model_1$summaries, rm(excl_1))) %>%
 
 
 # Bind all model evaluations
-mod_eval_1 <- bind_rows(within(model_1$evaluations, rm(excl_1)))%>%
-  mutate(target = geneids_1)
-
-
-# Merge the evaluations and summaries
-model_cont_1 <- mod_sum_1 %>%
-  inner_join(mod_eval_1, by = "target") # %>%
+# mod_eval_1 <- bind_rows(within(model_1$evaluations, rm(excl_1)))%>%
+#   mutate(target = geneids_1)
+# 
+# 
+# # Merge the evaluations and summaries
+# model_cont_1 <- mod_sum_1 %>%
+#   inner_join(mod_eval_1, by = "target") # %>%
 # filter(adj.p <= 0.05)
 
 
-saveRDS(model_cont_1, "data_new/models/scaled_age_seperate_slope_intercept_model.RDS")
+saveRDS(mod_sum_1, "data_new/baseline_model_summary.RDS")
 
-# Initialize an empty data frame to store results
-results <- data.frame()
 
-# Use a for loop to iterate over the numbers
-for (model in model_cont_1) {
-  # Calculate the square of each number
-  squared <- i^2
-  
-  # Append the results to the data frame
-  results <- rbind(results, data.frame(Number = i, Squared = squared))
-}
