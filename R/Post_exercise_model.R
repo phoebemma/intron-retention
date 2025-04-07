@@ -8,6 +8,7 @@ library(gridExtra)
 library(ggpubr)
 library(cowplot)
 library(effects)
+library(scales)
 
 
 # Load the Trainome functions
