@@ -43,11 +43,8 @@ all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
 # This argument would estimate the intercept, and the slope separately
 # with uncorrelated random intercept and random slope within each study
-<<<<<<< HEAD
-arg_1<- list(formula = y ~  scaled_age  + (1|study) + (scaled_age+0|study) +(1|participant), 
-=======
-arg_1<- list(formula = y ~  scaled_age + (1|study) + (scaled_age+0|study) +(1|participant), 
->>>>>>> a5265ac924e41ee4df97d3e02786f00a60fd0943
+
+arg_1<- list(formula = y ~  scaled_age + sex + (1|study) +(1|participant), 
              family = glmmTMB::beta_family())
 
 
@@ -61,16 +58,12 @@ model_1 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                    exported = list(),
                    save_models = F,
                    return_models = T,
-<<<<<<< HEAD
                    #   subset = 1:100,
                    cores = ncores-2)
 model_1$summaries$
-=======
-                   # subset = 1:10,
-                   cores = ncores)
 
 model_1$summaries$ENST00000001008.6_5_12
->>>>>>> a5265ac924e41ee4df97d3e02786f00a60fd0943
+
 
 
 names(model_1$models)
@@ -100,15 +93,11 @@ for (i in 1:length(model_list)) {
 }
 
 
-<<<<<<< HEAD
 
+saveRDS(baseline_predictions, "data_new/simpler_baseline_model_predictions.RDS")
 
-saveRDS(baseline_predictions, "data_new/baseline_model_predictions.RDS")
-=======
-saveRDS(model_1, "data_new/baseline_model.RDS")
->>>>>>> a5265ac924e41ee4df97d3e02786f00a60fd0943
+saveRDS(model_1, "data_new/simpler_baseline_model.RDS")
 
-saveRDS(baseline_predictions, "data_new/baseline_predictions.RDS")
 
 #Remove all that have output NULL
 excl_1<- names(which(model_1$summaries == "NULL"))
@@ -124,22 +113,7 @@ mod_sum_1 <- bind_rows(within(model_1$summaries, rm(excl_1))) %>%
          fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"))
 
 
-<<<<<<< HEAD
-# Bind all model evaluations
-# mod_eval_1 <- bind_rows(within(model_1$evaluations, rm(excl_1)))%>%
-#   mutate(target = geneids_1)
-# 
-# 
-# # Merge the evaluations and summaries
-# model_cont_1 <- mod_sum_1 %>%
-#   inner_join(mod_eval_1, by = "target") # %>%
-# filter(adj.p <= 0.05)
 
-
-saveRDS(mod_sum_1, "data_new/baseline_model_summary.RDS")
-=======
-
-saveRDS(mod_sum_1 , "data_new/baseline_model_summary.RDS")
->>>>>>> a5265ac924e41ee4df97d3e02786f00a60fd0943
+saveRDS(mod_sum_1, "data_new/simpler_baseline_model_summary.RDS")
 
 

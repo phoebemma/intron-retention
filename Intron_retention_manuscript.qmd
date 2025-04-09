@@ -9,7 +9,7 @@ author:
 editor: visual
 csl: resources/embo_reports.csl
 bibliography: resources/My_Library.bib
-target_journal: https://journals.biologists.com/jcs
+target_journal: https://www.embopress.org/page/journal/14693178/authorguide
 prefer-html: true
 ---
 
@@ -136,7 +136,7 @@ Table 1: Basic characteristics of RT intervention studies included in this analy
 | Volume                             | 25                     | 20-37                | 12         | @khan_increased_2020           |
 +------------------------------------+------------------------+----------------------+------------+--------------------------------+
 
-# Results
+# Results and Discussion
 
 ## Splicing efficiency of introns in the skeletal muscle are affected by aging
 
@@ -146,64 +146,45 @@ Table 1: Basic characteristics of RT intervention studies included in this analy
 #| warning: false
 #| label: Results_1
 
-ds_introns_pre <- readRDS("data_new/models/scaled_age_seperate_slope_intercept_model.RDS")  %>%
-  filter(Pr...z..<= 0.05)
+# The full spliceQ baseline data
+
+ds_introns_pre <- readRDS("data_new/baseline_model_outputs/baseline_model_df.RDS")
 
 # Load the gene annotation file
  gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
 
-ds <- length(ds_introns_pre$target)
+ds <- length(unique(ds_introns_pre$target))
 
 ds_pos_ <- ds_introns_pre %>%
-   filter(Estimate > 0)
- ds_pos <-  length(ds_pos_$target)
+   filter(Estimate > 0 & Pr...z.. <= 0.05)
+ ds_pos <-  length(unique(ds_pos_$target))
 
 
 ds_neg_ <- ds_introns_pre %>%
-   filter(Estimate < 0) 
+   filter(Estimate < 0 & Pr...z.. <= 0.05) 
 
-ds_neg <- length(ds_neg_$target)
+ds_neg <- length(unique(ds_neg_$target))
 
 
+ds_total <- ds_neg + ds_pos
 # EXplore the gene and transcript level information of the ds introns
 
-filt_positive <- ds_pos_ %>%
-   separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
-    inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
-   dplyr::select(Estimate, transcript_ID, intron_ID,  transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)%>%
-   mutate(intron_ID = paste0(transcript_ID, "_", intron_ID))
+# How many transcripts in full data
+transcript_level <- length(unique(ds_introns_pre$transcript_ID))
 
+gene_level <- length(unique(ds_introns_pre$ensembl_gene_id))
 
-
-filt_negative <- ds_neg_  %>%
-   separate("target", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
-   inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
-   dplyr::select(Estimate, transcript_ID,intron_ID,  transcript_biotype, ensembl_gene_id, external_gene_name, transcript_length)%>%
-   mutate(intron_ID = paste0(transcript_ID, "_", intron_ID))
-
-
-# get the intersect of both data
-pos_neg_intersect <- length(intersect(filt_negative$transcript_ID, filt_positive$transcript_ID))
-
-common_genes_neg <- filt_negative[filt_negative$transcript_ID %in% filt_positive$transcript_ID,]
-
-common_genes_pos <- filt_positive[filt_positive$transcript_ID %in% filt_negative$transcript_ID,]
-
-
-reduced_inte <- length(common_genes_neg$intron_ID)
-
-increased_inte <- length(common_genes_pos$intron_ID)
 
 
 ```
 
-To explore if SE reduces with aging in human *vastus lateralis* muscle, we investigated the `r introns` introns recorded by SpliceQ [@de_melo_costa_splice-q_2021] across all the untrained (pre-exercise) samples. These were the samples collected before commencement of the exercise interventions. SpliceQ awards each intron an SE score ranging from zero to one. A score of zero means that the intron is fully retained, while a score of one means the complete splicing-out of the intron. Scores between zero and one indicate the approximate fraction of retained nucleotides .
+Splicing effciciency is said to be cell, tissue and specie specific . Previous studies[@garcia-ruiz_splicing_2025; @baralle_age-related_2023; @mariotti_deterioration_2022; @bhadra_alternative_2020; @adusumalli_increased_2019] had linked poor SE to aging in different tissues . We explored SE and its relationship with aging in the human *vastus lateralis* muscle in `r ds` introns from untrained (pre-exercise) samples based on the inclusion criteria that samples were taken from participants before commencement of the exercise intervention, and the that introns did not have an SE score of one across all samples. SpliceQ @splice was used to calculate SE . The tool awards each intron an SE score ranging from zero to one. A score of zero means that the intron is fully retained, while a score of one means the complete splicing-out of the intron. Scores between zero and one indicate the approximate fraction of retained nucleotides. These introns were from `r transcript_level` transcripts of `r gene_level` genes. Based on the results, we grouped the introns into those not affected by aging (No effect), those with SE scores that improved with aging ( Improved SE), and those that aging leads to decline in their SE scores (Reduced SE).
 
-Of the `r introns` introns at baseline, `r ds` were differentially spliced (ds) by aging. Even though aging led to the improvement of SE in `r ds_pos` introns, it however led to decline in SE of `r ds_neg` introns as can be seen in the model estimates shown in **Figures 1A.** We also explored the transcript and gene-level annotations of the transcripts containing the ds introns. `r pos_neg_intersect` transcripts contained introns in both the improved SE ( `r increased_inte` introns) and reduced SE (`r reduced_inte` introns) groups, That is, aging led to both increase and decrease in SE of different introns in same transcripts . This suggests that the effects of aging is intron-specific. **Figure 1B and 1D** show the transcript and gene-level distribution of the introns whose SE were reduced by aging, while **Figure 1C and 1E** shows those for introns improved by aging . Gene ontology (GO) analyses reveal that the introns with both improved and reduced SE due to aging are involved in the same biological processes, but have somewhat different cellular components as can be seen in **Figure 3**. This suggests that while the two groups of ds introns are involved in same biological processes, their functional locations could vary.
+Of the `r ds` introns , `r ds_total` are significantly affected by aging, of which `r ds_pos` introns are predicted to improve with aging while `r ds_neg` introns declines with aging. Figure 2A shows how SE of different introns tend to change with increasing age. Our results indicate that while most introns in the skeletal muscle are unaffected by aging, a significant number of them are changed by aging; resulting mostly to relatively poorer SE scores. Our results also show that the effects of aging are intron-specific as several transcripts contained introns that cut across the several groups as shown in Figure 2B. 61 transcripts contained introns whose SE scores were reduced by aging, as well as those improved by aging. These transcripts also had introns unaffected by aging. These trend was observed across the three groups as several introns shared transcripts in common with other groups. This result agrees with those obtained by @sun_abnormalities_2023 that suggests differential regulation of splicing at the intron-level. Majority of the transcripts in all the groups were protein-coding genes which is not surprising since RNA sequencing tends to be enriched mostly with protein-coding genes. There was no noticeable gene expression pattern related to the effect of aging on SE. This was expected since a gene could contain introns with different response patterns to aging.
 
-We further investigated the SE trend across age groups in comparison to those aged 20 and below. The participants were divided into age groups based on their ages as shown in Figure 2. We observed IR peaking for participants in their sixties. Though GO analyses revealed the genes containing the ds introns belonged to similar gene sets across the age groups, more introns relating to genes involved in muscle organ and tissue development were ds in participants aged 80 and above as can be seen in Figure 2G. The model estimates as seen in supplementary figure 1 reveal that introns were differentially spliced across the age groups, but from the age of sixty, there was a very noticeable increase in IR evident from the model estimates being skewed to the left.
+Gene ontology (GO) analyses reveal that the introns affected by aging are involved mostly in muscle-related biological processes as can be shown in Figure 2C
 
-## Resistance Exercise Training affects splicing efficiency
+## Resistance Exercise Training affects splicing efficiency and could improve aging-related intron retention
 
 ```{r}
 #| echo: false
@@ -330,8 +311,6 @@ According to @sanchez-escabias_co-transcriptional_2022, SE tends to be similar b
 There is said to exist a positive correlation between gene length and SE [@sanchez-escabias_co-transcriptional_2022 ; @saudemont_fitness_2017; @braunschweig_widespread_2014]. We investigated this by using Pearson's product-moment correlation to check for correlations between transcript length and SE of introns in a transcript. A negligible correlation of -0.018 at a pvalue of 0.007 was found between the transcript length and SE of the samples at baseline. When tested in the post exercise data alone , they had a correlation estimate of -0.054 at a p value of 0.0. In the full dataset (baseline and postexercise), the correlation was -0.042 with a p.value of 0.0. All the results completely disagree with reports that suggest a relationship between those two factors in human skeletal muscles.
 
 # Discussion
-
-Here, we have shown that aging has an intron-specific effect on splicing efficiency in human skeletal muscle. While some improvements in SE occurred with aging, most of what was observed were declines in SE. We had expected a gradual increase in IR with aging as reported by several studies [@garcia-ruiz_splicing_2025; @baralle_age-related_2023; @mariotti_deterioration_2022; @bhadra_alternative_2020; @adusumalli_increased_2019], however we observed a relatively consistent IR pattern in participants aged 20 to 59, and a spike in participants aged 60 to 69. The gradual improvement observed in those in their seventies point towards the probable effect of other age-related issues . Another striking effect of aging is the very obvious reduction in SE among participants aged 80 and above and mainly in genes involved in muscle organ and tissue development. This is most likely connected to the widely known and reported increase in muscle strength and mass in quite old individuals.
 
 We also show that RT, like aging, has an intron-specific effect on SE. This agrees with @kodama_systematic_2024, @ubaida-mohien_physical_2019 and @ubaida-mohien_unbiased_2022 that exercise counteracts the effects of aging and can offset aging-related changes to the splicing machinery, though our study was specific to IR and RT in the skeletal muscle. By investigating specific introns affected by aging, and by RT we also show that RT improves aging-related poor SE values asmost of the ds introns were estimated to have improved SE values following 10-13 weeks of RT. In contrast to the pattern of gene sets affected by aging where relatively different gene sets were seen in those aged 80 and above, the genes containing the ds introns by RT belonged to similar gene sets across all age groups. This suggests that the benefits of RT are not age-dependent. However, the left skew of the model estimates for those aged 80 and above point towards a need for deeper investigation into the role of IR.
 

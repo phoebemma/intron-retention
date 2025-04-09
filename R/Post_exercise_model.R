@@ -152,11 +152,11 @@ full_RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                          exported = list(),
                          save_models = F,
                          return_models = T,
-                          subset = 1:10,
+                         # subset = 1:10,
                          cores = ncores-2)
 
 full_RT_model$summaries
-
+saveRDS(full_RT_model, "data_new/simpler_full_RT_model.RDS")
 #saveRDS(full_RT_model, "data_new/full_RT_model.RDS")
 names(full_RT_model$models)
 # plot(effect_plot)
@@ -202,7 +202,7 @@ for (i in 1:length(model_list)) {
   
 }
 
-saveRDS(baseline_predictions, "data_new/predictions_RT_model.RDS")
+saveRDS(baseline_predictions, "data_new/predictions_simpler_RT_model.RDS")
 # plot(allEffects(full_RT_model$models$ENST00000023939.8_5_20), 
 #      main = "Interaction Effects Plot", xlab = "Predictor", ylab = "Response")
 full_RT_model$summaries
@@ -214,15 +214,16 @@ avail_full <- names(which(full_RT_model$summaries != "NULL"))
 
 
 mod_sum <- bind_rows(within(full_RT_model$summaries, rm(missing_full))) %>%
-  mutate(target = rep(avail_full, each = 6)) %>%
+  mutate(target = rep(avail_full, each = 5)) %>%
  # subset(coef != "(Intercept)")  %>%
-  mutate(adj.p = p.adjust( p.val, method = "fdr"),
-         log2fc = estimate/log(2),
+  mutate(adj.p = p.adjust( Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
          fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"),
-         odds_ratio = exp(estimate),
+         odds_ratio = exp(Estimate),
          type = "model coefficient")
 
 
-saveRDS(mod_sum, "data_new/model_summary_RT_model.RDS")
+saveRDS(mod_sum, "data_new/simpler_model_summary.RDS")
+#saveRDS(mod_sum, "data_new/model_summary_RT_model.RDS")
 model_df <- baseline_predictions %>%
   inner_join(mod_sum, by = "target")
