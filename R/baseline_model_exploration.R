@@ -40,9 +40,9 @@ baseline_merged <- baseline_predictions %>%
                             Estimate > 0 & Pr...z.. > 0.05 ~ "No effect")) %>%
   inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
-saveRDS(baseline_merged, "data_new/baseline_model_outputs/baseline_model_df.RDS")
 
 
+saveRDS(baseline_merged, "data_new/baeline_merged_model_output.RDS")
 
 
 
