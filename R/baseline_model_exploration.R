@@ -9,6 +9,7 @@ library(ggplot2)
 library(ggplotify)
 library(clusterProfiler)
 library(org.Hs.eg.db)
+library(grid)
 
 # load baseline model summary 
 
@@ -52,7 +53,7 @@ summary_df <- baseline_merged %>%
   summarize(num_targets = n_distinct(target))
 
 
-ggplot(baseline_merged, aes(x = scaled_age, y = fit,  group = target)) +
+trend_line <- ggplot(baseline_merged, aes(x = scaled_age, y = fit,  group = target)) +
   geom_line(aes(alpha = 0.5, colour = "grey"), show.legend = F) + 
   theme_minimal()+
   labs(title = "Relationship between age and splicing efficiency", x = "Scaled Age", y = "Splicing efficiency") +
@@ -82,19 +83,19 @@ intersect_efect <- intersect(no_effect$transcript_ID, Reduced_se$transcript_ID)
 
 # create a Venn list
 int_data <- list("No_effect" = no_effect$transcript_ID,
-                  "Improved_SE" = Improved_Se$transcript_ID,
+                  "Improved SE" = Improved_Se$transcript_ID,
                   "Reduced SE" = Reduced_se$transcript_ID)
 
 # Plot the UpSet plot
- upset(fromList(int_data), order.by = "freq",
-      text.scale = 1.5, 
-      mainbar.y.label = "Number of intersecting transcripts ", 
-      sets.x.label = "Number of transcripts", 
-      sets.bar.color = c("grey30", "grey50", "grey60"),
-      number.angles = 45, 
-      point.size = 4.5, 
-      matrix.color = "black",
-      line.size = 2)
+distribution <-  upset(fromList(int_data), order.by = "freq",
+                 text.scale = 1.5, 
+                  mainbar.y.label = "Number of intersecting transcripts ", 
+                  sets.x.label = "Number of transcripts", 
+                  sets.bar.color = c("grey30", "grey50", "grey60"),
+                  number.angles = 45, 
+                  point.size = 4.5, 
+                  matrix.color = "black",
+                  line.size = 2)
 
 
 
@@ -217,12 +218,21 @@ effect_genes <- effect_genes %>%
  ## Output results from GO analysis to a table
  cluster_summary_effect <- data.frame(ego_df_effect)
  
- dotplot(ego_df_effect,
+ go_results <- dotplot(ego_df_effect,
               
-              font.size = 8, title = "Enriched biological processes in genes affected by aging at baseline") +
+              font.size = 8, title = "Enriched biological processes in genes affected by aging in untrained muscle") +
    theme(axis.text = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title.x = element_text(size = 20))
  
  
+ 
+ 
+ 
+ 
+ 
+ # ggarrange(trend_line , distribution , go_results,
+ #           labels = c("A", "B", "C"),
+ #           align = "h")
+ # 
  
  
  

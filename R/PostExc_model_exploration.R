@@ -55,15 +55,15 @@ summary_df <- RT_effect %>%
   summarize(num_targets = n_distinct(target))
 
 
-ggplot(RT_effect, aes(x = scaled_age, y = fit,  group = target)) +
-  geom_line(aes(alpha = 0.5, colour = "grey"), show.legend = F) + 
+ggplot(RT_effect, aes(x = scaled_age, y = fit,  group = target, colour =time)) +
+  geom_line(alpha = 0.5) + 
   theme_minimal()+
   labs(title = "Relationship between RT and splicing efficiency", x = "Scaled Age", y = "Splicing efficiency") +
   facet_wrap(~time) +
   scale_alpha_identity()+
-  scale_color_manual(values = c("grey"), guide = "none")+
-  geom_text(data = summary_df, aes(x = Inf, y = Inf, label = paste("Number of introns:", num_targets)), 
-            hjust = 1.1, vjust = 1.1, size = 3, color = "black", inherit.aes = FALSE) +
+  # scale_color_manual(values = c("grey"), guide = "none")+
+  # geom_text(data = summary_df, aes(x = Inf, y = Inf, label = paste("Number of introns:", num_targets)), 
+  #           hjust = 1.1, vjust = 1.1, size = 3, color = "black", inherit.aes = FALSE) +
   theme(plot.title = element_text(hjust = 0.5))
 
 
@@ -145,6 +145,7 @@ int_df <- RT_alone %>%
 length(unique(int_df$target))
 
 ggplot(int_df, aes(x = scaled_age, y = fit,  group = target, colour = time )) +
+ 
   geom_line(alpha = 0.2) + 
   theme_minimal()+
   labs(title = "Relationship between RT and sE in aging affected introns", x = "Scaled Age", y = "Splicing efficiency") +
@@ -170,9 +171,9 @@ int_base <-  RT_effect %>%
 
 
 ggplot(int_base, aes(x = scaled_age, y = fit,  group = target, colour = time )) +
-  geom_line(alpha = 0.2) + 
+  geom_line(alpha = 0.4) + 
   theme_minimal()+
-  labs(title = "Relationship between RT and sE in aging affected introns", x = "Scaled Age", y = "Splicing efficiency") +
+  labs(title = "Effect of RT in introns with age-related decline", x = "Scaled Age", y = "Splicing efficiency") +
   facet_wrap(~time) +
   scale_alpha_identity()+
   # scale_color_manual(values = c("grey"), guide = "none")+
@@ -185,11 +186,11 @@ length(unique(int_base$target))
 
 
 
-Improved_RT <- RT_effects %>%
+Improved_RT <- RT_effect %>%
   filter(effect == "Improved SE")
 
 
-Reduced_RT <- RT_effects %>%
+Reduced_RT <- RT_effect %>%
   filter(effect == "Reduced SE")
 
 
