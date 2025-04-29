@@ -13,7 +13,7 @@ library(grid)
 
 # load baseline model summary 
 
-baseline_summary <- readRDS("data_new/simpler_baseline_model_summary.RDS")%>%
+baseline_summary <- readRDS("data_new/simpler_baseline_model_summary.RDS") %>%
   # filter only the scaled age
   filter(coef == "scaled_age" ) %>%
   # add the odds ratio for each Estimate
@@ -53,18 +53,102 @@ summary_df <- baseline_merged %>%
   summarize(num_targets = n_distinct(target))
 
 
-trend_line <- ggplot(baseline_merged, aes(x = scaled_age, y = fit,  group = target)) +
-  geom_line(aes(alpha = 0.5, colour = "grey"), show.legend = F) + 
-  theme_minimal()+
-  labs(title = "Relationship between age and splicing efficiency", x = "Scaled Age", y = "Splicing efficiency") +
-  facet_wrap(~effect) +
-  scale_alpha_identity()+
-  scale_color_manual(values = c("grey"), guide = "none")+
-  geom_text(data = summary_df, aes(x = Inf, y = Inf, label = paste("Number of introns:", num_targets)), 
-            hjust = 1.1, vjust = 1.1, size = 3, color = "black", inherit.aes = FALSE) +
-  theme(plot.title = element_text(hjust = 0.5))
+#update the baseline dataframe to include the number of introns in each target
+# This is done to add the number of introns to the legen
 
-# subset these effects into different dataframes
+baseline_merged <- baseline_merged %>%
+  left_join(summary_df, by = "effect")%>%
+  mutate(effect_label = paste(effect, "(No of introns:", num_targets, ")"))
+         
+
+
+
+# trend_line <- ggplot(baseline_merged, aes(x = scaled_age, y = fit,  group = target)) +
+#   geom_line(aes(alpha = 0.5, colour = "grey"), show.legend = F) + 
+#   theme_minimal()+
+#   labs(title = "Relationship between age and splicing efficiency", x = "Scaled Age", y = "Splicing efficiency") +
+#   facet_wrap(~effect) +
+#   scale_alpha_identity()+
+#   scale_color_manual(values = c("grey"), guide = "none")+
+#   geom_text(data = summary_df, aes(x = Inf, y = Inf, label = paste("Number of introns:", num_targets)), 
+#             hjust = 1.1, vjust = 1.1, size = 3, color = "black", inherit.aes = FALSE) +
+#   theme(plot.title = element_text(hjust = 0.5))
+
+
+
+
+
+ggplot(baseline_merged, aes(x = scaled_age, y = fit, color = effect_label)) +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "Relationship between Age and Splicing Efficiency", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+ # geom_text(data = summary_df, aes(x = Inf, y = Inf, label = paste("Number of introns:", num_targets)), 
+ #           hjust = 1.1, vjust = 1.1, size = 3, color = "black", inherit.aes = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 10, face = "italic"),
+        legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
+
+
+
+# Investigate chromosome level infoprmation
+chr <- baseline_summary %>%
+  drop_na() %>%
+  mutate(effect = case_when(Estimate > 0 & Pr...z.. <= 0.05 ~ "Improved SE",
+                            Estimate < 0 & Pr...z.. <= 0.05 ~ "Reduced SE" ,
+                            Estimate < 0 & Pr...z.. > 0.05 ~ "No effect",
+                            Estimate > 0 & Pr...z.. > 0.05 ~ "No effect"),
+         chromosome = str_extract(target, "(?<=_)[^_]+$"))
+#  filter(effect != "No effect") %>%
+chromosomal_dist <-  chr %>% ggplot(aes(chromosome))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Distribution of introns across chromosomes") +
+  ylab("Number of chromosome") +
+  facet_grid(~effect)
+
+
+
+
+# select the introns most affected by aging
+
+effect_ranked <- chr %>%
+  filter(effect != "No effect") %>%
+  mutate(abs_estimate = abs(Estimate)) %>%
+  arrange(desc(abs_estimate)) %>%
+  dplyr::select(target, abs_estimate) %>%
+  slice_head(n = 100) %>%
+  inner_join(baseline_predictions, by = "target") %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+  dplyr::select(target, external_gene_name, abs_estimate, fit,transcript_biotype, scaled_age)
+
+
+ggplot(effect_ranked %>%
+         filter(target == "ENST00000256854.10_4_18" ), aes(x = scaled_age, y = fit, colour = target)) +
+  geom_line(aes(alpha = 0.5, colour = "grey"), show.legend = F) + 
+    theme_minimal()+
+    scale_alpha_identity()+
+    scale_color_manual(values = c("grey"), guide = "none")+
+  labs(title = "Relationship between Age and Splicing Efficiency in the top 20 affected introns", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 10, face = "italic"),
+        legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
+
+
+effect_ranked %>%
+  ggplot(aes(external_gene_name))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Distribution of introns across chromosomes") +
+  ylab("Number of chromosome") +
+  facet_grid(~effect)
+
+# subset these effects into different dataframes# scolour = # subset these effects into different dataframes# subset theseeffect effects into different dataframes
 no_effect <- baseline_merged %>% 
   filter(effect == "No effect")
 Improved_Se <- baseline_merged %>%
@@ -75,22 +159,22 @@ Reduced_se <- baseline_merged %>%
 # Get the intersect based on transcript IDs. This is to determine if there are transcripts
 # across the three groups
 
-intersect_df <- Reduce(intersect, list(no_effect$transcript_ID, 
-                                       Improved_Se$transcript_ID, Reduced_se$transcript_ID))
+intersect_df <- Reduce(intersect, list(no_effect$external_gene_name, 
+                                       Improved_Se$external_gene_name, Reduced_se$external_gene_name))
 
 intersect_efect <- intersect(no_effect$transcript_ID, Reduced_se$transcript_ID)
 
 
 # create a Venn list
-int_data <- list("No_effect" = no_effect$transcript_ID,
-                  "Improved SE" = Improved_Se$transcript_ID,
-                  "Reduced SE" = Reduced_se$transcript_ID)
+int_data <- list("No_effect" = no_effect$external_gene_name,
+                  "Improved SE" = Improved_Se$external_gene_name,
+                  "Reduced SE" = Reduced_se$external_gene_name)
 
 # Plot the UpSet plot
 distribution <-  upset(fromList(int_data), order.by = "freq",
                  text.scale = 1.5, 
-                  mainbar.y.label = "Number of intersecting transcripts ", 
-                  sets.x.label = "Number of transcripts", 
+                  mainbar.y.label = "Number of intersecting genes ", 
+                  sets.x.label = "Number of genes", 
                   sets.bar.color = c("grey30", "grey50", "grey60"),
                   number.angles = 45, 
                   point.size = 4.5, 
@@ -99,16 +183,20 @@ distribution <-  upset(fromList(int_data), order.by = "freq",
 
 
 
+
  
  
  
- Reduced_se%>%
+ Reduced_se %>%
    ggplot(aes(transcript_biotype))+
    geom_bar()+
    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
    stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
    ggtitle("Annotation of genes containing introns with improved SE upon aging") +
    ylab("Number of genes")
+ 
+ 
+ 
  
  
  

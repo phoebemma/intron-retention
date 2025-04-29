@@ -62,7 +62,7 @@ Relief_metadata <- Relief_metadata %>%
   filter(time == "PreExc" | time == "PostExc")
 
 
-
+hist(Relief_metadata$)
 # Select the Prexercise metadata
 pre_Exc <- Relief_metadata %>%
   filter(time == "PreExc")
@@ -89,9 +89,6 @@ Relief_metadata <- Relief_metadata %>%
 unique(Relief_metadata$allocation)
 
 
-
-
-hist(Relief_metadata$age)
 length(unique(Relief_metadata$participant))
 
 

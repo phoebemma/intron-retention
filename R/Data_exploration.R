@@ -140,12 +140,21 @@ all_pre_splice <- copd_data%>%
   inner_join(contratrain_data, by = "transcript_ID")%>%
   inner_join(SRP102542_data, by = "transcript_ID") %>%
   inner_join(Alpha_Omega_data, by = "transcript_ID") %>%
-  inner_join(Relief_data, by = "transcript_ID") %>%
-  drop_na()
+  inner_join(Relief_data, by = "transcript_ID") #%>%
+  #drop_na()
+# calculate threshold for non-missing values
+threshold <- ncol(all_pre_splice) * 0.05
+
+all_pre <- all_pre_splice %>%
+  filter(rowSums(is.na(.)) > threshold)
 
 
 
-saveRDS(all_pre_splice, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
+
+
+
+
+saveRDS(all_pre, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 
 
@@ -499,10 +508,18 @@ saveRDS(post_metadata, "data_new/processed_data/PostEXc_metadata.RDS")
 all_intersect <- intersect(colnames(all_splice_df), all_full_metadata$seq_sample_id)
 
 all_splice_df <- all_splice_df %>%
-  subset(select = c("transcript_ID", all_intersect))%>%
-  drop_na()
+  subset(select = c("transcript_ID", all_intersect)) #%>%
+  #drop_na()
 
-saveRDS(all_splice_df, "data_new/processed_data/all_splice_data.RDS")
+
+
+threshold <- ncol(all_splice_df) * 0.05
+
+all_splice <- all_splice_df %>%
+  filter(rowSums(is.na(.)) > threshold)
+
+
+saveRDS(all_splice, "data_new/processed_data/all_splice_data.RDS")
 
 
 

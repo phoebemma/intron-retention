@@ -14,10 +14,11 @@ library(org.Hs.eg.db)
 
 RT_model_summary <- readRDS("data_new/simpler_RT_model_summary.RDS") %>%
   # select the model results of those affected by RT alone or interaction with aging
-  filter(coef == "timePostExc" | coef == "scaled_age:timePostExc")%>%
+  filter(coef == "timePostExc" | coef == "scaled_age:timePostExc" | coef == "scaled_age")%>%
   # add the odds ratio for each Estimate
   mutate(odds_ratio = exp(Estimate),
          type = "model coefficient")
+
 
 # load the predictions 
 
@@ -43,9 +44,186 @@ RT_merged <- RT_predictions %>%
 saveRDS(RT_merged, "data_new/RT_model_outputs/RT_model_df.RDS")
 
 
+
+# Explore tyhe effect of aging alone
+Aging_effect <- RT_merged %>%
+  filter(coef == "scaled_age")
+
+# extract the disicnt effect types
+summary_aging <- Aging_effect %>%
+  group_by(effect) %>%
+  summarize(num_targets = n_distinct(target))
+
+Aging_effect <- Aging_effect %>%
+  left_join(summary_aging, by = "effect")%>%
+  mutate(effect_label = paste(effect, "(No of introns:", num_targets, ")"))
+
+
+
+ggplot(Aging_effect %>%
+         filter(time == "PreExc"), aes(x = scaled_age, y = fit, color = effect_label)) +
+  geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
+  theme_minimal() +
+  labs(title = "Relationship between Age and Splicing Efficiency at baseline", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 10, face = "italic"),
+        legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
+
+
+
+
+# Investigate chromosome level infoprmation
+chr_RT <- RT_merged %>%
+  filter(coef == "scaled_age" & time == "PreExc") %>%
+  mutate(chromosome = str_extract(target, "(?<=_)[^_]+$"))
+
+chr_RT %>%
+  filter(effect != "No effect" & coef == "scaled_age") %>% ggplot(aes(chromosome))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Distribution of introns across chromosomes") +
+  ylab("Number of chromosome") +
+  facet_grid(~effect)
+
+
+
+# Extract the highest ranked introns by absolute Estimate
+effect_ranked <- chr_RT %>%
+  arrange(fit) %>%
+  slice_head(n = 100) %>%
+  group_by(target) %>%
+  # inner_join(RT_predictions, by = "target") %>%
+  # inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+  dplyr::select(target, external_gene_name,  fit, Estimate,transcript_biotype, scaled_age, external_transcript_name) 
+
+  length(unique(effect_ranked$target))
+
+
+ggplot(effect_ranked, aes(x = scaled_age, y = fit, colour = target, group = target)) +
+  geom_line(aes(alpha = 0.5, colour = "grey"), show.legend = F) + 
+  theme_minimal()+
+  scale_alpha_identity()+
+  scale_color_manual(values = c("grey"), guide = "none")+
+  labs(title = "Relationship between Age and Splicing Efficiency in the top 20 affected introns", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 10, face = "italic"),
+        legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
+
+
+
+length(unique(effect_ranked$external_gene_name))
+
+
+# Extract those affected by RT 
+RT_effect_alone <- RT_merged %>%
+  filter(coef == "timePostExc")
+
+# extract the disicnt effect types
+summary_RT <- RT_effect_alone %>%
+  group_by(effect) %>%
+  summarize(num_targets = n_distinct(target))
+
+
+RT_effect_alone <- RT_effect_alone %>%
+  left_join(summary_RT, by = "effect")%>%
+  mutate(effect_label = paste(effect, "(No of introns:", num_targets, ")"))
+
+ggplot(RT_effect_alone, aes(x = scaled_age, y = fit, color = effect_label, linetype = time)) +
+  geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
+  theme_minimal() +
+  labs(title = "Relationship between RT and Splicing Efficiency", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+
+
+
+# Extract those with stronger effect and rank them
+
+RT_effect_ranked <- RT_effect_alone %>%
+  filter( effect != "No effect" & time == "PostExc") %>%
+  arrange(fit) %>%
+  slice_head(n = 200) 
+
+RT_effect_ranked <- RT_effect_alone %>%
+  filter(target %in% RT_effect_ranked$target)
+
+ggplot(RT_effect_ranked %>%
+         filter(target == "ENST00000380384.5_4_9" ), aes(x = scaled_age, y = fit, linetype = time)) +
+  geom_line(aes(alpha = 0.5, colour = "grey"), show.legend = F) + 
+  theme_minimal()+
+  scale_alpha_identity()+
+  scale_color_manual(values = c("grey"), guide = "none")+
+  labs(title = "Effect of RT on top 20 affected introns", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 10, face = "italic"),
+        legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
+
+length(unique(RT_effect_df$external_transcript_name))
+
+# hOW RT afects introns affected by agin
+
+#get the intercept between RT and aging
+
+#GET THOSE AFECTED BY AGINg
+
+RT_alone <- RT_effect_alone %>%
+  filter(effect != "No effect")
+
+Aging_alone <- Aging_effect %>%
+  filter(effect != "No effect")
+
+int_aging_RT <- intersect(RT_alone$target, Aging_alone$target)
+
+
+
+int_df <- RT_effect_alone %>%
+  filter( target %in% int_aging_RT)
+
+summary_int <- int_df %>%
+  group_by(effect) %>%
+  summarize(num_targets = n_distinct(target))
+
+
+ggplot(int_df, aes(x = scaled_age, y = fit, color = time)) +
+  geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
+  theme_minimal() +
+  labs(title = "Relationship between RT and Splicing Efficiency in age_affected introns", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+  geom_text(data = summary_int, aes(x = Inf, y = Inf, label = paste("Number of introns:", num_targets)), 
+            hjust = 1.1, vjust = 1.1, size = 3, color = "black", inherit.aes = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  facet_wrap(~effect)
+
+
+ggplot(int_df, aes(x = scaled_age, y = fit,  group = target, colour = time)) +
+  geom_line(aes(alpha = 0.5, colour = "grey"), show.legend = F) + 
+  theme_minimal()+
+  labs(title = "Relationship between age and splicing efficiency", x = "Scaled Age", y = "Splicing efficiency") +
+  facet_wrap(~time) +
+  scale_alpha_identity()+
+  scale_color_manual(values = c("grey"), guide = "none")+
+  geom_text(data = summary_int, aes(x = Inf, y = Inf, label = paste("Number of introns:", num_targets)), 
+            hjust = 1.1, vjust = 1.1, size = 3, color = "black", inherit.aes = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+
+
 # select only those affected by RT
 RT_effect <- RT_merged %>%
-  filter(effect != "No effect" )
+  filter(effect != "No effect" ) %>%
+  filter(coef == "scaled_age" )
 
 length(unique(RT_effect$target))
 
@@ -55,7 +233,7 @@ summary_df <- RT_effect %>%
   summarize(num_targets = n_distinct(target))
 
 
-ggplot(RT_effect, aes(x = scaled_age, y = fit,  group = target, colour =time)) +
+ggplot(RT_effect, aes(x = scaled_age, y = fit,  group = target)) +
   geom_line(alpha = 0.5) + 
   theme_minimal()+
   labs(title = "Relationship between RT and splicing efficiency", x = "Scaled Age", y = "Splicing efficiency") +
@@ -66,6 +244,17 @@ ggplot(RT_effect, aes(x = scaled_age, y = fit,  group = target, colour =time)) +
   #           hjust = 1.1, vjust = 1.1, size = 3, color = "black", inherit.aes = FALSE) +
   theme(plot.title = element_text(hjust = 0.5))
 
+
+ggplot(RT_effect, aes(x = scaled_age, y =fit, group = coef, colour = effect )) +
+  geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
+  theme_minimal() +
+  labs(title = "Relationship between Age and Splicing Efficiency", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+  facet_wrap(~time)
+#  geom_text(data = summary_df, aes(x = max(baseline_merged$scaled_age), y = predict(lm(fit ~ scaled_age, data = baseline_merged)), label = paste("Number of introns:", num_targets)), 
+#            hjust = 1, vjust = 1, size = 3, color = "black", inherit.aes = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 
