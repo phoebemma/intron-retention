@@ -61,11 +61,9 @@ match(colnames(all_splice_reordered), all_full_metadata$seq_sample_id)
 all_splice_reordered[all_splice_reordered == 1 ] <- 0.999
 
 
-# Since only few of the ds by age introns were contained in the full data, might be nice to look at the 
-# Impact of age and exercise in one go
 
 
-args_full <-list(formula = y ~  scaled_age*time + sex*time + (1|study) + (scaled_age+0|study) +(1|participant), 
+args_full <-list(formula = y ~  scaled_age * time + sex + (1|study) +(1|participant), 
                  family = glmmTMB::beta_family())
 
 
@@ -75,38 +73,33 @@ full_RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                          data = all_splice_reordered,
                          metadata = all_full_metadata,
                          samplename = "seq_sample_id",
-                         summary_fun = sum_fun2,
+                         summary_fun = sum_fun,
                          eval_fun = eval_mod,
                          exported = list(),
                          save_models = F,
-                         return_models = T,
-                         # subset = 1:100,
-                         cores = ncores-2)
+                         return_models = F,
+                          subset = 1:10,
+                         cores = ncores)
 
-
+#full_RT_model$summaries
+saveRDS(full_RT_model, "data_new/simpler_full_RT_model.RDS")
+#saveRDS(full_RT_model, "data_new/full_RT_model.RDS")
 names(full_RT_model$models)
 # plot(effect_plot)
 
 #exclude those whose summaries are not Null
 model_list <- full_RT_model$models[which(full_RT_model$summaries != "NULL")]
 
-baseline_predictions <- data.frame()
+baseline_predictions <- data.frame(scaled_age = numeric(),
+                                   target = character(), type = character(), stringsAsFactors = FALSE)
 
 for (i in 1:length(model_list)) {
   model_name <- names(model_list)[i]
   
   # Extract the effect of predictors and catch those with null
-  effect_plot <- # tryCatch({
-    allEffects(model_list[[i]], xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
-  # }, error = function(e) {
-  #   print(paste("Error in allEffects for model", model_name, ":", e$message))
-  #   return(NULL)
-  # })
-  # 
-  
-  # # Check if 'scaled_age' exists in effect_plot
-  # if (!is.null(effect_plot) && !is.null(effect_plot$scaled_age)) {
-  # Convert the effect plot to a dataframe
+  effect_plot <- allEffects(model_list[[i]], xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
+ 
+ 
   effect_df <- as.data.frame(effect_plot$scaled_age)
   
   # Add a column for the model name
@@ -115,16 +108,30 @@ for (i in 1:length(model_list)) {
   # define a type to differentiate it from the model coefficient
  
   # Append to the baseline_predictions dataframe
-  baseline_predictions <- rbind(baseline_predictions, effect_df)
+ # baseline_predictions <- rbind(baseline_predictions, effect_df)
+ 
+  effect_df$type <- "prediction"
+  
+  # # Ensure column names match
+  # if (ncol(baseline_predictions) == 0) {
+  #   baseline_predictions <- effect_df
   # } else {
-  # print(paste("scaled_age not found in effect_plot for model", model_name))
+  #   if (all(names(effect_df) %in% names(baseline_predictions))) {
+  #     baseline_predictions <- rbind(baseline_predictions, effect_df)
+  #   } else {
+  #     warning("Column names do not match. Skipping this model.")
+  #   }
   # }
-  baseline_predictions$type <- "prediction"
+  
+  # Append to the baseline_predictions dataframe
+  baseline_predictions <- rbind(baseline_predictions, effect_df)
+  
 }
 
+saveRDS(baseline_predictions, "data_new/predictions_simpler_RT_model.RDS")
 # plot(allEffects(full_RT_model$models$ENST00000023939.8_5_20), 
 #      main = "Interaction Effects Plot", xlab = "Predictor", ylab = "Response")
-full_RT_model$summaries
+#full_RT_model$summaries
 
 
 missing_full <- names(which(full_RT_model$summaries == "NULL"))
@@ -133,14 +140,16 @@ avail_full <- names(which(full_RT_model$summaries != "NULL"))
 
 
 mod_sum <- bind_rows(within(full_RT_model$summaries, rm(missing_full))) %>%
-  mutate(target = rep(avail_full, each = 6)) %>%
+  mutate(target = rep(avail_full, each = 5)) %>%
  # subset(coef != "(Intercept)")  %>%
-  mutate(adj.p = p.adjust( p.val, method = "fdr"),
-         log2fc = estimate/log(2),
+  mutate(adj.p = p.adjust( Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
          fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"),
-         odds_ratio = exp(estimate),
+         odds_ratio = exp(Estimate),
          type = "model coefficient")
 
 
+saveRDS(mod_sum, "data_new/simpler_model_summary.RDS")
+#saveRDS(mod_sum, "data_new/model_summary_RT_model.RDS")
 model_df <- baseline_predictions %>%
   inner_join(mod_sum, by = "target")
