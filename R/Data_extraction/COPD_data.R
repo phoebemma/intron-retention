@@ -29,7 +29,7 @@ copd_metadata["volume"] <- 3
  
 #Load the COPD splicing data
 
-copd_data <- extract_splice_q("./data_new/COPD_Spliceq_outputs_new/")
+copd_data <- extract_splice_q("./data_new/COPD_Spliceq_outputs/")
 
 idx <- sapply(copd_data, class)== "numeric"
 copd_data[, idx] <- lapply(copd_data[, idx], round, 2)

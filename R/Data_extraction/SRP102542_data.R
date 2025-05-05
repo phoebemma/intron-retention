@@ -92,7 +92,8 @@ SRP102542_data[, idx] <- lapply(SRP102542_data[, idx], round, 2)
 SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542$seq_sample_id)
 
 SRP102542_data <- SRP102542_data %>%
-  subset(select = c("transcript_ID", SRP102542_intersect))
+  subset(select = c("transcript_ID", SRP102542_intersect)) %>%
+  drop_na()
 
 
  saveRDS(SRP102542_data, "data_new/processed_data/SRP102542_splicing_data.RDS")
@@ -103,7 +104,8 @@ SRP102542_data <- SRP102542_data %>%
 SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542_pre$seq_sample_id)
 
 SRP102542_pre_data <- SRP102542_data %>%
-  subset(select = c("transcript_ID", SRP102542_intersect))
+  subset(select = c("transcript_ID", SRP102542_intersect)) %>%
+  drop_na()
  saveRDS(SRP102542_pre_data, "data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS")
 
 

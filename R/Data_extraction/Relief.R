@@ -62,7 +62,6 @@ Relief_metadata <- Relief_metadata %>%
   filter(time == "PreExc" | time == "PostExc")
 
 
-hist(Relief_metadata$)
 # Select the Prexercise metadata
 pre_Exc <- Relief_metadata %>%
   filter(time == "PreExc")

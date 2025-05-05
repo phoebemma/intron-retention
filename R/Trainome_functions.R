@@ -13,6 +13,53 @@ sum_fun <- function(x){
 }
 
 
+
+sum_fun_combined <- function(x){
+
+  cond_effects <- data.frame(cbind(data.frame(coef = rownames(coef(summary(x))$cond))),
+                             coef(summary(x))$cond,
+                             row.names = NULL)
+  cond_effects$name <- deparse(substitute(x))
+#  return(cond_effects)
+  # Step 1: Initialize baseline_predictions dataframe
+   baseline_predictions <- data.frame(scaled_age = numeric(),
+                                      target = character(), type = character())
+
+  # Step 2: Generate the effect_plot for scaled_age from 0 to 1 with increments of 0.1
+  effect_plot <- allEffects(x, xlevels = list(scaled_age = seq(from = 0, to = 1, by = 0.1)))
+
+  # Convert effect plot to dataframe
+  effect_df <- as.data.frame(effect_plot$scaled_age)
+
+
+  # Add a column for the model name
+  effect_df$name <- deparse(substitute(x))  # Use deparse(substitute(x)) to get the model name
+
+  effect_df$type <- "prediction"
+
+  # Append to the baseline_predictions dataframe
+  baseline_predictions <- rbind(baseline_predictions, effect_df)
+
+  # Step 3: Extract conditional effects and add the model name
+    combined <- right_join(cond_effects, baseline_predictions, by = "name")
+  
+  return(combined)
+}
+
+# metdat <- all_full_metadata
+# 
+# dat <-all_splice_reordered[all_splice_reordered$transcript_ID =="ENST00000011619.6_5_6",]
+# metdat$y<-as.numeric(dat[,-1])
+# 
+# 
+# # 
+# x <- glmmTMB( y ~  scaled_age * time + sex + (1|study) + (1|participant),
+#                   data = metdat,
+#                   family = beta_family())
+# mod <- sum_fun_combined(x)
+
+
+
 #Function for evaluating seq_model output
 eval_mod <- function(x) {
   
@@ -80,38 +127,6 @@ sum_fun2 <- function(x) {
   
   
 }
-# 
-
-
-sumfun_ME <- function(x) {
-  all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
-  q <- datagrid(scaled_age = all_pre_metadata$scaled_age, sex = factor(all_pre_metadata$sex),
-                  study = factor(all_pre_metadata$study), participant = factor(all_pre_metadata$participant))
-  df <-  marginaleffects::predictions(x, newdata = q ,
-                                      type = "response",
-                                      re.form=NA)
-
-  preds <- data.frame(df)[,c(2, 3, 4, 5)]
-  preds$type <- "prediction"
-
-
-
-  # Save model coefficients
-  modcoefs <- data.frame(coef(summary(x)), row.names = NULL)
-  modcoefs$type <- "modelcoef"
-
-  colnames(modcoefs) <- c("estimate", "se", "zval", "pval", "type")
-  colnames(preds) <- c("estimate", "se", "zval", "pval", "type")
-
-
-  out <- rbind( modcoefs, preds)
-  return(out)
-
-
-}
-
-
-
 
 
 #check number of cores. Used in seq_model

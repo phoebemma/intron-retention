@@ -140,21 +140,21 @@ all_pre_splice <- copd_data%>%
   inner_join(contratrain_data, by = "transcript_ID")%>%
   inner_join(SRP102542_data, by = "transcript_ID") %>%
   inner_join(Alpha_Omega_data, by = "transcript_ID") %>%
-  inner_join(Relief_data, by = "transcript_ID") #%>%
-  #drop_na()
+  inner_join(Relief_data, by = "transcript_ID") %>%
+  drop_na()
 # calculate threshold for non-missing values
-threshold <- ncol(all_pre_splice) * 0.05
-
-all_pre <- all_pre_splice %>%
-  filter(rowSums(is.na(.)) > threshold)
-
-
+# threshold <- ncol(all_pre_splice) * 0.05
+# 
+# all_pre <- all_pre_splice %>%
+#   filter(rowSums(is.na(.)) > threshold)
 
 
 
 
 
-saveRDS(all_pre, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
+
+
+saveRDS(all_pre_splice, "data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 
 
@@ -212,11 +212,12 @@ low_SE_df <- all_pre_splice %>%
            mode = getmode(SE),
            #  range = max(SE) - min(SE)
            ) %>%
-  filter(max <= 0.2)
+  filter(max <= 0.1)
 
 
 low_SE <- low_SE_df %>%
-  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
 
 
@@ -238,7 +239,9 @@ High_SE_df <- all_pre_splice %>%
 
 
 High_SE <- High_SE_df %>%
-  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
+
 
 
 
@@ -319,7 +322,7 @@ saveRDS(annotation_no_dev, "data_new/processed_data/annotation_no_deviation_PreE
 # annotation of perfectly spliced introns
 annotation_high_SE <- inner_join(High_SE, annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
-high_distribution <- annotation_high_SE %>%
+high_distribution <- low_SE %>%
   ggplot(aes(transcript_biotype, fill = transcript_biotype))+
   geom_bar(width = 1, alpha =.8 )+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
@@ -508,18 +511,18 @@ saveRDS(post_metadata, "data_new/processed_data/PostEXc_metadata.RDS")
 all_intersect <- intersect(colnames(all_splice_df), all_full_metadata$seq_sample_id)
 
 all_splice_df <- all_splice_df %>%
-  subset(select = c("transcript_ID", all_intersect)) #%>%
-  #drop_na()
+  subset(select = c("transcript_ID", all_intersect)) %>%
+  drop_na()
 
 
+# 
+# threshold <- ncol(all_splice_df) * 0.05
+# 
+# all_splice <- all_splice_df %>%
+#   filter(rowSums(is.na(.)) > threshold)
 
-threshold <- ncol(all_splice_df) * 0.05
 
-all_splice <- all_splice_df %>%
-  filter(rowSums(is.na(.)) > threshold)
-
-
-saveRDS(all_splice, "data_new/processed_data/all_splice_data.RDS")
+saveRDS(all_splice_df, "data_new/processed_data/all_splice_data.RDS")
 
 
 
@@ -535,8 +538,9 @@ low_SE_full <- post_splice_df %>%
             min = min(SE), 
             max = max(SE), 
             mean = mean(SE)) %>%
-  filter(max <= 0.2) %>%
-  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+  filter(max <= 0.1) %>%
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
 
 saveRDS(low_SE_full, "data_new/processed_data/low_SE_postExc.RDS")
@@ -553,9 +557,78 @@ High_SE_full <- post_splice_df %>%
             min = min(SE), 
             max = max(SE)) %>%
   filter(min == 1) %>%
-  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_")
+  separate("transcript_ID", c("transcript_ID", "intron_ID", "chr"), sep = "_") %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
 saveRDS(High_SE_full, "data_new/processed_data/High_SE_postExc.RDS")
+
+
+
+
+
+
+
+
+
+# Load the batch-corrected gene expression data
+gene_exp_df <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS") %>%
+  # remove the version number to match gene_id
+  mutate(gene_id = gsub("\\..*", "",  gene_id))
+
+
+
+
+# Functional annotation of the genes affected
+ego_perfect_post <- enrichGO(gene = unique(High_SE_full$ensembl_gene_id) ,
+                      keyType = "ENSEMBL",
+                      universe = gene_exp_df$gene_id,
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "BP", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+
+
+
+ dotplot(ego_perfect_post,
+                    
+                    font.size = 8, title = "Enriched biological processes perfectly spliced introns at postexercise") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10))
+
+
+
+
+
+
+ # Functional annotation of the genes affected
+ ego_perfect_pre <- enrichGO(gene = unique(High_SE$ensembl_gene_id) ,
+                              keyType = "ENSEMBL",
+                              universe = gene_exp_df$gene_id,
+                              OrgDb = org.Hs.eg.db, 
+                              ont = "BP", 
+                              pAdjustMethod = "BH", 
+                              qvalueCutoff = 0.05, 
+                              readable = T)
+ 
+ 
+ 
+ 
+ dotplot(ego_perfect_pre,
+         
+         font.size = 8, title = "Enriched biological processes perfectly spliced introns at baseline") +
+   theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10))
+
+
+
+
+
+
+
+
+length(unique(low_SE$ensembl_gene_id))
+
+
 
 
 

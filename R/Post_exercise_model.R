@@ -9,6 +9,7 @@ library(ggpubr)
 library(cowplot)
 library(effects)
 library(scales)
+library(glmmTMB)
 
 
 # Load the Trainome functions
@@ -33,6 +34,8 @@ High_SE_df <- all_splice_df %>%
             max = max(SE)) %>%
   filter(min == 1) 
 
+
+saveRDS(High_SE_df, "data_new/processed_data/perfectly_spliced_across_all.RDS")
 
 non_perfect_SE <- all_splice_df %>%
   filter(!(transcript_ID %in% High_SE_df$transcript_ID))
@@ -73,12 +76,12 @@ full_RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                          data = all_splice_reordered,
                          metadata = all_full_metadata,
                          samplename = "seq_sample_id",
-                         summary_fun = sum_fun,
+                         summary_fun = sum_fun_combined,
                          eval_fun = eval_mod,
                          exported = list(),
                          save_models = F,
-                         return_models = T,
-                         # subset = 1:10,
+                         return_models = F,
+                          subset = 1:20,
                          cores = ncores-2)
 
 full_RT_model$summaries
@@ -104,24 +107,10 @@ for (i in 1:length(model_list)) {
   
   # Add a column for the model name
   effect_df$target <- model_name
-  
-  # define a type to differentiate it from the model coefficient
- 
-  # Append to the baseline_predictions dataframe
- # baseline_predictions <- rbind(baseline_predictions, effect_df)
+
  
   effect_df$type <- "prediction"
   
-  # # Ensure column names match
-  # if (ncol(baseline_predictions) == 0) {
-  #   baseline_predictions <- effect_df
-  # } else {
-  #   if (all(names(effect_df) %in% names(baseline_predictions))) {
-  #     baseline_predictions <- rbind(baseline_predictions, effect_df)
-  #   } else {
-  #     warning("Column names do not match. Skipping this model.")
-  #   }
-  # }
   
   # Append to the baseline_predictions dataframe
   baseline_predictions <- rbind(baseline_predictions, effect_df)
