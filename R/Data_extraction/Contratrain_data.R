@@ -37,17 +37,13 @@ ct_metadata <- ct_metadata %>%
    filter(condition != "Control" )
 
 
-unique(ct_metadata$time)
-unique(ct_metadata$condition)
-unique(ct_metadata$volume)
-length(unique(ct_metadata$participant))
 
  saveRDS(ct_metadata, "data_new/processed_data/contratrain_metadata.RDS")
 
 
 
 #Load Volume splicing data
-ct_data <- extract_splice_q("./data_new/Contratrain_SpliceQ_outputs_new/") 
+ct_data <- extract_splice_q("./data_new/Contratrain_SpliceQ_output/") 
 # remove everything after the underscore
 colnames(ct_data)[-1] <- gsub("\\_S\\d+", "", colnames(ct_data)[-1] )
 idx <- sapply(ct_data, class)== "numeric"
@@ -59,7 +55,8 @@ ct_data[, idx] <- lapply(ct_data[, idx], round, 2)
 ct_intersect_full <- intersect(colnames(ct_data), ct_metadata$seq_sample_id)
 
 ct_data_full <- ct_data %>%
-  subset(select = c("transcript_ID", ct_intersect_full))
+  subset(select = c("transcript_ID", ct_intersect_full)) %>%
+  drop_na()
 
  saveRDS(ct_data_full, "data_new/processed_data/contratrain_splicing_data.RDS")
 
@@ -71,6 +68,7 @@ ct_data_full <- ct_data %>%
 ct_intersect <- intersect(colnames(ct_data), ct_pre_meta$seq_sample_id)
 
 ct_pre_data <- ct_data %>%
-  subset(select = c("transcript_ID", ct_intersect))
+  subset(select = c("transcript_ID", ct_intersect)) %>%
+  drop_na()
 
  saveRDS(ct_pre_data, "data_new/Pre_Exercise/ct_PreExc_splicing_data.RDS")

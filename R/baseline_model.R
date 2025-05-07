@@ -1,6 +1,5 @@
 # This is the updated baseline model
 # Here, the models will be built after removing the data that score perfectly across all samples
-
 library(dplyr)
 library(tidyverse)
 library(seqwrap)
@@ -49,7 +48,12 @@ all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
 # This argument would estimate the intercept, and the slope separately
 # with uncorrelated random intercept and random slope within each study
+<<<<<<< HEAD
 arg_1<- list(formula = y ~  scaled_age + sex+ (1|study)  +(1|participant), 
+=======
+
+arg_1<- list(formula = y ~  scaled_age + sex + (1|study) +(1|participant), 
+>>>>>>> fb7071e2e24605258a7346836fffd8ec9035f52f
              family = glmmTMB::beta_family())
 
 
@@ -63,10 +67,12 @@ model_1 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                    exported = list(),
                    save_models = F,
                    return_models = T,
-                   # subset = 1:10,
-                   cores = ncores)
+                   #   subset = 1:100,
+                   cores = ncores-2)
+model_1$summaries$
 
 model_1$summaries$ENST00000001008.6_5_12
+
 
 
 names(model_1$models)
@@ -76,7 +82,8 @@ saveRDS(model_1, "data_new/simpler_baseline_model.RDS")
 #exclude those whose summaries are not Null
 model_list <- model_1$models[which(model_1$summaries != "NULL")]
 
-baseline_predictions <- data.frame()
+baseline_predictions <- data.frame(scaled_age = numeric(),
+                                   target = character(), type = character(), stringsAsFactors = FALSE)
 
 for (i in 1:length(model_list)) {
   model_name <- names(model_list)[i]
@@ -97,7 +104,14 @@ for (i in 1:length(model_list)) {
 
 
 
+<<<<<<< HEAD
 saveRDS(baseline_predictions, "data_new/simpler_baseline_predictions.RDS")
+=======
+saveRDS(baseline_predictions, "data_new/simpler_baseline_model_predictions.RDS")
+
+saveRDS(model_1, "data_new/simpler_baseline_model.RDS")
+
+>>>>>>> fb7071e2e24605258a7346836fffd8ec9035f52f
 
 #Remove all that have output NULL
 excl_1<- names(which(model_1$summaries == "NULL"))
@@ -114,6 +128,10 @@ mod_sum_1 <- bind_rows(within(model_1$summaries, rm(excl_1))) %>%
 
 
 
+<<<<<<< HEAD
 saveRDS(mod_sum_1 , "data_new/simpler_baseline_model_summary.RDS")
+=======
+saveRDS(mod_sum_1, "data_new/simpler_baseline_model_summary.RDS")
+>>>>>>> fb7071e2e24605258a7346836fffd8ec9035f52f
 
 

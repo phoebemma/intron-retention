@@ -14,8 +14,7 @@ idx <- sapply(AO_splice, class)== "numeric"
 AO_splice[, idx] <- lapply(AO_splice[, idx], round, 2)
 
 
-# Save the splicing data 
-saveRDS(AO_splice, "data_new/processed_data/Alpha_Omega_splicing_data.RDS")
+
 
 # Extract the sequence ID to match the extraction sequence given in the metadata
 # extraction sequence is that number following "s" on the sample name
@@ -79,14 +78,22 @@ length(unique(Sequenced_samples$participant))
  
 length(unique(pre_Exc$participant))
 
- saveRDS(pre_Exc, "data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS")
+saveRDS(pre_Exc, "data_new/Pre_Exercise/Alpha_Omega_PreExc_metadata.RDS")
 
 
 # Select the pre-exercise splicing data
 AO_intersect <- intersect(colnames(AO_splice), pre_Exc$seq_sample_id)
 
 AO_pre_splicing <-AO_splice %>%
-  subset(select = c("transcript_ID", AO_intersect))
+  subset(select = c("transcript_ID", AO_intersect)) %>%
+  drop_na()
 
+AO_full_intersect <- intersect(colnames(AO_splice), Sequenced_samples$seq_sample_id)
 
-saveRDS(AO_pre_splicing, "data_new/Pre_Exercise/Alpha_Omega_PreExc_splicing_data.RDS")
+AO_splice <-AO_splice %>%
+  subset(select = c("transcript_ID", AO_full_intersect)) %>%
+  drop_na()
+
+ saveRDS(AO_pre_splicing, "data_new/Pre_Exercise/Alpha_Omega_PreExc_splicing_data.RDS")
+# # Save the splicing data 
+ saveRDS(AO_splice, "data_new/processed_data/Alpha_Omega_splicing_data.RDS")

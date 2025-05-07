@@ -13,6 +13,30 @@ sum_fun <- function(x){
 }
 
 
+
+sum_with_pred <- function(x) {
+
+  cond_effects <- data.frame(cbind(data.frame(coef = rownames(coef(summary(x))$cond))),
+                             coef(summary(x))$cond, 
+                             
+                             row.names = NULL)
+ 
+  
+  # Step 3: Generate the effect_plot for scaled_age from 0 to 1 with increments of 0.1
+  effect_plot <- effects::allEffects(x, xlevels = list(scaled_age = seq(from = 0, to = 1, by = 0.1)))
+  effect_df <- as.data.frame(effect_plot$scaled_age)
+  
+   # effect_df <- effect_df 
+   #   dplyr::mutate(Estimate = x$Estimate)
+
+  combined <- dplyr::bind_rows(effect_df,  cond_effects)
+  
+#  rownames(combined) <- NULL
+  
+  return(combined)
+}
+
+
 #Function for evaluating seq_model output
 eval_mod <- function(x) {
   
@@ -36,7 +60,7 @@ eval_mod <- function(x) {
 sum_fun2 <- function(x) {
   
   # How many rows in the cond effects?
-  nrows <- nrow(data.frame(coef(summary(x))$cond))
+ # nrows <- nrow(data.frame(coef(summary(x))$cond))
   
   # Save model coefficients
   modcoefs <- coef(summary(x))$cond |>
@@ -45,73 +69,62 @@ sum_fun2 <- function(x) {
     cbind(data.frame(confint(x))[1:nrows,c(1,2)])  |>
     data.frame(row.names = NULL)  |>
     dplyr::select(coef,
-                  estimate = Estimate, 
-                  se = Std..Error, 
+                  estimate = Estimate,
+                  se = Std..Error,
                   z.val = z.value,
-                  p.val = Pr...z.., 
-                  cil = X2.5.., 
+                  p.val = Pr...z..,
+                  cil = X2.5..,
                   ciu =  X97.5..) # |>
-    # tibble::add_case(coef = "dispersion", 
+    # tibble::add_case(coef = "dispersion",
     #                  estimate = summary(x)$sigma)
-  
+
   if(!is.null(coef(summary(x))$disp)) {
-    
+
     modcoefs <-  dplyr::bind_rows(
-      
+
       modcoefs,
-      
+
       coef(summary(x))$disp |>
         data.frame() |>
         tibble::rownames_to_column(var = "coef") |>
-        dplyr::select(coef, estimate = Estimate, 
-                      se = Std..Error, 
+        dplyr::select(coef, estimate = Estimate,
+                      se = Std..Error,
                       z.val = z.value,
                       p.val = Pr...z..) |>
         dplyr::mutate(coef = paste0("dispersion:", coef),
-                      cil = NA, 
+                      cil = NA,
                       ciu = NA))
-    
-    
-    
+
+
   }
-  
-  
-  return(modcoefs)
+
+
+#Step 2: Initialize baseline_predictions dataframe
+ baseline_predictions <- data.frame(scaled_age = numeric(),
+                                     target = character(),
+                                     type = character(),
+                                     stringsAsFactors = FALSE)
+
+  # Step 3: Generate the effect_plot for scaled_age from 0 to 1 with increments of 0.1
+ effect_plot <- allEffects(x, xlevels = list(scaled_age = seq(from = 0, to = 1, by = 0.1)))
+ effect_df <- as.data.frame(effect_plot$scaled_age)
+   # dplyr::mutate(name = deparse(substitute(x)),
+   #               type = "prediction")
+
+
+  # Append to the baseline_predictions dataframe
+baseline_predictions <- rbind(baseline_predictions, effect_df)
+
+
+
+  # Step 4: Combine conditional effects and baseline predictions
+#combined <- right_join(modcoefs, baseline_predictions, by = "name",relationship = "many-to-many" )
+
+
+  return(baseline_predictions)
   
   
 }
-# 
-
-
-sumfun_ME <- function(x) {
-  all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
-  q <- datagrid(scaled_age = all_pre_metadata$scaled_age, sex = factor(all_pre_metadata$sex),
-                  study = factor(all_pre_metadata$study), participant = factor(all_pre_metadata$participant))
-  df <-  marginaleffects::predictions(x, newdata = q ,
-                                      type = "response",
-                                      re.form=NA)
-
-  preds <- data.frame(df)[,c(2, 3, 4, 5)]
-  preds$type <- "prediction"
-
-
-
-  # Save model coefficients
-  modcoefs <- data.frame(coef(summary(x)), row.names = NULL)
-  modcoefs$type <- "modelcoef"
-
-  colnames(modcoefs) <- c("estimate", "se", "zval", "pval", "type")
-  colnames(preds) <- c("estimate", "se", "zval", "pval", "type")
-
-
-  out <- rbind( modcoefs, preds)
-  return(out)
-
-
-}
-
-
-
 
 
 #check number of cores. Used in seq_model

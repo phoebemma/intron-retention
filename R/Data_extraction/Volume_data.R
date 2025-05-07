@@ -31,7 +31,7 @@ Vol_metadata["condition"] <- "RM10"
 
 
 # Load Volume splicing data
-volume_data <- extract_splice_q("data_new/Volume_spliceq_outputs_new/")
+volume_data <- extract_splice_q("data_new/Volume_spliceq_outputs/")
 idx <- sapply(volume_data, class)== "numeric"
 volume_data[, idx] <- lapply(volume_data[, idx], round, 2)
 
