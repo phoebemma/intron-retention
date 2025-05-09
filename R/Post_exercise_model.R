@@ -81,12 +81,19 @@ full_RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                          exported = list(),
                          save_models = F,
                          return_models = F,
+<<<<<<< HEAD
                           subset = 1:10,
                          cores = ncores-2)
 
 ex <- full_RT_model$summaries$ENST00000001008.6_5_12 %>%
   select(scaled_age, time, fit)
 
+=======
+                        #  subset = 1:10,
+                         cores = ncores-3)
+
+full_RT_model$summaries
+>>>>>>> d0d09063912251cef58504ca56a363ed05917a9d
 
 
 
@@ -97,9 +104,15 @@ saveRDS(full_RT_model, "data_new/simpler_full_RT_model.RDS")
 # 
 # #exclude those whose summaries are not Null
 # model_list <- full_RT_model$models[which(full_RT_model$summaries != "NULL")]
+<<<<<<< HEAD
 # # 
 # # baseline_predictions <- data.frame(scaled_age = numeric(),
 # #                                    target = character(), type = character(), stringsAsFactors = FALSE)
+=======
+# 
+# baseline_predictions <- data.frame(scaled_age = numeric(),
+#                                    target = character(), type = character(), stringsAsFactors = FALSE)
+>>>>>>> d0d09063912251cef58504ca56a363ed05917a9d
 # 
 # for (i in 1:length(model_list)) {
 #   model_name <- names(model_list)[i]
@@ -118,14 +131,25 @@ saveRDS(full_RT_model, "data_new/simpler_full_RT_model.RDS")
 #   
 #   
 #   # Append to the baseline_predictions dataframe
+<<<<<<< HEAD
 #  # baseline_predictions <- rbind(baseline_predictions, effect_df)
 #  # return(effect_df)
+=======
+# 
+#  # baseline_predictions <- rbind(baseline_predictions, effect_df)
+#  
+#   effect_df$type <- "prediction"
+# 
+# 
+#   baseline_predictions <- rbind(baseline_predictions, effect_df)
+#   
+>>>>>>> d0d09063912251cef58504ca56a363ed05917a9d
 # }
 # 
 # saveRDS(baseline_predictions, "data_new/predictions_simpler_RT_model.RDS")
 # plot(allEffects(full_RT_model$models$ENST00000023939.8_5_20), 
 #      main = "Interaction Effects Plot", xlab = "Predictor", ylab = "Response")
-full_RT_model$summaries
+#full_RT_model$summaries
 
 
 missing_full <- names(which(full_RT_model$summaries == "NULL"))
@@ -134,7 +158,7 @@ avail_full <- names(which(full_RT_model$summaries != "NULL"))
 
 
 mod_sum <- bind_rows(within(full_RT_model$summaries, rm(missing_full))) %>%
-  mutate(target = rep(avail_full, each = 5)) %>%
+  mutate(target = rep(avail_full, each = 27)) %>%
  # subset(coef != "(Intercept)")  %>%
   mutate(adj.p = p.adjust( Pr...z.., method = "fdr"),
          log2fc = Estimate/log(2),

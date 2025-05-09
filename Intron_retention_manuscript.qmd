@@ -61,30 +61,6 @@ Abstract
 #| warning: false
 #| label: abstract
 
-#source("R/Data_exploration.R")
-  
-  pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
-  
-  participants <- length(unique(pre_metadata$participant))
-  
-  desc_stat  <- pre_metadata %>%
-    distinct(sex, age, participant) %>%
-  
-    summarise(.by = c(sex),
-              n= n(),
-              range = range(age)) %>%
-    data.frame()
-  
-  females <- glue::glue(round(desc_stat[1,2], 0),
-                        " females aged ", round(desc_stat[1,3], 0),
-                        " to ", round(desc_stat[2, 3], 0))
-  
-  males <- glue::glue( round(desc_stat[3,2], 0),
-                        " males aged ", round(desc_stat[3,3], 0),
-                      " to ", round(desc_stat[4, 3], 0))
-  
-  
-  
   full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
   full_part <- length(unique(full_metadata$participant))
   

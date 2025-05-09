@@ -21,16 +21,21 @@ all_pre_metadata <- readRDS("data_new/Pre_Exercise/all_prexercise_metadata.RDS")
 
 
 # Load Splicing data that excludes the itrons with SE of 1 across all samples
-all_pre_splice <- readRDS("data_new/Pre_Exercise/non_perfect_Pre_splicing_data.RDS")
+all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
+
+
+#filter out the introns with score of 1 across all samples
+ all_pre <- all_pre_splice %>%
+   filter(rowSums(select(., -1) ==1) != ncol(all_pre_splice)-1)
 
 
 # select only samples present in the metadata
 all_pre_metadata <- all_pre_metadata %>%
-  filter((seq_sample_id %in% colnames(all_pre_splice[,-1]))) 
+  filter((seq_sample_id %in% colnames(all_pre[,-1]))) 
 
 
 # reorder the sample ids to match how they occur in the metadata
-all_pre_splice_reordered <- all_pre_splice[ , c("transcript_ID",all_pre_metadata$seq_sample_id)]
+all_pre_splice_reordered <- all_pre[ , c("transcript_ID",all_pre_metadata$seq_sample_id)]
 
 
 # Check if everything matches except the transcript_id
@@ -43,8 +48,12 @@ all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
 # This argument would estimate the intercept, and the slope separately
 # with uncorrelated random intercept and random slope within each study
+<<<<<<< HEAD
+arg_1<- list(formula = y ~  scaled_age + sex+ (1|study)  +(1|participant), 
+=======
 
 arg_1<- list(formula = y ~  scaled_age + sex + (1|study) +(1|participant), 
+>>>>>>> fb7071e2e24605258a7346836fffd8ec9035f52f
              family = glmmTMB::beta_family())
 
 
@@ -69,6 +78,7 @@ model_1$summaries$ENST00000001008.6_5_12
 names(model_1$models)
 # plot(effect_plot)
 
+saveRDS(model_1, "data_new/simpler_baseline_model.RDS")
 #exclude those whose summaries are not Null
 model_list <- model_1$models[which(model_1$summaries != "NULL")]
 
@@ -94,10 +104,14 @@ for (i in 1:length(model_list)) {
 
 
 
+<<<<<<< HEAD
+saveRDS(baseline_predictions, "data_new/simpler_baseline_predictions.RDS")
+=======
 saveRDS(baseline_predictions, "data_new/simpler_baseline_model_predictions.RDS")
 
 saveRDS(model_1, "data_new/simpler_baseline_model.RDS")
 
+>>>>>>> fb7071e2e24605258a7346836fffd8ec9035f52f
 
 #Remove all that have output NULL
 excl_1<- names(which(model_1$summaries == "NULL"))
@@ -106,7 +120,7 @@ geneids_1 <- names(which(model_1$summaries != "NULL"))
 
 # Collect all model summaries
 mod_sum_1 <- bind_rows(within(model_1$summaries, rm(excl_1))) %>%
-  mutate(target = rep(geneids_1, each = 2)) %>%
+  mutate(target = rep(geneids_1, each = 3)) %>%
 #  subset(coef != "(Intercept)")  %>%
   mutate(adj.p = p.adjust(Pr...z.., method = "fdr"),
          log2fc = Estimate/log(2),
@@ -114,6 +128,10 @@ mod_sum_1 <- bind_rows(within(model_1$summaries, rm(excl_1))) %>%
 
 
 
+<<<<<<< HEAD
+saveRDS(mod_sum_1 , "data_new/simpler_baseline_model_summary.RDS")
+=======
 saveRDS(mod_sum_1, "data_new/simpler_baseline_model_summary.RDS")
+>>>>>>> fb7071e2e24605258a7346836fffd8ec9035f52f
 
 
