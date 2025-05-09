@@ -14,50 +14,27 @@ sum_fun <- function(x){
 
 
 
-sum_fun_combined <- function(x){
+sum_with_pred <- function(x) {
 
   cond_effects <- data.frame(cbind(data.frame(coef = rownames(coef(summary(x))$cond))),
-                             coef(summary(x))$cond,
+                             coef(summary(x))$cond, 
+                             
                              row.names = NULL)
-  cond_effects$name <- deparse(substitute(x))
-#  return(cond_effects)
-  # Step 1: Initialize baseline_predictions dataframe
-   baseline_predictions <- data.frame(scaled_age = numeric(),
-                                      target = character(), type = character())
-
-  # Step 2: Generate the effect_plot for scaled_age from 0 to 1 with increments of 0.1
-  effect_plot <- allEffects(x, xlevels = list(scaled_age = seq(from = 0, to = 1, by = 0.1)))
-
-  # Convert effect plot to dataframe
+ 
+  
+  # Step 3: Generate the effect_plot for scaled_age from 0 to 1 with increments of 0.1
+  effect_plot <- effects::allEffects(x, xlevels = list(scaled_age = seq(from = 0, to = 1, by = 0.1)))
   effect_df <- as.data.frame(effect_plot$scaled_age)
+  
+   # effect_df <- effect_df 
+   #   dplyr::mutate(Estimate = x$Estimate)
 
-
-  # Add a column for the model name
-  effect_df$name <- deparse(substitute(x))  # Use deparse(substitute(x)) to get the model name
-
-  effect_df$type <- "prediction"
-
-  # Append to the baseline_predictions dataframe
-  baseline_predictions <- rbind(baseline_predictions, effect_df)
-
-  # Step 3: Extract conditional effects and add the model name
-    combined <- right_join(cond_effects, baseline_predictions, by = "name")
+  combined <- dplyr::bind_rows(effect_df,  cond_effects)
+  
+#  rownames(combined) <- NULL
   
   return(combined)
 }
-
-# metdat <- all_full_metadata
-# 
-# dat <-all_splice_reordered[all_splice_reordered$transcript_ID =="ENST00000011619.6_5_6",]
-# metdat$y<-as.numeric(dat[,-1])
-# 
-# 
-# # 
-# x <- glmmTMB( y ~  scaled_age * time + sex + (1|study) + (1|participant),
-#                   data = metdat,
-#                   family = beta_family())
-# mod <- sum_fun_combined(x)
-
 
 
 #Function for evaluating seq_model output
@@ -83,7 +60,7 @@ eval_mod <- function(x) {
 sum_fun2 <- function(x) {
   
   # How many rows in the cond effects?
-  nrows <- nrow(data.frame(coef(summary(x))$cond))
+ # nrows <- nrow(data.frame(coef(summary(x))$cond))
   
   # Save model coefficients
   modcoefs <- coef(summary(x))$cond |>
@@ -92,38 +69,59 @@ sum_fun2 <- function(x) {
     cbind(data.frame(confint(x))[1:nrows,c(1,2)])  |>
     data.frame(row.names = NULL)  |>
     dplyr::select(coef,
-                  estimate = Estimate, 
-                  se = Std..Error, 
+                  estimate = Estimate,
+                  se = Std..Error,
                   z.val = z.value,
-                  p.val = Pr...z.., 
-                  cil = X2.5.., 
+                  p.val = Pr...z..,
+                  cil = X2.5..,
                   ciu =  X97.5..) # |>
-    # tibble::add_case(coef = "dispersion", 
+    # tibble::add_case(coef = "dispersion",
     #                  estimate = summary(x)$sigma)
-  
+
   if(!is.null(coef(summary(x))$disp)) {
-    
+
     modcoefs <-  dplyr::bind_rows(
-      
+
       modcoefs,
-      
+
       coef(summary(x))$disp |>
         data.frame() |>
         tibble::rownames_to_column(var = "coef") |>
-        dplyr::select(coef, estimate = Estimate, 
-                      se = Std..Error, 
+        dplyr::select(coef, estimate = Estimate,
+                      se = Std..Error,
                       z.val = z.value,
                       p.val = Pr...z..) |>
         dplyr::mutate(coef = paste0("dispersion:", coef),
-                      cil = NA, 
+                      cil = NA,
                       ciu = NA))
-    
-    
-    
+
+
   }
-  
-  
-  return(modcoefs)
+
+
+#Step 2: Initialize baseline_predictions dataframe
+ baseline_predictions <- data.frame(scaled_age = numeric(),
+                                     target = character(),
+                                     type = character(),
+                                     stringsAsFactors = FALSE)
+
+  # Step 3: Generate the effect_plot for scaled_age from 0 to 1 with increments of 0.1
+ effect_plot <- allEffects(x, xlevels = list(scaled_age = seq(from = 0, to = 1, by = 0.1)))
+ effect_df <- as.data.frame(effect_plot$scaled_age)
+   # dplyr::mutate(name = deparse(substitute(x)),
+   #               type = "prediction")
+
+
+  # Append to the baseline_predictions dataframe
+baseline_predictions <- rbind(baseline_predictions, effect_df)
+
+
+
+  # Step 4: Combine conditional effects and baseline predictions
+#combined <- right_join(modcoefs, baseline_predictions, by = "name",relationship = "many-to-many" )
+
+
+  return(baseline_predictions)
   
   
 }

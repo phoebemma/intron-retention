@@ -5,7 +5,7 @@ format:
    reference-doc: resources/custom_reference.docx
 author:
   - "Chidimma Phoebe Echebiri^1,2^, Kristian Lian^2^, Torkil Rognefl&aring;ten^2^, 
- H&aring;vard Hamarsland^2^, Knut Sindre M&#248;lmen^2^, Rafi Ahmad^1^, Stian Ellefsen^2^, and Daniel Hammarstr&ouml;m^2^"
+ H&aring;vard Hamarsland^2^, Knut Sindre M&#248;lmen^2^, Rafi Ahmad^13^, Stian Ellefsen^2^, and Daniel Hammarstr&ouml;m^2^"
 editor: visual
 csl: resources/molecular_systems_biology.csl
 bibliography: resources/My_Library.bib
@@ -14,11 +14,13 @@ prefer-html: true
 ---
 
 ::: {custom-style="author-meta"}
-1 Department of Biotechnology, University of Inland Norway, Faculty of Applied Ecology, Agricultural Sciences and Biotechnology, Hamar, Norway
+1 Department of Biotechnology, University of Inland Norway, Faculty of Applied Ecology, Agricultural Sciences and Biotechnology, Holsetgata 31, 2318 Hamar, Norway
 
-2 Section for Health and Exercise Physiology, Department of Public Health and Sport Sciences, University of Inland Norway, Lillehammer, Norway
+2 Section for Health and Exercise Physiology, Department of Public Health and Sport Sciences, University of Inland Norway, Vormstuguvegen 2, 2624 Lillehammer, Norway
 
-Correspondance: Chidimma Phoebe Echebiri (chidimma.echebiri\@inn.no)
+3 Institute for Clinical Medicine, Faculty of Health Sciences, UiT- The Arctic University of Norway, Hansine Hansens veg 18, 9019, Tromsø, Norway
+
+Correspondence: Chidimma Phoebe Echebiri (chidimma.echebiri\@inn.no)
 :::
 
 ```{r}
@@ -136,9 +138,9 @@ Table 1: Basic characteristics of RT intervention studies included in this analy
 | Volume                             | 25                     | 20-37                | 12         | @khan_increased_2020           |
 +------------------------------------+------------------------+----------------------+------------+--------------------------------+
 
-# Results and Discussion
+# Results 
 
-## Intron retention is associated with aging in the skeletal muscle
+## Splicing efficiency of some introns in the skeletal muscle is associated with aging
 
 ```{r}
 #| echo: false
@@ -149,6 +151,7 @@ Table 1: Basic characteristics of RT intervention studies included in this analy
 # Load the model summaries for each intron
 introns <- readRDS("data_new/RT_model_outputs/RT_model_df.RDS")
 length_introns <- length(unique(introns$target))
+length_genes <- length(unique(introns$external_gene_name))
 
 # Load splicing data
 all_splice_df <- readRDS("data_new/processed_data/all_splice_data.RDS")
@@ -166,32 +169,50 @@ High_SE_df <- all_splice_df %>%
 length_perfect_scores <- length(unique(High_SE_df$transcript_ID))
 
 
-# Load the merged data that includes the prediction and gene annotation of the model output
+# Load the merged data that includes the prediction and gene annotation of the model outp
 
-Introns_annotation <- readRDS("data_new/RT_model_outputs/RT_model_df.RDS")
-length_genes <- length(unique(Introns_annotation$external_gene_name))
 
 
 # Extract the effects of aging alone
-Aging_effects <- Introns_annotation %>%
+Aging_effects <- introns %>%
   filter(coef == "scaled_age" & time == "PreExc" & effect != "No effect")
 
 length_age_effects <- length(unique(Aging_effects$target))
 
-RT_effects <- Introns_annotation %>%
+RT_effects <- introns %>%
   filter(coef == "timePostExc" & time == "PreExc" & effect != "No effect")
 length_RT_introns <- length(unique(RT_effects$target))
 ```
 
-Given the tissue and cell-specificity of SE, we investigated the relationship between SE and aging in human *vastus lateralis* muscle in the `r length_introns` introns from `r length_genes` that were quantified across all samples in our dataset. Our results (Fig 2A) show that `r length_age_effects` introns were differentially spliced (ds) with aging; 739 of them showing age-related decline in SE while 240 showed age-related improvements. There was no apparent association between the genes containing these ds introns and their chromosomal locations (Fig 2B). The rate of SE improvements due to aging were relatively smaller compared to the rate of decline as can be seen in Figure 2C and 2D. Gene ontology analyses revealed that the ds introns belong mostly to genes involved in muscle-related biological processes and were mostly located in the myofibril and contractile fiber (Fig 2D). This would not be unrelated to the known effects of aging on the skeletal muscle where functions tends to decline with increasing age. We also investigated the intron-specificity of the effects (or lack thereof) of aging by exploring if the effects were specific to certain introns in certain genes. Our results suggest that the effects of aging are intron-specific as several genes contained introns that cut across the several groups as shown in Figure 2E which suggests differential regulation of splicing at the intron-level in agreement with @sun_abnormalities_2023 in addition to other levels of regulation [@monteuuis_changing_2019]. Majority of the introns in all three groups were contained in protein-coding genes in agreement with previous studies that suggest IR occurrence in mostly protein-coding genes. However, this is arguably attributable to short-read RNA sequencing and its bias towards quantification of protein-coding genes. Similar to @stokes_transcriptomics_2023 contesting the long-held belief that long non-coding RNAs are sparsely expressed in comparison to protein-coding genes, it might be necessary to explore IR using alternative RNA methods to confirm its occurrence in mainly protein-coding genes and investigate if truly short-read RNA sequencing is underestimating IR as suggested by @garcia-ruiz_splicing_2025 .
+We investigated the relationship between aging and SE in the human *vastus lateralis* muscle using a Generalised Linear Mixed Model . Of the `r length_introns` quantified across all samples in our studies, the SE scores of 30908 of them were not affected by aging. 2221 introns were affected by aging, of which 512 showed improved SE with aging while 1709 had reduced SE with aging (Fig 2A). There was no apparent association between the genes containing these differentially spliced (ds) introns and their chromosomal locations (Fig 2B). The rate of SE improvements due to aging were relatively smaller compared to the rate of decline as can be seen in Supplementary Figure 1. Most of the introns with reduced SE upon aging were those with SE scores below 0.95 in the youngest participants. It appeared that the decline had probably began before the youngest participant, or that these were introns already prone to poor SE scores. Based on the model's predictions of SE scores with aging, the topmost affected introns were ranked and are shown in supplementary images. These effects were intron-specific as a gene could contain both introns affected by aging, and those not affected by aging as shown in Figure 2C. Gene ontology analyses revealed that the ds introns belong mostly to genes involved in muscle-related biological processes and were mostly located in the myofibril and contractile fiber (Fig 2D and E).
+
+## Resistance exercise training has age-dependent effects on splicing efficiency and could improve aging-related declines in splicing efficiency
+
+SE of `r length_RT_introns` introns were associated with RT. Unlike aging, most of the associations involved improvements in SE scores post RT intervention (Fig 3A). These effects largely seemed to be age-dependent as 1593 of the `r length_RT_introns` introns showed an age-dependent response to RT (Figure 3). Like the impact of aging, the impact of RT was also intron-specific.The genes sets were involved in the same processes as those affected by aging, albeit to differing gene ratios (Fig 3C). 384 introns from 51 genes with age-related changes in SE had slightly improved SE scores following short-term RT
+
+## Splicing efficiency of specific introns in a gene could be same despite transcript type
+
+our results reveal that the SE scores of specific intron junctions in a gene were same, even when in different transcripts . We hypothesize that these are the same intron-exon junctions but due to other types of alternative splicing events, occur in different transcripts of the same gene. See supplementary figure
+
+## Most introns are in protein-coding genes
+
+A good majority of the introns in the entire dataset, as well as those affected by either RT or aging are contained in protein-coding genes
+
+## Some introns are perfectly spliced out across all ages and conditions
+
+201 introns were perfectly spliced (SE score of 1) across all samples. Like the pattern in the full dataset, these introns were contained in mostly protein-coding genes
+
+## Transcript length is not associated with SE
+
+We investigated the relationship between transcript length and SE. There appears to be no relationship between he two
+
+# Discussion
+
+This would not be unrelated to the known effects of aging on the skeletal muscle where functions tends to decline with increasing age. We also investigated the intron-specificity of the effects (or lack thereof) of aging by exploring if the effects were specific to certain introns in certain genes. Our results suggest that the effects of aging are intron-specific as several genes contained introns that cut across the several groups as shown in Figure 2E which suggests differential regulation of splicing at the intron-level in agreement with @sun_abnormalities_2023 in addition to other levels of regulation [@monteuuis_changing_2019]. Majority of the introns in all three groups were contained in protein-coding genes in agreement with previous studies that suggest IR occurrence in mostly protein-coding genes. However, this is arguably attributable to short-read RNA sequencing and its bias towards quantification of protein-coding genes. Similar to @stokes_transcriptomics_2023 contesting the long-held belief that long non-coding RNAs are sparsely expressed in comparison to protein-coding genes, it might be necessary to explore IR using alternative RNA methods to confirm its occurrence in mainly protein-coding genes and investigate if truly short-read RNA sequencing is underestimating IR as suggested by @garcia-ruiz_splicing_2025 .
 
 Though our results agree with previous studies that linked declining SE to aging in different tissues [@garcia-ruiz_splicing_2025; @baralle_age-related_2023; @mariotti_deterioration_2022; @bhadra_alternative_2020; @adusumalli_increased_2019], we however show that this is observed in less than one percent of introns in the skeletal muscle . Also, our results show that while most age-associated effects are declines in SE, SE of some introns potentially improve with age. This suggests that the role of intron retention in gene regulation should not be generalised as bad or good, and that further studies are needed in understanding the specific effects of intron retention in relation to different aging-related conditions.
 
-## Resistance exercise training affects splicing efficiency and could improve aging-related declines in splicing efficiency
-
-SE of `r length_RT_introns` introns were associated with RT. Unlike aging, most of the associations involved improvements in SE scores post RT intervention (Fig 3A). Some relationships depended on participants age (Fig 3B). However, the range of changes in response to short-term RT could be argued as relatively small and thus may require longer-term RT to elicit more significant impacts on SE. The genes sets were involved in the same processes as those affected by aging, albeit to differing gene ratios (Fig 3C). 220 introns from 26 genes with age-related changes in SE were also affected by RT
-
-Though more introns were differentially spliced due to the impact of RT alone, its interaction with aging had more effect on intron retention as 423 introns had LogF2C values at or above 0.5. That is, there was at least a doubling of the impact on SE due to the interaction of RT and aging in 423 introns, as compared to 16 due to RT alone. Like the impact of aging, the impact of RT was also intron-specific.
+The relatively small response to RT may be a result of the short-duration and thus may require longer-term RT to elicit more significant impacts on SE. However, the range of changes in response to short-term RT appeared relatively small . This suggests that longer-term RT, or perhaps a lifetime of RT would have a much impacts on aging
 
 Exercise is already known to counteract the effects of aging and can offset aging-related changes to the splicing machinery @kodama_systematic_2024, @ubaida-mohien_physical_2019 and @ubaida-mohien_unbiased_2022 , but we contribute to what is already known by focusing mainly on RT and intron retention. The pattern of response to both aging and RT point towards regulatory roles of IR and there is need to explore IR in response to long-term RT to ascertain if the impact on IR depends on factors like length of RT as well as RT volume and conditions. Thus, there is need to further deepen our insights into transcriptomic responses to RT.
 
