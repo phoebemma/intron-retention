@@ -45,14 +45,14 @@ all_full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
 
 all_full_metadata$scaled_age <- round(rescale(all_full_metadata$age), digits = 2)
 
-saveRDS(all_full_metadata, "data_new/processed_data/all_full_metadata.RDS")
+
 
 
 # Select only the splicing data whose metadata is available
 all_full_metadata <- all_full_metadata %>%
   filter((seq_sample_id %in% colnames(non_perfect_SE [,-1]))) 
 
-
+saveRDS(all_full_metadata, "data_new/processed_data/all_full_metadata.RDS")
 # REORDER THE SEQUENCE ID TO MATCH BOTH DATAFRAMMES
 all_splice_reordered <- non_perfect_SE[, c("transcript_ID",all_full_metadata$seq_sample_id)]
 
@@ -81,75 +81,18 @@ full_RT_model <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                          exported = list(),
                          save_models = F,
                          return_models = F,
-<<<<<<< HEAD
-                          subset = 1:10,
+                          #subset = 1:10,
                          cores = ncores-2)
 
 ex <- full_RT_model$summaries$ENST00000001008.6_5_12 %>%
   select(scaled_age, time, fit)
-
-=======
-                        #  subset = 1:10,
-                         cores = ncores-3)
-
 full_RT_model$summaries
->>>>>>> d0d09063912251cef58504ca56a363ed05917a9d
 
 
 
 saveRDS(full_RT_model, "data_new/simpler_full_RT_model.RDS")
 #saveRDS(full_RT_model, "data_new/full_RT_model.RDS")
-# names(full_RT_model$models)
-# # plot(effect_plot)
-# 
-# #exclude those whose summaries are not Null
-# model_list <- full_RT_model$models[which(full_RT_model$summaries != "NULL")]
-<<<<<<< HEAD
-# # 
-# # baseline_predictions <- data.frame(scaled_age = numeric(),
-# #                                    target = character(), type = character(), stringsAsFactors = FALSE)
-=======
-# 
-# baseline_predictions <- data.frame(scaled_age = numeric(),
-#                                    target = character(), type = character(), stringsAsFactors = FALSE)
->>>>>>> d0d09063912251cef58504ca56a363ed05917a9d
-# 
-# for (i in 1:length(model_list)) {
-#   model_name <- names(model_list)[i]
-#   
-#   # Extract the effect of predictors and catch those with null
-#   effect_plot <- allEffects(model_list[[i]], xlevels=list(scaled_age=seq(from = 0, to = 1, by = 0.1)))
-#  
-#  
-#   effect_df <- as.data.frame(effect_plot$scaled_age)
-#   
-#   # Add a column for the model name
-#   effect_df$target <- model_name
-# 
-#  
-#   effect_df$type <- "prediction"
-#   
-#   
-#   # Append to the baseline_predictions dataframe
-<<<<<<< HEAD
-#  # baseline_predictions <- rbind(baseline_predictions, effect_df)
-#  # return(effect_df)
-=======
-# 
-#  # baseline_predictions <- rbind(baseline_predictions, effect_df)
-#  
-#   effect_df$type <- "prediction"
-# 
-# 
-#   baseline_predictions <- rbind(baseline_predictions, effect_df)
-#   
->>>>>>> d0d09063912251cef58504ca56a363ed05917a9d
-# }
-# 
-# saveRDS(baseline_predictions, "data_new/predictions_simpler_RT_model.RDS")
-# plot(allEffects(full_RT_model$models$ENST00000023939.8_5_20), 
-#      main = "Interaction Effects Plot", xlab = "Predictor", ylab = "Response")
-#full_RT_model$summaries
+
 
 
 missing_full <- names(which(full_RT_model$summaries == "NULL"))

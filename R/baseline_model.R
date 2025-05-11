@@ -26,7 +26,7 @@ all_pre_splice <- readRDS("data_new/Pre_Exercise/all_pre_Exc_splicing_data.RDS")
 
 #filter out the introns with score of 1 across all samples
  all_pre <- all_pre_splice %>%
-   filter(rowSums(select(., -1) ==1) != ncol(all_pre_splice)-1)
+   filter(rowSums(dplyr::select(., -1) ==1) != ncol(all_pre_splice)-1)
 
 
 # select only samples present in the metadata
@@ -39,7 +39,7 @@ all_pre_splice_reordered <- all_pre[ , c("transcript_ID",all_pre_metadata$seq_sa
 
 
 # Check if everything matches except the transcript_id
-match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id)
+match(colnames(all_pre_splice_reordered), all_pre_metadata$seq_sample_id) 
 
 
 
@@ -48,12 +48,10 @@ all_pre_splice_reordered[all_pre_splice_reordered == 1 ] <- 0.999
 
 # This argument would estimate the intercept, and the slope separately
 # with uncorrelated random intercept and random slope within each study
-<<<<<<< HEAD
-arg_1<- list(formula = y ~  scaled_age + sex+ (1|study)  +(1|participant), 
-=======
+
 
 arg_1<- list(formula = y ~  scaled_age + sex + (1|study) +(1|participant), 
->>>>>>> fb7071e2e24605258a7346836fffd8ec9035f52f
+
              family = glmmTMB::beta_family())
 
 
@@ -62,11 +60,11 @@ model_1 <- seqwrap(fitting_fun = glmmTMB::glmmTMB,
                    data = all_pre_splice_reordered,
                    metadata = all_pre_metadata,
                    samplename = "seq_sample_id",
-                   summary_fun = sum_fun,
+                   summary_fun = sum_with_pred,
                    eval_fun = eval_mod,
                    exported = list(),
                    save_models = F,
-                   return_models = T,
+                   return_models = F,
                    #   subset = 1:100,
                    cores = ncores-2)
 model_1$summaries$

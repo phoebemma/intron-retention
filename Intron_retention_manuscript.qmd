@@ -82,7 +82,7 @@ Abstract
   
 ```
 
-Increased intron retention has been linked to aging and several disease conditions, at a rate that is cell and tissue-specific. Investigating factors that influence intron retention would contribute towards understanding gene regulation and the potential mechanisms of reversing or limiting deleterious effects of aging and related disease conditions . This study investigated intron retention and aging in the *vastus lateralis* muscle of `r participants` participants ( `r females` ; `r males`) ; and how it is affected by short-term resistance exercise training in the `r  full_part` participants ( `r females_full` ; `r males_full`) who completed 10 to 13 weeks of training. Using SpliceQ, splicing efficiency of individual introns in paired_end RNA sequence data from six different RT intervention studies was quantified. Differentially spliced introns before the commencement of the exercise intervention studies and at post-intervention were identified using betabinomial generalized linear mixed models (GLMM) . Our results show that aging is associated with increased intron retention in the skeletal muscle. Our results also show that short-term resistance exercise training potentially improves aging-related declines in splicing efficiency. The results contribute towards understanding the adaptive responses to resistance exercise training and highlight its potential for combating aging and aging-related diseases of the skeletal muscle.
+Increased intron retention has been linked to aging and several disease conditions at a rate that is cell and tissue-specific. However, information available about the effect of aging on intron retention in the human skeletal muscle is very limited. This study investigated the relationship between intron retention and aging in the *vastus lateralis* muscle of `r  full_part` participants ( `r females_full` ; `r males_full`) and how 10 -13 weeks of progressive resistance exercise training (RT) affected the relationship. Using SpliceQ, the splicing efficiency of individual introns in paired-end RNA sequence data from six RT intervention studies were quantified. Differentially spliced introns were identified using betabinomial generalised linear mixed models (GLMM). The results show that aging affected the splicing efficiency (SE) of less than one percent of the introns quantified (2221 out of 30908 introns) as it was associated with a decrease in SE of 1709 introns while being associated with increase in SE scores in 512 introns. These age-related associations were intron-specific as several genes cntained introns whose SE decreased with aging , those that increased with aging, as well as introns unaffected by aging. Moreover, short-term RT potentially improves aging-related declines in SE. The results contribute towards understanding the adaptive responses to resistance exercise training and highlight its potential for combating aging and aging-related skeletal muscle diseases.
 
 # Introduction
 
@@ -94,25 +94,25 @@ Progressive resistance exercise training (RT) is a type of high intensity traini
 
 Table 1: Basic characteristics of RT intervention studies included in this analysis: primary results from three of the RT intervention studies (COPD, Volume; SRP102542) have been previously published. Results from ContraTrain, Alpha & Omega, and ReLiEf are yet to be published but their clinical identifier numbers are provided
 
-+------------------------------------+------------------------+----------------------+------------+--------------------------------+
-| Study                              | Number of participants | Age Range            | Duration   | Publication/Clinical identifer |
-+====================================+========================+======================+============+================================+
-| Alpha/Omega                        | 143                    | 23-60                | 12         | NCT04279951                    |
-+------------------------------------+------------------------+----------------------+------------+--------------------------------+
-| ContraTrain                        | 32                     | 19-35                | 10         | NCT03795025                    |
-+------------------------------------+------------------------+----------------------+------------+--------------------------------+
-| COPD                               | 53                     | 56-79                | 13         | @molmen_chronic_2021           |
-+------------------------------------+------------------------+----------------------+------------+--------------------------------+
-| ReLief                             | 66                     | 20-29 (Young cohort) | 12         | NCT05063279                    |
-|                                    |                        |                      |            |                                |
-|                                    |                        | 72-93(Old cohort)    |            |                                |
-+------------------------------------+------------------------+----------------------+------------+--------------------------------+
-| SRP102542 (GEO Accession GSE97084) | 52                     | 19-30 (Young cohort) | 12         | @robinson_enhanced_2017        |
-|                                    |                        |                      |            |                                |
-|                                    |                        | 65-78 (Old cohort)   |            |                                |
-+------------------------------------+------------------------+----------------------+------------+--------------------------------+
-| Volume                             | 25                     | 20-37                | 12         | @khan_increased_2020           |
-+------------------------------------+------------------------+----------------------+------------+--------------------------------+
++------------------------------------+----------------------------+----------------------+------------+--------------------------------+
+| Study                              | Number of participants     | Age Range            | Duration   | Publication/Clinical identifer |
++====================================+============================+======================+============+================================+
+| Alpha/Omega                        | 143 (76 females; 67 males) | 23-60                | 12         | NCT04279951                    |
++------------------------------------+----------------------------+----------------------+------------+--------------------------------+
+| ContraTrain                        | 26 (19 females; 7 males)   | 19-34                | 10         | NCT03795025                    |
++------------------------------------+----------------------------+----------------------+------------+--------------------------------+
+| COPD                               | 53 (29 females; 24 males)  | 56-79                | 13         | @molmen_chronic_2021           |
++------------------------------------+----------------------------+----------------------+------------+--------------------------------+
+| ReLief                             | 63 (28 females; 35 males)  | 20-29 (Young cohort) | 12         | NCT05063279                    |
+|                                    |                            |                      |            |                                |
+|                                    |                            | 72-93(Old cohort)    |            |                                |
++------------------------------------+----------------------------+----------------------+------------+--------------------------------+
+| SRP102542 (GEO Accession GSE97084) | 18 (8 females; 10 males)   | 19-30 (Young cohort) | 12         | @robinson_enhanced_2017        |
+|                                    |                            |                      |            |                                |
+|                                    |                            | 65-76 (Old cohort)   |            |                                |
++------------------------------------+----------------------------+----------------------+------------+--------------------------------+
+| Volume                             | 25 (11 females; 14 males)  | 20-37                | 12         | @khan_increased_2020           |
++------------------------------------+----------------------------+----------------------+------------+--------------------------------+
 
 # Results 
 
@@ -160,7 +160,7 @@ RT_effects <- introns %>%
 length_RT_introns <- length(unique(RT_effects$target))
 ```
 
-We investigated the relationship between aging and SE in the human *vastus lateralis* muscle using a Generalised Linear Mixed Model . Of the `r length_introns` quantified across all samples in our studies, the SE scores of 30908 of them were not affected by aging. 2221 introns were affected by aging, of which 512 showed improved SE with aging while 1709 had reduced SE with aging (Fig 2A). There was no apparent association between the genes containing these differentially spliced (ds) introns and their chromosomal locations (Fig 2B). The rate of SE improvements due to aging were relatively smaller compared to the rate of decline as can be seen in Supplementary Figure 1. Most of the introns with reduced SE upon aging were those with SE scores below 0.95 in the youngest participants. It appeared that the decline had probably began before the youngest participant, or that these were introns already prone to poor SE scores. Based on the model's predictions of SE scores with aging, the topmost affected introns were ranked and are shown in supplementary images. These effects were intron-specific as a gene could contain both introns affected by aging, and those not affected by aging as shown in Figure 2C. Gene ontology analyses revealed that the ds introns belong mostly to genes involved in muscle-related biological processes and were mostly located in the myofibril and contractile fiber (Fig 2D and E).
+To investigate the relationship between aging and SE in the human *vastus lateralis* muscle , we filtered for introns whose SE were quantified across all samples . Of the `r length_introns` , the SE scores of 30908 of them were not associated with aging. 2221 introns were affected by aging, of which 512 showed improved SE with aging while 1709 had reduced SE with aging (Fig 2A). There was no apparent association between the genes containing these differentially spliced (ds) introns and their chromosomal locations (Fig 2B). The rate of SE improvements due to aging were relatively smaller compared to the rate of decline as can be seen in Supplementary Figure 1. Most of the introns with reduced SE upon aging were those with SE scores below 0.95 in the youngest participants. It appeared that the decline had probably began before the youngest participant, or that these were introns already prone to poor SE scores. Based on the model's predictions of SE scores with aging, the topmost affected introns were ranked and are shown in supplementary images. These effects were intron-specific as a gene could contain both introns affected by aging, and those not affected by aging as shown in Figure 2C. Gene ontology analyses revealed that the ds introns belong mostly to genes involved in muscle-related biological processes and were mostly located in the myofibril and contractile fiber (Fig 2D and E).
 
 ## Resistance exercise training has age-dependent effects on splicing efficiency and could improve aging-related declines in splicing efficiency
 
@@ -178,11 +178,9 @@ A good majority of the introns in the entire dataset, as well as those affected 
 
 201 introns were perfectly spliced (SE score of 1) across all samples. Like the pattern in the full dataset, these introns were contained in mostly protein-coding genes
 
-## Transcript length is not associated with SE
-
-We investigated the relationship between transcript length and SE. There appears to be no relationship between he two
-
 # Discussion
+
+A lot is currently known about adaptive responses to RT, but very little is known about intron retention in the human skeletal muscle in response to RT. Our results show that the splicing efficiency of some introns in the human skeletal muscle is associated with aging, while the number is relatively small in comparison to the number of introns in the human genome, they might be significant enough to elicit changes in not just the skeletal muscle system but in the whole body. IR in singluar splice junctions have been shown to elicit changes/disruption in the biological system [@lee_intron_2023; @chang_intron_2024; @yue_histone_2024 ]
 
 This would not be unrelated to the known effects of aging on the skeletal muscle where functions tends to decline with increasing age. We also investigated the intron-specificity of the effects (or lack thereof) of aging by exploring if the effects were specific to certain introns in certain genes. Our results suggest that the effects of aging are intron-specific as several genes contained introns that cut across the several groups as shown in Figure 2E which suggests differential regulation of splicing at the intron-level in agreement with @sun_abnormalities_2023 in addition to other levels of regulation [@monteuuis_changing_2019]. Majority of the introns in all three groups were contained in protein-coding genes in agreement with previous studies that suggest IR occurrence in mostly protein-coding genes. However, this is arguably attributable to short-read RNA sequencing and its bias towards quantification of protein-coding genes. Similar to @stokes_transcriptomics_2023 contesting the long-held belief that long non-coding RNAs are sparsely expressed in comparison to protein-coding genes, it might be necessary to explore IR using alternative RNA methods to confirm its occurrence in mainly protein-coding genes and investigate if truly short-read RNA sequencing is underestimating IR as suggested by @garcia-ruiz_splicing_2025 .
 
@@ -190,7 +188,7 @@ Though our results agree with previous studies that linked declining SE to aging
 
 The relatively small response to RT may be a result of the short-duration and thus may require longer-term RT to elicit more significant impacts on SE. However, the range of changes in response to short-term RT appeared relatively small . This suggests that longer-term RT, or perhaps a lifetime of RT would have a much impacts on aging
 
-Exercise is already known to counteract the effects of aging and can offset aging-related changes to the splicing machinery @kodama_systematic_2024, @ubaida-mohien_physical_2019 and @ubaida-mohien_unbiased_2022 , but we contribute to what is already known by focusing mainly on RT and intron retention. The pattern of response to both aging and RT point towards regulatory roles of IR and there is need to explore IR in response to long-term RT to ascertain if the impact on IR depends on factors like length of RT as well as RT volume and conditions. Thus, there is need to further deepen our insights into transcriptomic responses to RT.
+Exercise is already known to counteract the effects of aging and can offset aging-related changes to the splicing machinery @kodama_systematic_2024, @ubaida-mohien_physical_2019 and @ubaida-mohien_unbiased_2022 , but we contribute to what is already known by focusing mainly on RT and intron retention. The pattern of response to both aging and RT point towards regulatory roles of IR and there is need to explore IR in response to long-term RT to ascertain if the impact on IR depends on factors like length of RT as well as RT volume and conditions. Thus, there is need to further deepen our insights into transcriptomic responses to RT. There is no observable diffrence between transcript length and splicing efficiency
 
 # Limitations
 
@@ -200,22 +198,18 @@ This study did not group RT into conditions or volume of exercise interventions 
 
 ## Datasets
 
-Six different studies designed to investigate different aspects of adaptive responses to RT were included in the analyses. Five of these studies were conducted in our research group, while one is a study by @robinson_enhanced_2017 with GEO ascension number GSE97084. The studies were selected based on the criteria that they included paired-end Illumina RNA-Seq data from the *vastus lateralis* muscle of human subjects who performed at least 10 weeks of RT with samples collected at baseline and at the end of the study . Age of all participants was also required to be included in the data. The study protocols of the different studies are described elsewhere. A flowchart of the data analyses is as seen in **Figure 1** . **Figure 4** shows the distribution of participants within the individual studies.
+Six different studies designed to investigate different aspects of adaptive responses to RT were included in the analyses. Five of these studies were conducted in our research group, while one is a study by @robinson_enhanced_2017 with GEO ascension number GSE97084. The studies were selected based on the criteria that they included paired-end Illumina RNA-Seq data from the *vastus lateralis* muscle of human subjects who performed at least 10 weeks of RT with samples collected at baseline and at the end of the intervention . The participants' age was also to be included in the data. The study protocols of the different studies are described elsewhere. A flowchart of the data analyses is as seen in **Figure 1** . Table 1 shows the distribution of participants within the individual studies.
 
 ## RNA sequence data processing
 
-STAR (2.7.9a) [@dobin_star_2013] was used to map the RNA Sequence reads to the human reference genome (GRCh38, gencode v47 primary annotation ) using the 2-pass alignment method described by @veeneman_two-pass_2016. This method is said to advance the quantification and discovery of splicing events. RSEM (v.1.3.3-foss-2019b) @li_rsem_2011 was used to quantify transcript and gene level expressions. Splicing efficiency of each intron was quantified using the default settings in SpliceQ [@de_melo_costa_splice-q_2021] whereby introns are scored only if they have a minimum intron length of 30 nucleotides, have a minimum of 10 reads spanning each splice junction, above 10 uniquely mapping reads, and if they do not overlap with any exon; among other settings . SpliceQ @de_melo_costa_splice-q_2021 was used to quantify SE . The tool awards each intron an SE score ranging from zero to one. A score of zero means that the intron is fully retained, while a score of one means the complete splicing-out of the intron. Scores between zero and one indicate the approximate fraction of retained nucleotides.
+STAR (2.7.9a) \[@dobin_star_2013\] was used to map the RNA Sequence reads to the human reference genome (GRCh38, gencode v47 primary annotation ) using the 2-pass alignment method described by @veeneman_two-pass_2016. This method is said to advance the quantification and discovery of splicing events. MultiQc [@ewels_multiqc_2016] was then used to aggregate the STAR outputs per study; files with comparatively low annotated splices were excluded from further analysis. RSEM (v.1.3.3-foss-2019b) @li_rsem_2011 was used to quantify transcript and gene level expressions. SpliceQ @de_melo_costa_splice-q_2021 was used to quantify SE using the default settings whereby introns are scored only if they have a minimum intron length of 30 nucleotides, above 10 uniquely mapping reads, and if they do not overlap with any exon; among other settings . However, the minimum coverage per splice junction was adjusted to 5. SpliceQ awards each intron an SE score ranging from zero to one. A score of zero means that the intron is fully retained, while a score of one means the complete splicing-out of the intron. Scores between zero and one indicate the approximate fraction of retained nucleotides.
 
 ## Data analyses
 
-Analyses of the extracted SpliceQ data for all participants in the six studies were done using R version 4.4.1 on RStudio 2024.04.2+764 "Chocolate Cosmos" Release . Introns included in each data analyses step were only those whose SE was quantified across all samples.
+Analyses of the extracted SpliceQ data for all participants in the six studies were done using R version 4.4.1 on RStudio 2024.04.2+764 "Chocolate Cosmos" Release .
 
 ## Investigating the impact of aging , and RT on splicing efficiency
 
-`r length_perfect_scores` were excluded from the analyses as they had perfect scores across all samples.
-
-To examine the effect of aging on splicing efficiency , we transformed participants' age to a scale of 0 to 1 and fitted a generalized linear mixed model (GLMM) using a Beta distribution. The model built using only the pre-exercise data included random intercepts for study and participants to account for random variations at the study and participant levels while sex and scaled age of participants were fixed effects. . Differentially spliced introns were defined as those with p values at or below 0.05.
-
-To examine the effect of \~12 weeks RT on SE, we used a similar model that included fixed interactive effects for aging and RT, and sex. Study and participants remained random effects . Only samples that performed RT were included in this analyses. Thus, the control samples in ContraTrain, RELiEf and the non-RT samples in @robinson_enhanced_2017 were not included in the second model.
+Introns included in the analyses were only those whose SE was quantified across all samples. `r length_perfect_scores` were excluded from the analyses as they had perfect scores (1) across all samples. To examine the effect of aging and \~12 weeks RT on SE, we transformed participants' age to a scale of 0 to 1 and fitted a generalized linear mixed model (GLMM) using a Beta distribution. The model included fixed interactive effects for aging and RT, and sex while accounting for random variations at the study and participants levels. Study and participants remained random effects . The effects::allEffects function [@fox_effect_2003] was used to estimate marginal predictions of the SE of each intron across the scaled age of participants.
 
 # References
