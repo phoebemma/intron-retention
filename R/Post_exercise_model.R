@@ -46,7 +46,7 @@ all_full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
 all_full_metadata$scaled_age <- round(rescale(all_full_metadata$age), digits = 2)
 
 
-
+length(unique(all_full_metadata$seq_sample_id))
 
 # Select only the splicing data whose metadata is available
 all_full_metadata <- all_full_metadata %>%

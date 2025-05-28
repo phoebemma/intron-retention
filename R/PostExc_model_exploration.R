@@ -51,6 +51,16 @@ RT_merged <- RT_predictions %>%
 saveRDS(RT_merged, "data_new/RT_model_outputs/RT_model_df.RDS")
 
 
+# plot the distribution of gene biotypes
+RT_merged %>%
+  ggplot(aes(transcript_biotype, fill = transcript_biotype))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5))+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Distribution of gene biotypes in our dataset") +
+  ylab("Number of introns per biotype") +
+  facet_grid(~effect)
 
 # Explore tyhe effect of aging alone
 Aging_effect <- RT_merged %>%
@@ -123,6 +133,8 @@ length(unique(doubled_aging$external_gene_name))
 # Load original splicing data 
 all_splicing <- readRDS("data_new/processed_data/all_splice_data.RDS")
 all_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
+
+
 
 long_df <- all_splicing %>%
   pivot_longer(names_to = "seq_sample_id",
@@ -477,15 +489,19 @@ age_rt_plot <- ggplot(Age_dependent_RT, aes(x = scaled_age, y = fit, color = eff
         legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
 
 
-ggarrange(RT_plot, age_rt_plot,
-          labels = c("A", "B"),
-          align = "hv")
 
 
+
+# Get a ranking of the RT introns
 RT_ranked <- RT_effect_alone %>%
-  filter(effect != "No effect" & time == "PostExc") %>%
-  arrange(fit) #%>%
- # dplyr::select(target, external_gene_name, time, fit, Estimate,transcript_biotype, scaled_age, external_transcript_name, transcript_length) 
+  filter(effect != "No effect" ) %>%
+  group_by(time) %>%
+  mutate(new_fit = fit - lag(fit)) %>%
+  ungroup()%>%
+  filter(time == "PostExc") %>%
+  
+  arrange(new_fit) #%>%
+#  dplyr::select(target, external_gene_name,  new_fit, Estimate,transcript_biotype, scaled_age, external_transcript_name, transcript_length) 
 
  # filter(fcthreshold == "s")
 length(unique(RT_ranked$target))
@@ -497,13 +513,13 @@ RT_ranked_list <- RT_effect_alone %>%
                         "ENST00000295314.9_9_1","ENST00000258888.6_9_15",
                        "ENST00000566354.1_1_16", "ENST00000553489.1_1_12", 
                        "ENST00000228641.4_2_12", "ENST00000306434.8_7_2",
-                      "ENST00000432688.5_14_2", "ENST00000310417.9_12_3" ))
+                      "ENST00000432688.5_14_2", "ENST00000310417.9_12_3"))
 
 
 Top_affected_introns <- ggplot(RT_ranked_list, aes(x = scaled_age, y = fit, color = time, linetype = time)) +
   geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
   theme_minimal() +
-  labs(title = "Relationship between RT and Splicing Efficiency in  top  affected introns", 
+  labs(title = "Relationship between RT and Splicing Efficiency in  top 12  RT_associated introns", 
        x = "Scaled Age", 
        y = "Splicing Efficiency") +
   theme(plot.title = element_text(hjust = 0.5),
@@ -523,9 +539,9 @@ ggplot(VP, aes(x = scaled_age, y = fit, colour = time, linetype = time)) +
   geom_line() + 
   theme_minimal()+
   scale_alpha_identity()+
-  facet_wrap(~target, scale = "free") +
-  geom_text(data = VP, aes( x = Inf, y = Inf, label =external_transcript_name),
-            vjust = 1.1, hjust = 1.1, size = 3, colour = "darkgrey")
+  facet_wrap(~target + external_transcript_name, scale = "free") # +
+  # geom_text(data = VP, aes( x = Inf, y = Inf, label =external_transcript_name),
+  #           vjust = 1.1, hjust = 1.1, size = 3, colour = "darkgrey")
 
 # Check GO for those affected by RT
 
@@ -576,7 +592,10 @@ go_RT_cc <- dotplot(ego_RT_cc,
 
 
 
-
+ggarrange(RT_plot, age_rt_plot, go_RT, go_RT_cc,
+          labels = c("A", "B", "C", "D"),
+           font.label = list(size = 12),
+          align = "v")
 
 
 
@@ -637,6 +656,15 @@ ggplot(summary_df, aes(x = average_SE, y = transcript_length)) +
 RT_ranked <- RT_effect_alone %>%
   filter(effect != "No effect" )
  age_rt_int <- RT_ranked[RT_ranked$target %in% Aging_df$target,] 
+ 
+ ranked_age_rt <- age_rt_int%>%
+   group_by(time) %>%
+   mutate(new_fit = fit - lag(fit)) %>%
+   ungroup()%>%
+   filter(time == "PostExc") %>%
+   arrange(new_fit) %>%
+   dplyr::select(target, external_gene_name,  new_fit, Estimate,transcript_biotype, scaled_age, external_transcript_name, transcript_length) 
+ 
    
  length(unique(age_rt_int$target))
  length(unique(age_rt_int$ensembl_gene_id))
@@ -654,17 +682,24 @@ RT_on_age_specific_plot <-  ggplot(age_rt_int, aes(x = scaled_age, y = fit,  lin
          legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
  
  age_rt_int_list <- RT_ranked %>%
-   filter(target %in% c("ENST00000258888.6_9_15", "ENST00000487126.5_6_10", 
-                        "ENST00000424301.6_10_5", "ENST00000536007.5_27_12", 
+   # filter(target %in% c("ENST00000504055.1_2_6", "ENST00000409751.1_4_2", 
+   #                      "ENST00000258888.6_9_15", "ENST00000553294.1_2_12", 
+   #                      "ENST00000228641.4_2_12", "ENST00000487126.5_5_10",
+   #                      "ENST00000567071.5_1_15","ENST00000437669.5_9_5",
+   #                      "ENST00000361466.7_30_12", "ENST00000640575.2_1_2",
+   #                     "ENST00000268661.8_7_16", "ENST00000262113.9_14_8" ))
+   filter(target %in% c("ENST00000258888.6_9_15", "ENST00000487126.5_6_10",
+                        "ENST00000424301.6_10_5", "ENST00000536007.5_27_12",
                         "ENST00000456057.5_9_6", "ENST00000555869.5_9_14",
-                        "ENST00000502372.1_3_3","ENST00000397183.6_22_17"))
- 
- 
+                        "ENST00000502372.1_3_3","ENST00000397183.6_22_17",
+                        "ENST00000262113.9_14_8"))
+
+
  
  Topmost_aging_Rt <- ggplot( age_rt_int_list, aes(x = scaled_age, y = fit, color = time, linetype = time)) +
    geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
    theme_minimal() +
-   labs(title = "Effect of RT on topmost age-affected introns", 
+   labs(title = "Effect of RT on 9 topmost age-affected introns", 
         x = "Scaled Age", 
         y = "Splicing Efficiency") +
    theme(plot.title = element_text(hjust = 0.5),
@@ -688,3 +723,15 @@ RT_on_age_specific_plot <-  ggplot(age_rt_int, aes(x = scaled_age, y = fit,  lin
  
  
  ggsave("Figures/Figure2.png", bg = "white",scale = 2.5, dpi = 400)
+ 
+ 
+ # Explore the metadata
+ length(unique(all_metadata$study))
+ 
+ all_metadata %>%
+   distinct(sex, age, study, participant) %>%
+   
+   summarise(.by = c(study,sex),
+             n= n(),
+             range = range(age)) %>%
+   data.frame()

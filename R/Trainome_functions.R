@@ -472,8 +472,53 @@ extract_splice_q <- function(folder){
   return(data.frame(comb.df))
 }
 
+
+
+
+
+
+
+
 # Create a mode  function.
 getmode <- function(v) {
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+
+
+# second function to read Splice_q results file and remove duplicates
+
+read_Splice_Q_updated <- function(file){
+  df <- readr::read_tsv(file)
+  df <- df[!duplicated(df[, 6:ncol(df)]),] # removes all duplicates from the 6 column upwards
+ # df <- df %>% dplyr::select(transcript_ID, intron_ID, score, chr)
+  df$transcript_ID <- paste0(df$transcript_ID,"_",
+                             df$intron_ID,"_",
+                             df$chr) 
+  df %>% dplyr::select(transcript_ID, score)
+  return(df)
+}
+
+
+
+#Function to extract all the spliceQ data in a folder
+extract_splice_q_updated <- function(folder){
+  
+  files <- list.files(folder, pattern =".tsv") 
+  
+  splice_list <- list()
+  
+  for(i in 1:length(files)){
+    
+    splice_list[[i]] <- read_Splice_Q_updated(paste0(folder, files[i])) %>% 
+      mutate(file_id = gsub(".tsv", "", files[i])) %>% ## This removes the file number
+      dplyr::select(transcript_ID, file_id, score)
+  }
+  
+  comd.df <- data.table::rbindlist(splice_list)
+  
+  comb.df <- data.table::dcast(comd.df, transcript_ID  ~ file_id, value.var = "score")
+  
+  return(data.frame(comb.df))
 }
