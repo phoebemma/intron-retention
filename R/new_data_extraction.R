@@ -5,6 +5,8 @@ library(tidyverse)
 
 source("R/Trainome_functions.R")
  # load the metadata 
+
+
 metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
 
 # Load the different metadata
