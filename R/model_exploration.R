@@ -18,6 +18,7 @@ model_summary <- readRDS("data/RT_model_summary.RDS")
 all_splicing <- readRDS("data/all_splice.RDS") %>%
   drop_na()
 all_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
+
 # extract the model summaries
 mod_sum <- model_summary$summaries
 
