@@ -72,7 +72,7 @@ RT_merged <- RT_predictions %>%
                             Estimate > 0 & Pr...z.. > 0.05 ~ "No effect")) %>%
   inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
-length(unique(RT_merged$target))
+# length(unique(RT_merged$target))
 saveRDS(RT_merged, "data/RT_model_df.RDS")
 
 
@@ -102,7 +102,7 @@ summary_aging <- Aging_effect %>%
   group_by(effect) %>%
   summarize(num_targets = n_distinct(target))
 
-# get a dataset that includes a legen that displays the number of introns in each group
+# get a dataset that includes a legend that displays the number of introns in each group
 Aging_effect <- Aging_effect %>%
   left_join(summary_aging, by = "effect")%>%
   mutate(effect_label = paste(effect, "(No of introns:", num_targets, ")"))
@@ -433,7 +433,7 @@ go_aging_CC <- dotplot(ego_aging_CC,
 
 
 
-# subset these effects into different dataframes# scolour = # subset these effects into different dataframes# subset theseeffect effects into different dataframes
+# subset these effects into different dataframes
 no_effect <- RT_merged %>% 
   filter(effect == "No effect")
 Improved_Se <- RT_merged %>%
@@ -497,18 +497,6 @@ ggsave("Figures/newest_version/Figure1.png", bg = "white",scale = 2.5, dpi = 400
 
 
 
-# RT_plot <- ggplot(RT_effect_alone, aes(x = scaled_age, y = fit, color = effect_label, linetype = time, shape = coef)) +
-#   geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
-#   theme_minimal() +
-#   labs(title = "Relationship between RT and Splicing Efficiency", 
-#        x = "Scaled Age", 
-#        y = "Splicing Efficiency") +
-#   theme(plot.title = element_text(hjust = 0.5))+
-#   theme(plot.title = element_text(hjust = 0.5),
-#         legend.text = element_text(size = 10, face = "italic"),
-#         legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
-
-
 
 # explore the age-dependent effects
 Age_dependent_RT <- RT_merged %>%
@@ -535,7 +523,7 @@ age_rt_plot <- ggplot(Age_dependent_RT, aes(x = scaled_age, y = fit, color = eff
         legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
 
 
-
+length(unique(Age_dependent_RT$target))
 
 
 # explore the effects of resistance training
@@ -560,6 +548,16 @@ RT_effect <- RT_effect %>%
 # Extract those not in the interaction set
 RT_alone_df <- RT_effect %>%
   filter(!target %in% Age_dependent_RT$target)
+
+length(unique(RT_effect$target))
+
+interaction_alone <- Age_dependent_RT %>%
+  filter(!target %in% RT_effect$target)
+
+length(unique(RT_alone_df$target))
+
+
+length(unique(interaction_alone$target))
 
 RT_plot  <- ggplot(RT_alone_df, aes(x = scaled_age, y = fit, color = effect_label, linetype = time)) +
   geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
