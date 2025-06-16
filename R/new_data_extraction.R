@@ -4,10 +4,58 @@ library(tidyverse)
 
 
 source("R/Trainome_functions.R")
- # load the metadata 
+ # load the individual metadata 
+#COPD metadata
+copd_metadata <- readRDS("data_new/processed_data/copd_metadata.RDS") %>%
+  dplyr::select(study, participant, sex, time, seq_sample_id, age)
 
 
-metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
+# Volume_data
+Vol_metadata <- readRDS("data_new/processed_data/volume_metadata.RDS")%>%
+  dplyr::select(study, participant, sex, time, seq_sample_id, age) 
+
+
+# Contratrain_data
+ct_metadata <- readRDS("data_new/processed_data/contratrain_metadata.RDS") %>%
+  dplyr::select(study, participant, sex, time, seq_sample_id, age)
+
+
+# Publicly available data
+SRP102542_metadata <- readRDS("data_new/processed_data/SRP102542_metadata.RDS")%>%
+  dplyr::select(study, participant, sex, time, seq_sample_id, age)
+
+
+# Alpha and Omega data
+
+A_Omega_metadata <- readRDS("data_new/processed_data/Alpha_Omega_metadata.RDS")%>%
+  dplyr::select(study, participant, sex, time, seq_sample_id, age)
+
+
+
+Relief_full_meta <- readRDS("data_new/processed_data/Relief_metadata.RDS")%>%
+  dplyr::select(study, participant, sex, time, seq_sample_id, age)
+
+
+# Merge the metadata into one
+metadata <- rbind(copd_metadata, Vol_metadata)%>%
+  rbind(ct_metadata) %>%
+  rbind(A_Omega_metadata) %>%
+  rbind(SRP102542_metadata) %>%
+  rbind(Relief_full_meta) %>%
+  mutate(across(c("age"), round, 0)) %>%
+  mutate(group = case_when(age <=50 ~ "Fifty and below" ,
+                           age > 50  ~ "Above fifty")) %>%
+  mutate(sex = factor(sex, levels = c("female", "male")),
+         group = factor(group, levels = c("Fifty and below" ,"Above fifty" )),
+         time = factor(time, levels = c("PreExc", "PostExc")))
+metadata$participant <- paste0(metadata$study, "_", metadata$participant)
+
+# Standardize the age by scaling them 0 to 1
+metadata$scaled_age <- round(rescale(metadata$age), digits = 2)
+
+
+
+saveRDS(metadat, "data_new/processed_data/all_full_metadata.RDS")
 
 # Load the different metadata
 

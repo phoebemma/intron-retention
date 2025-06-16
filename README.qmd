@@ -7,7 +7,7 @@ title-block-style: plain
 
 ## Introduction
 
-This study is aimed at investigating the impact of age and resistance exercise training on splicing efficiency (SE) . It uses SpliceQ @demelocosta2021 to quantify splicing efficiency in six datasets;
+This study is aimed at investigating the impact of age and resistance exercise training (RT) on splicing efficiency (SE) of introns in skeletal muscle . Using SpliceQ @demelocosta2021 we quantify the splicing efficiency of introns in RNA sequence data from six RT intervention studies;
 
 the [COPD study](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8261934/) ,
 
@@ -31,21 +31,17 @@ and
 
     2.  `/archive` Old scripts used but not wished to be discarded
 
-    3.  `Data_exploration.R` Basic exploration of the intron retention data used in this study
+    3.  `new_data_extraction.R` . This extracts the individual splicing data and metadata and then merges them into one dataset ready for modelling
 
-    4.  `Figures.R` Codes used to produce the figures/images used in the manuscript
+    4.  `model_building.R` . This uses seqwrap to build the model
 
-    5.  `Preexercise_model.R` Codes for building the baseline model
+    5.  `model_exploration.R` This script explores the built model and generates the images used in the script
 
-    6.  `Preexercise_model_exploration.R` Exploration of the baseline model outputs
+    6.  `/archive/Data_exploration.R` Basic exploration of the old intron retention data . This was used before SpliceQ splice junction strigency was reduced to 5. The gene annotation used in the analysis was generated in this script
 
-    7.  `RT_effect_model_TrainOme.R` Codes for building the RT model
+    7.  `Trainome_functions.R` Functions created for use in this study or other TrainOme studies
 
-    8.  `RT_model_exploration.R` Exploration of the RT model
-
-    9.  `Trainome_functions.R` Functions created for use in this study or other TrainOme studies
-
-    10. `beta-reg-sim-notes.qmd` Codes used in model simulation
+    8.  `beta-reg-sim-notes.qmd` Codes used in model simulation
 
 -   `/public_data` Contains the files/documents/articles of publicly available data used or previously intended to be used in the study
 
@@ -53,6 +49,16 @@ and
 
 -   `Relief_sampleIDs.xlsx` Annotation of relief samples/participants.
 
--    `Alpha_Omega_sample_list_transcriptomics.xlsx`
+-   `Alpha_Omega_sample_list_transcriptomics.xlsx`
 
--   `make.qmd` Running this file is supposed to run the relevant codes and save the produced files
+## To reproduce the analysis, run the scripts in the following order
+
+1.  `/Data_extraction`
+
+2.  `/archive/Data_exploration.R` . This will save a couple of files like the gene annotation needed during model exploration
+
+3.  `new_data_extraction.R`
+
+4.  `model_building.R` .
+
+5.  `model_exploration.R`
