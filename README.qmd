@@ -51,7 +51,9 @@ and
 
 -   `Alpha_Omega_sample_list_transcriptomics.xlsx`
 
-## To reproduce the analysis, run the scripts in the following order
+##  Redroducing the analysis
+
+To reproduce the analysis, request access to the folder containing the raw SpliceQ counts, the run the scripts in the following order
 
 1.  `/Data_extraction`
 
