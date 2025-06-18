@@ -137,5 +137,10 @@ all_splice_df <-copd_splice  %>%
   inner_join(SRP102542_splice, by = "transcript_ID") %>%
   inner_join(Relief_splice, by = "transcript_ID") 
 
+# create the directory if it doesnt exist
+if (!dir.exists("data")) {
+  dir.create("data")
+}
+
 
 saveRDS(all_splice_df, "data/all_splice.RDS")
