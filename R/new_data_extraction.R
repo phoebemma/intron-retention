@@ -55,12 +55,12 @@ metadata$scaled_age <- round(rescale(metadata$age), digits = 2)
 
 
 
-saveRDS(metadat, "data_new/processed_data/all_full_metadata.RDS")
-
-# Load the different metadata
+saveRDS(metadata, "data_new/processed_data/all_full_metadata.RDS")
 
 
-# Load the full splicing data
+
+
+# Load the full splicing data using the updated function that removes splice duplicates
 copd_splice_df <- extract_splice_q_updated("data_new/COPD_spliceq_outputs/")
 
 vol_splice_df <- extract_splice_q_updated("data_new/Volume_spliceq_outputs/")
