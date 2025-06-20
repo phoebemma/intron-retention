@@ -22,14 +22,14 @@ copd_metadata["volume"] <- 3
 # hist(copd_metadata$age)
 # length(unique(copd_metadata$participant))
 
- saveRDS(copd_metadata, "data_new/processed_data/copd_metadata.RDS")
+ saveRDS(copd_metadata, "data/copd_metadata.RDS")
 
  
  
  
 #Load the COPD splicing data
 
-copd_data <- extract_splice_q("./data_new/COPD_Spliceq_outputs/")
+copd_data <- extract_splice_q_updated("./data_new/COPD_Spliceq_outputs/")
 
 idx <- sapply(copd_data, class)== "numeric"
 copd_data[, idx] <- lapply(copd_data[, idx], round, 2)
@@ -43,19 +43,6 @@ copd_data <- copd_data %>%
   subset(select = c("transcript_ID", copd_intersect))
 
 
- saveRDS(copd_data, "data_new/processed_data/copd_splicing_data.RDS")
+ saveRDS(copd_data, "data/copd_splicing_data.RDS")
 
 
-# Extract the pre-exercise data
-
-copd_metadata_pre <- copd_metadata %>%
-  subset(time == "PreExc")
-
- saveRDS(copd_metadata_pre, "data_new/Pre_Exercise/copd_preExc_metadata.RDS")
-
-copd_intersect <- intersect(colnames(copd_data), copd_metadata_pre$seq_sample_id)
-
-copd_data_pre <- copd_data %>%
-  subset(select = c("transcript_ID", copd_intersect))
-
- saveRDS(copd_data_pre, "data_new/Pre_Exercise/copd_preExc_splicing_data.RDS")

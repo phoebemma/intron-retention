@@ -1,0 +1,133 @@
+---
+title: "Data analysis:"
+format: html
+bibliography: "My_Library.bib"
+execute: 
+  warning: false
+  message: false
+  code-summary: "Code"
+  code-fold: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| code-fold: true
+#| code-summary: "Preliminary settings and packages"
+
+
+color_scale <- c("#7fc97f",  "#beaed4","#fdc086","#ffff99","#386cb0","#f0027f")
+
+library(dplyr)
+library(gt)
+library(tidyverse)
+library(cowplot)
+
+
+source("R/Trainome_functions.R")
+
+
+```
+
+## Introduction
+
+This file reproduces the relevant analyses for the paper as well as the supplementary materials
+
+### Data Extraction
+
+Running the codes in this section extracts and processes the data for the individual datasets. It also saves the extracted datasets in the designated folders for further analyses
+
+```{r}
+#Create these directories if the don't already exist
+
+
+# Create data_new directory if it doesnt exist
+if (!dir.exists("data")) {
+  dir.create("data")
+}
+
+
+# Extract the Alpha and Omega data
+source("R/Data_extraction/Alpha_Omega_data.R")
+
+# Extract the COPD data
+source("R/Data_extraction/COPD_data.R")
+
+# Extract the Contratrain data
+source("R/Data_extraction/ct_data.R")
+
+# Extract the Volume data
+source("R/Data_extraction/Volume_data.R")
+
+
+# Extract the Public data; Srp102542
+source("R/Data_extraction/SRP102542_data.R")
+
+
+# Extract the REliEf data
+source("R/Data_extraction/Relief.R")
+```
+
+Running the function above would save the following results in a `data_new` folder
+
+| Data                                 | Description              |
+|--------------------------------------|--------------------------|
+| `data/Alpha_Omega_splicing_data.RDS` | Alpha_Omega SpliceQ data |
+| `data/Alpha_Omega_metadata.RDS`      | Alpha_Omega metadata     |
+| `data/copd_metadata.RDS`             | COPD metadata            |
+| `data/copd_splicing_data.RDS`        | COPD SpliceQ data        |
+| `data/contratrain_metadata.RDS`      | Contratrain metadata     |
+| `data/contratrain_splicing_data.RDS` | Contratrain SpliceQ data |
+| `data/volume_metadata.RDS`           | Volume metadata          |
+| `data/volume_splicing_data.RDS`      | Volume SpliceQ data      |
+| `data/SRP102542_metadata.RDS`        | SRP102542 metadata       |
+| `data/SRP102542_splicing_data.RDS`   | SRP102542 SpliceQ data   |
+| `data/Relief_splicing_data.RDS`      | ReLiEf SpliceQ data      |
+| `data/Relief_metadata.RDS`           | ReLiEf metadata          |
+
+### Basic data exploration
+
+Running this code would perform basic data exploration using the data extracted and saved above. It also saves a couple of images and files as listed in the table below the code.
+
+```{r}
+# 
+source("R/new_data_extraction.R")
+```
+
+The code block above would produce and save the following files and images
+
+| Data                               | Description                                     |
+|------------------------------------|-------------------------------------------------|
+| `data/all_full_metadata.RDS`       | Combined metadata of all the datasets           |
+| `data/all_splice.RDS`              | All splicing data in one dataframe              |
+| `data/ensembl_gene_annotation.RDS` | All genes annotations (downloaded from Ensembl) |
+
+### Model building
+
+This script in the code block would build a betabinomial GLMM model to analyse differentially spliced introns based on age (scaled value), resistance exercise training and its interaction with aging while having participant and study as random factors
+
+```{r}
+
+
+source("R/model_building.R")
+```
+
+The script above produces one file "data/RT_model_summary.RDS" that contains the model summary and predictions
+
+### Model Exploration
+
+The following script would explore the model outputs and create the figures and files shown in the table below
+
+```{r}
+source("R/model_exploration.R")
+```
+
+| Data                         | Argument                        |
+|------------------------------|---------------------------------|
+| `"data_new/RT_model_df.RDS"` | The model and model predictions |
+|                              |                                 |
+|                              |                                 |
+|                              |                                 |
+|                              |                                 |
+|                              |                                 |
+|                              |                                 |

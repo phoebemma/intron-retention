@@ -3,7 +3,7 @@ library(dplyr)
 library(tidyverse)
 source("R/Trainome_functions.R")
 
-# This file extracts the Volume data in the desired format
+# This file extracts the Volume  data in the desired format
 
 
 Vol_metadata <- vol_samples %>%
@@ -25,13 +25,12 @@ Vol_metadata["condition"] <- "RM10"
 
 
 
-
- saveRDS(Vol_metadata, "data_new/processed_data/volume_metadata.RDS") 
+ saveRDS(Vol_metadata, "data/volume_metadata.RDS") 
 
 
 
 # Load Volume splicing data
-volume_data <- extract_splice_q("data_new/Volume_spliceq_outputs/")
+volume_data <- extract_splice_q_updated("data_new/Volume_spliceq_outputs/")
 idx <- sapply(volume_data, class)== "numeric"
 volume_data[, idx] <- lapply(volume_data[, idx], round, 2)
 
@@ -45,21 +44,8 @@ volume_intersect <- intersect(colnames(volume_data), Vol_metadata$seq_sample_id)
 volume_data <- volume_data %>%
   subset(select = c("transcript_ID", volume_intersect))
 
- saveRDS(volume_data, "data_new/processed_data/volume_splicing_data.RDS")
+
+saveRDS(volume_data, "data/volume_splicing_data.RDS")
 
 
 
-#Subset Prexercise metadata
-Vol_metadata_pre <- Vol_metadata %>%
-  subset(time == "PreExc")
-
-
- saveRDS(Vol_metadata_pre, "data_new/Pre_Exercise/vol_preExc_metadata.RDS")
-
-#select only the splicing samples captured in the metadata
-volume_intersect <- intersect(colnames(volume_data), Vol_metadata_pre$seq_sample_id)
-
-volume_pre_data <- volume_data %>%
-  subset(select = c("transcript_ID", volume_intersect))
-
- saveRDS(volume_pre_data, "data_new/Pre_Exercise/vol_preExc_splicing_data.RDS")

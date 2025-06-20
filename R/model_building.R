@@ -13,17 +13,16 @@ source("R/Trainome_functions.R")
 
 
 all_splice_df <- readRDS("data/all_splice.RDS") %>%
-  mutate(across(where(is.numeric), ~ round(.x, 2))) %>%
-  drop_na() 
+  mutate(across(where(is.numeric), ~ round(.x, 2))) 
 
 
 
-all_full_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
+all_full_metadata <- readRDS("data/all_full_metadata.RDS")
 colnames(all_full_metadata)
 
 
 # REORDER THE SEQUENCE ID TO MATCH BOTH DATAFRAMMES
-all_splice_reordered <- all_splice_df[, c("transcript_ID",all_full_metadata$seq_sample_id)]
+all_splice_reordered <- all_splice_df[, c("transcript_ID",all_full_metadata$seq_sample_id)] 
 
 # Check if everything matches except the transcript_id
 match(colnames(all_splice_reordered), all_full_metadata$seq_sample_id)

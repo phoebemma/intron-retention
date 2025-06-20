@@ -17,7 +17,20 @@ model_summary <- readRDS("data/RT_model_summary.RDS")
 # Load original splicing data 
 all_splicing <- readRDS("data/all_splice.RDS") %>%
   drop_na()
-all_metadata <- readRDS("data_new/processed_data/all_full_metadata.RDS")
+all_metadata <- readRDS("data/all_full_metadata.RDS")
+
+
+# Load the batch-corrected gene expression data
+gene_exp_df <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS") #%>%
+  # remove the version number to match gene_id
+ # mutate(gene_id = gsub("\\..*", "",  gene_id))
+
+
+
+# Load the gene annotation file
+gene_annotation <- readRDS("data/ensembl_gene_annotation.RDS")
+
+
 
 # extract the model summaries
 mod_sum <- model_summary$summaries
@@ -49,6 +62,10 @@ RT_model_summary <- mod_sum %>%
 
 
 
+
+
+
+
 # From the model summary, extract those that are predictions
 RT_predictions <- mod_sum %>%
   dplyr::select(scaled_age, time, fit, target) %>%
@@ -58,8 +75,7 @@ RT_predictions <- mod_sum %>%
 
 
 
-# Load the gene annotation file
-gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
+
 
 
 
@@ -67,7 +83,8 @@ gene_annotation <- readRDS("data_new/ensembl_gene_annotation.RDS")
 RT_merged <- RT_predictions %>%
   inner_join(RT_model_summary, by = "target") %>%
   drop_na() %>%
-  mutate(effect = case_when(Estimate > 0 & Pr...z.. <= 0.05 ~ "Improved SE",
+  # based on model estimate and p values, group the introns into how they are affected by aging
+  mutate(effect = case_when(Estimate > 0 & Pr...z.. <= 0.05 ~ "Improved SE", 
                             Estimate < 0 & Pr...z.. <= 0.05 ~ "Reduced SE" ,
                             Estimate < 0 & Pr...z.. > 0.05 ~ "No effect",
                             Estimate > 0 & Pr...z.. > 0.05 ~ "No effect")) %>%
@@ -80,18 +97,46 @@ saveRDS(RT_merged, "data/RT_model_df.RDS")
 
 
 
-# plot the distribution of gene biotypes
-RT_merged %>%
+
+# plot the distribution of gene biotypes of the genec containing the introns
+intron_distribution <- RT_merged %>%
+  distinct(target, transcript_biotype, .keep_all = T) %>%
   ggplot(aes(transcript_biotype, fill = transcript_biotype))+
   geom_bar()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-        plot.title = element_text(hjust = 0.5))+
-  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.5) +
-  ggtitle("Distribution of gene biotypes in our dataset") +
-  ylab("Number of introns per biotype") +
-  facet_grid(~effect)
+        plot.title = element_text(hjust = 0.5),
+        legend.position = "none")+ # no legend
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.1) +
+  ggtitle("Distribution of biotypes of genes containing the introns") +
+  ylab("Number of introns per biotype") 
+  
 
 
+
+
+
+
+
+# Plot the gene biotype to check if the distribution of biotypes also fit that of those containing introns
+gene_distribution <- gene_annotation %>%
+  distinct(external_gene_name, .keep_all = T) %>%
+  inner_join((gene_exp_df %>%
+                dplyr::select(gene_name) ), by = c("external_gene_name" = "gene_name")) %>%
+#  distinct(gene_id, transcript_biotype, .keep_all = T)%>%
+  ggplot(aes(transcript_biotype, fill = transcript_biotype))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5),
+        legend.position = "none")+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.1) +
+  ggtitle("Distribution of gene biotypes in the gene expression data") +
+  ylab("Number of genes per biotype")
+
+
+
+ggarrange(intron_distribution, gene_distribution,
+          ncol = 2,
+          labels = c("A", "B"))
 
 # Explore tyhe effect of aging alone
 Aging_effect <- RT_merged %>%
@@ -158,17 +203,17 @@ length_introns <- Aging_effect %>%
   dplyr::select(target, intron_length, effect) %>%
   distinct()
   
-range(length_introns$intron_length)
+# range(length_introns$intron_length)
 # subset the introns with improved Se 
 Imp_length <- length_introns %>%
   filter(effect == "Improved SE") 
-range(Imp_length$intron_length)
+# range(Imp_length$intron_length)
 
 # subset those with reduced SE
 Red_length <- length_introns %>%
   filter(effect == "Reduced SE") 
 
-range(Red_length$intron_length)
+# range(Red_length$intron_length)
 # plot the data
 main_plot <- length_introns %>%
   ggplot(aes(intron_length)) +
@@ -225,7 +270,17 @@ length_plot <- ggdraw()+
 print(length_plot)
 
 
-range(RT_model_summary$intron_length)
+
+
+
+
+
+
+
+# Plot Figure 1
+
+
+# plot figure 1
 
 
 
@@ -360,16 +415,18 @@ top_improved <- ggplot(improved_df, aes(x = scaled_age, y = fit,  linetype = typ
 
 
 
+ggarrange(top_decline,NULL,  top_improved,
+          nrow = 3,
+          heights = c(1,0.1,1),
+          labels = c("A", "", "B"),
+          align = "hv")
 
+
+ggsave("plots/FigureEV2.png", bg = "white",scale = 2.5, dpi = 400)
 
 # explore the GO of genes containing the differentailly spliced introns by aging
 
 
-
-# Load the batch-corrected gene expression data
-gene_exp_df <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS") %>%
-  # remove the version number to match gene_id
-  mutate(gene_id = gsub("\\..*", "",  gene_id))
 
 
 # select only genes present in the splicing data
@@ -430,7 +487,19 @@ go_aging_CC <- dotplot(ego_aging_CC,
 
 
 
+ggarrange(intron_distribution, gene_distribution, aging_plot, length_plot, 
+          ncol = 2, nrow = 2, labels = c("A", "B", "C", "D"),
+          align = "v",
+          #          axis = "tblr",
+          label.x = 0.05,
+          #         label.y = 0.05,
+          font.label = list(size = 11),
+          heights = c(1.3, 1),
+          widths = c(1, 1.2))
 
+
+ggsave("plots/Figure1.png", bg = "white",scale = 2.5, dpi = 400)
+# there was no obvious molecular function
 
 
 

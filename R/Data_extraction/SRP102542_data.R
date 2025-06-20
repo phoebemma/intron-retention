@@ -11,7 +11,7 @@ source("R/Trainome_functions.R")
 # see article https://pubmed.ncbi.nlm.nih.gov/28273480/
 # Sequence data downloaded from https://www.ebi.ac.uk/ena/browser/view/PRJNA380649
 # Metadata downloaded from https://www.ncbi.nlm.nih.gov/Traces/study/?page=2&acc=gse97084&o=acc_s%3Aa
-SRP102542 <- read_csv("data/SRP102542.txt") %>%
+SRP102542 <- read_csv("public_data/SRP102542.txt") %>%
   dplyr::select("Run", "AGE", "biopsy_timepoint", "exercise_type", "Experiment", "GEO_Accession (exp)", "SRA Study") 
 
 
@@ -51,10 +51,9 @@ SRP102542<- SRP102542 %>%
 colnames(SRP102542)[colnames(SRP102542) == "Age"] <- "age"
 colnames(SRP102542)[colnames(SRP102542) == "Sex"] <- "sex"
 colnames(SRP102542)[colnames(SRP102542) == "exercise_type"] <- "condition"
-colnames(SRP102542)
-unique(SRP102542$time)
 
-length(unique(extra_data$`Tissue Code`))
+
+
 SRP102542 <- SRP102542 %>%
   dplyr::select(study, participant, sex, condition, time, seq_sample_id, age, age_group)
 
@@ -64,23 +63,20 @@ SRP102542["sex"][SRP102542["sex"] == "F" ] <- "female"
 
 
 
-length(unique(SRP102542$participant))
-#Select pre-exercise data for the pre-exercise model
-
-SRP102542_pre <- SRP102542 %>%
-  subset(time == "PreExc")
- saveRDS(SRP102542_pre, "data_new/Pre_Exercise/SRP102542_preExc_metadata.RDS")
  
- 
- # For the full data analyses, we would need only participants that performed RT
+ # We need only participants that performed RT
 
  SRP102542_full <- SRP102542 %>%
    filter(condition == "Resistance")
-  saveRDS(SRP102542_full, "data_new/processed_data/SRP102542_metadata.RDS")
+ 
+ 
+
+ 
+saveRDS(SRP102542_full, "data/SRP102542_metadata.RDS")
 
 
-#Load the SpliceQ data
-SRP102542_data <- extract_splice_q("./data_new/SRP102542_SpliceQ_outputs/")
+# Load the SpliceQ data
+SRP102542_data <- extract_splice_q_updated("./data_new/SRP102542_SpliceQ_outputs/")
 
 idx <- sapply(SRP102542_data, class)== "numeric"
 SRP102542_data[, idx] <- lapply(SRP102542_data[, idx], round, 2)
@@ -92,20 +88,12 @@ SRP102542_data[, idx] <- lapply(SRP102542_data[, idx], round, 2)
 SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542$seq_sample_id)
 
 SRP102542_data <- SRP102542_data %>%
-  subset(select = c("transcript_ID", SRP102542_intersect)) %>%
-  drop_na()
+  subset(select = c("transcript_ID", SRP102542_intersect)) # %>%
+#  drop_na()
 
 
- saveRDS(SRP102542_data, "data_new/processed_data/SRP102542_splicing_data.RDS")
+ saveRDS(SRP102542_data, "data/SRP102542_splicing_data.RDS")
 
 
-#Repeat for pre-exercise data
-#select only the splicing samples captured in the preexercise metadata
-SRP102542_intersect <- intersect(colnames(SRP102542_data), SRP102542_pre$seq_sample_id)
-
-SRP102542_pre_data <- SRP102542_data %>%
-  subset(select = c("transcript_ID", SRP102542_intersect)) %>%
-  drop_na()
- saveRDS(SRP102542_pre_data, "data_new/Pre_Exercise/SRP102542_preExc_splicing_data.RDS")
 
 

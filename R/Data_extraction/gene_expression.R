@@ -32,12 +32,22 @@ alpha_omega <-  extract_rsem_gene_counts("data_new/gene_counts/Alpha_Omega_RSEM_
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
   
   # select gene_name and any of the sample names that match sample name in metadata
-  dplyr::select(gene_id, all_of(alpha_omega_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(alpha_omega_metadata$seq_sample_id))
 
+
+
+
+## Keep nonzero rows
+nonzero <- alpha_omega %>%
+  dplyr::filter(rowSums(alpha_omega[, -1]) != 0)
+
+
+nonzero <- nonzero %>%
+  dplyr::filter(filterByExpr(nonzero[,-1], min.total.count = 628)) # at least, one and half counts per participant
 
 
 # Create dge lists and calculate norm factors
-dge_ao   <- DGEList(alpha_omega[,-1])
+dge_ao   <- DGEList(nonzero[,-1])
 
 
 dge_ao  <- calcNormFactors(dge_ao, method = "TMM")
@@ -47,12 +57,12 @@ dge_ao  <- calcNormFactors(dge_ao, method = "TMM")
 
 normalised_ao_counts <- as.data.frame(cpm(dge_ao, normalized.lib.sizes = T))
 
-normalised_ao_counts$gene_id <- alpha_omega$gene_id
+normalised_ao_counts$gene_name <- nonzero$gene_name
 
 # Make the gene_Id the first column
 
 normalised_ao_counts <- normalised_ao_counts %>%
-  dplyr::select(gene_id, everything())
+  dplyr::select(gene_name, everything())
 
 
 
@@ -69,9 +79,18 @@ volume_metadata <- readRDS("data_new/processed_data/volume_metadata.RDS")
 
 volume <- volume %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
-  dplyr::select(gene_id, all_of(volume_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(volume_metadata$seq_sample_id))
 
-dge_vol   <- DGEList(volume[,-1])
+
+## Keep nonzero rows
+nonzero <- volume %>%
+  dplyr::filter(rowSums(volume[, -1]) != 0)
+
+
+nonzero <- nonzero %>%
+  dplyr::filter(filterByExpr(nonzero[,-1], min.total.count = 200)) # at least, one and half counts per participant
+
+dge_vol   <- DGEList(nonzero[,-1])
 
 
 dge_vol  <- calcNormFactors(dge_vol, method = "TMM")
@@ -81,10 +100,10 @@ dge_vol  <- calcNormFactors(dge_vol, method = "TMM")
 
 normalised_vol_counts <- as.data.frame(cpm(dge_vol, normalized.lib.sizes = T))
 
-normalised_vol_counts$gene_id <- volume$gene_id
+normalised_vol_counts$gene_name <- nonzero$gene_name
 
 normalised_vol_counts <- normalised_vol_counts %>%
-  dplyr::select(gene_id, everything())
+  dplyr::select(gene_name, everything())
 
 
 
@@ -94,20 +113,31 @@ ct_metadata <- readRDS("data_new/processed_data/contratrain_metadata.RDS")
 
 Contratrain <- extract_rsem_gene_counts("data_new/gene_counts/Contratrain_RSEM_outputs_new/") %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
-  dplyr::select(gene_id, all_of(ct_metadata$seq_sample_id)) 
+  dplyr::select(gene_name, all_of(ct_metadata$seq_sample_id)) 
 
 
-dge_ct   <- DGEList(Contratrain[,-1])
+
+## Keep nonzero rows
+nonzero <- Contratrain %>%
+  dplyr::filter(rowSums(Contratrain[, -1]) != 0)
+
+
+nonzero <- nonzero %>%
+  dplyr::filter(filterByExpr(nonzero[,-1], min.total.count = 84)) # at least, one and half counts per participant
+
+
+
+dge_ct   <- DGEList(nonzero[,-1])
 
 
 dge_ct  <- calcNormFactors(dge_ct, method = "TMM")
 
 normalised_ct_counts <- as.data.frame(cpm(dge_ct, normalized.lib.sizes = T))
 
-normalised_ct_counts$gene_id <- Contratrain$gene_id
+normalised_ct_counts$gene_name <- nonzero$gene_name
 
 normalised_ct_counts <- normalised_ct_counts %>%
-  dplyr::select(gene_id, everything())
+  dplyr::select(gene_name, everything())
 
 
 
@@ -122,21 +152,32 @@ Copd <-  extract_rsem_gene_counts("data_new/gene_counts/COPD_RSEM_outputs_new/")
 
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
   
-  dplyr::select(gene_id, all_of(copd_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(copd_metadata$seq_sample_id))
 
 
-dge_copd   <- DGEList(Copd[,-1])
+
+## Keep nonzero rows
+nonzero <- Copd %>%
+  dplyr::filter(rowSums(Copd[, -1]) != 0)
+
+
+nonzero <- nonzero %>%
+  dplyr::filter(filterByExpr(nonzero[,-1], min.total.count = 236)) # at least, one and half counts per participant
+
+
+
+dge_copd   <- DGEList(nonzero[,-1])
 
 
 dge_copd  <- calcNormFactors(dge_copd, method = "TMM")
 
 normalised_copd_counts <- as.data.frame(cpm(dge_copd, normalized.lib.sizes = T))
 
-normalised_copd_counts$gene_id <- Copd$gene_id
+normalised_copd_counts$gene_name <- nonzero$gene_name
 
 
 normalised_copd_counts <- normalised_copd_counts %>%
-  dplyr::select(gene_id, everything())
+  dplyr::select(gene_name, everything())
 
 
 # Relief data
@@ -145,19 +186,30 @@ Relief_metadata <- readRDS("data_new/processed_data/Relief_metadata.RDS")
 
 Relief <- extract_rsem_gene_counts("data_new/gene_counts/Relief_RSEM_outputs/") %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
-  dplyr::select(gene_id, all_of(Relief_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(Relief_metadata$seq_sample_id))
 
-dge_Relief   <- DGEList(Relief[,-1])
+
+
+## Keep nonzero rows
+nonzero <- Relief %>%
+  dplyr::filter(rowSums(Relief[, -1]) != 0)
+
+
+nonzero <- nonzero %>%
+  dplyr::filter(filterByExpr(nonzero[,-1], min.total.count = 246)) # at least, one and half counts per participant
+
+
+dge_Relief   <- DGEList(nonzero[,-1])
 
 
 dge_Relief  <- calcNormFactors(dge_Relief, method = "TMM")
 
 normalised_Relief_counts <- as.data.frame(cpm(dge_Relief, normalized.lib.sizes = T))
 
-normalised_Relief_counts$gene_id <- Relief$gene_id
+normalised_Relief_counts$gene_name <- nonzero$gene_name
 
 normalised_Relief_counts <- normalised_Relief_counts %>%
-  dplyr::select(gene_id, everything())
+  dplyr::select(gene_name, everything())
 
 
 
@@ -169,20 +221,31 @@ SRP102542_metadata <- readRDS("data_new/processed_data/SRP102542_metadata.RDS")
 SRP102542 <- extract_rsem_gene_counts("data_new/gene_counts/SRP102542_RSEM_outputs/") %>%
   separate(gene_id, c("gene_id", "gene_name"), sep = "_", extra = "merge") %>%
  
-  dplyr::select(gene_id, all_of(SRP102542_metadata$seq_sample_id))
+  dplyr::select(gene_name, all_of(SRP102542_metadata$seq_sample_id))
 
-dge_SRP102542   <- DGEList(SRP102542[,-1])
+
+## Keep nonzero rows
+nonzero <- SRP102542 %>%
+  dplyr::filter(rowSums(SRP102542[, -1]) != 0)
+
+
+nonzero <- nonzero %>%
+  dplyr::filter(filterByExpr(nonzero[,-1], min.total.count = 74)) # at least, one and half counts per participant
+
+
+
+dge_SRP102542   <- DGEList(nonzero[,-1])
 
 
 dge_SRP102542  <- calcNormFactors(dge_SRP102542, method = "TMM")
 
 normalised_SRP102542_counts <- as.data.frame(cpm(dge_SRP102542, normalized.lib.sizes = T))
 
-normalised_SRP102542_counts$gene_id <- SRP102542$gene_id
+normalised_SRP102542_counts$gene_name <- nonzero$gene_name
 
 
 normalised_SRP102542_counts <- normalised_SRP102542_counts %>%
-  dplyr::select(gene_id, everything())
+  dplyr::select(gene_name, everything())
 
 
 
@@ -190,11 +253,11 @@ normalised_SRP102542_counts <- normalised_SRP102542_counts %>%
  # Merge the normalised gene counts into one
 
 all_normalised_transcripts <- normalised_copd_counts %>%
-  full_join(normalised_vol_counts, by = "gene_id") %>%
-  full_join(normalised_ct_counts, by = "gene_id") %>%
-  full_join(normalised_ao_counts, by = "gene_id") %>%
-  full_join(normalised_SRP102542_counts, by = "gene_id") %>%
-  full_join(normalised_Relief_counts, by = "gene_id") 
+  full_join(normalised_vol_counts, by = "gene_name") %>%
+  full_join(normalised_ct_counts, by = "gene_name") %>%
+  full_join(normalised_ao_counts, by = "gene_name") %>%
+  full_join(normalised_SRP102542_counts, by = "gene_name") %>%
+  full_join(normalised_Relief_counts, by = "gene_name") 
 
 # round to two decimal places
 all_normalised_transcripts[,-1] <- round(all_normalised_transcripts[,-1], 2)
@@ -229,11 +292,11 @@ batch <- factor(all_metadata$study)
 # correct batch effect
 corrected_counts <- as.data.frame(removeBatchEffect(nonzero[,-1], batch = batch, group = all_metadata$time))
 
-corrected_counts$gene_id <-  nonzero$gene_id
+corrected_counts$gene_name <-  nonzero$gene_name
 
 #bring the gene counts to the fore
 
 corrected_counts <- corrected_counts %>%
-  dplyr::select(gene_id, everything())
+  dplyr::select(gene_name, everything())
 
 saveRDS(corrected_counts, "data_new/gene_counts/batch_corrected_genecounts.RDS")
