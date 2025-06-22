@@ -134,9 +134,15 @@ gene_distribution <- gene_annotation %>%
 
 
 
-ggarrange(intron_distribution, gene_distribution,
-          ncol = 2,
+ggarrange(intron_distribution, NULL,  gene_distribution,
+          ncol = 3,
+          widths = c(1,0.1,1),
           labels = c("A", "B"))
+
+ggsave("plots/FigureEV1.png", bg = "white",scale = 2.5, dpi = 400)
+
+
+
 
 # Explore tyhe effect of aging alone
 Aging_effect <- RT_merged %>%
@@ -430,15 +436,16 @@ ggsave("plots/FigureEV2.png", bg = "white",scale = 2.5, dpi = 400)
 
 
 # select only genes present in the splicing data
-gene_exp <- gene_exp_df[gene_exp_df$gene_id %in% RT_merged$ensembl_gene_id, ]
+gene_exp <- gene_exp_df[gene_exp_df$gene_name %in% RT_merged$external_gene_name, ]
 
 Aging_df <- Aging_effect  %>%
   filter(effect != "No effect")
 
+
 # Functional annotation of the genes affected
-ego_aging <- enrichGO(gene = unique(Aging_df$ensembl_gene_id) ,
-                      keyType = "ENSEMBL",
-                      universe = gene_exp$gene_id,
+ego_aging <- enrichGO(gene = unique(Aging_df$external_gene_name) ,
+                      keyType = "SYMBOL",
+                      universe = gene_exp$gene_name,
                       OrgDb = org.Hs.eg.db, 
                       ont = "BP", 
                       pAdjustMethod = "BH", 
@@ -464,9 +471,9 @@ go_aging <- dotplot(ego_aging,
 
 
 # Functional annotation of the genes affected
-ego_aging_CC <- enrichGO(gene = unique(Aging_df$ensembl_gene_id) ,
-                         keyType = "ENSEMBL",
-                         universe = gene_exp$gene_id,
+ego_aging_CC <- enrichGO(gene = unique(Aging_df$external_gene_name) ,
+                         keyType = "SYMBOL",
+                         universe = gene_exp$gene_name,
                          OrgDb = org.Hs.eg.db, 
                          ont = "CC", 
                          pAdjustMethod = "BH", 
@@ -486,10 +493,37 @@ go_aging_CC <- dotplot(ego_aging_CC,
 
 
 
+# explore those not affected by aging
 
-ggarrange(intron_distribution, gene_distribution, aging_plot, length_plot, 
+no_aging_effect <- Aging_effect  %>%
+  filter(effect == "No effect")
+
+
+ego_no_aging <- enrichGO(gene = unique(no_aging_effect$external_gene_name) ,
+                      keyType = "SYMBOL",
+                      universe = gene_exp$gene_name,
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "BP", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+
+
+cluster_no_aging <- data.frame(ego_no_aging)
+
+go_no_aging <- dotplot(ego_no_aging,
+                    
+                    font.size = 8, title = "Enriched biological processes in genes containing introns not affected by aging") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
+        plot.title = element_text(hjust = 0) )
+
+
+
+
+ggarrange(aging_plot, length_plot, go_aging, go_aging_CC,
           ncol = 2, nrow = 2, labels = c("A", "B", "C", "D"),
-          align = "v",
+         #align = "v",
           #          axis = "tblr",
           label.x = 0.05,
           #         label.y = 0.05,
@@ -500,6 +534,7 @@ ggarrange(intron_distribution, gene_distribution, aging_plot, length_plot,
 
 ggsave("plots/Figure1.png", bg = "white",scale = 2.5, dpi = 400)
 # there was no obvious molecular function
+
 
 
 
