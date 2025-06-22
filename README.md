@@ -37,8 +37,8 @@ and
 
   2.  `/archive` Old scripts used but not wished to be discarded
 
-  3.  `new_data_extraction.R` . This extracts the individual splicing
-      data and metadata and then merges them into one dataset ready for
+  3.  `data_compilation.R` . This extracts the individual splicing data
+      and metadata and then merges them into one dataset ready for
       modelling
 
   4.  `model_building.R` . This uses seqwrap to build the model
@@ -66,18 +66,22 @@ and
 
 - `Alpha_Omega_sample_list_transcriptomics.xlsx`
 
-## Redroducing the analysis
+## Reproducing the analysis
 
-To reproduce the analysis, request access to the folder containing the
-raw SpliceQ counts, the run the scripts in the following order
+To reproduce the analysis from scratch request access to the folder
+containing the raw SpliceQ counts, the run the scripts in the following
+order
 
-1.  `/Data_extraction`
+- `/Data_extraction`
 
-2.  `/archive/Data_exploration.R` . This will save a couple of files
-    like the gene annotation needed during model exploration
+  ## Else
 
-3.  `new_data_extraction.R`
+  Reproduce using the already extracted SpliceQ and metadata files in
+  the `data/` folder and run the following scripts in the order they
+  appear
 
-4.  `model_building.R` .
+- `data_compilation.R`
 
-5.  `model_exploration.R`
+- `model_building.R` .
+
+- `model_exploration.R`
