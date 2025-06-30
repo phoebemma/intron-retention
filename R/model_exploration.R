@@ -45,7 +45,7 @@ intron_length <- intron_length%>%
   mutate(transcript_ID = paste0(transcript_ID,"_", intron_ID,"_", chr),
          intron_length = abs((sj3start - sj5end) + 1) )  %>% # abs to remove effect of strand orientation
   dplyr::select(transcript_ID, intron_length)
-colnames(intron_length)
+#colnames(intron_length)
 
 
 
@@ -96,8 +96,6 @@ saveRDS(RT_merged, "data/RT_model_df.RDS")
 
 
 
-
-
 # plot the distribution of gene biotypes of the genec containing the introns
 intron_distribution <- RT_merged %>%
   distinct(target, transcript_biotype, .keep_all = T) %>%
@@ -144,7 +142,7 @@ ggsave("plots/FigureEV1.png", bg = "white",scale = 2.5, dpi = 400)
 
 
 
-# Explore tyhe effect of aging alone
+# Explore the effect of aging alone
 Aging_effect <- RT_merged %>%
   filter(coef == "scaled_age" & time == "PreExc")
 
@@ -282,11 +280,6 @@ print(length_plot)
 
 
 
-
-# Plot Figure 1
-
-
-# plot figure 1
 
 
 
@@ -574,20 +567,20 @@ int_data <- list("No_effect" = no_effect$external_gene_name,
 
 
 # plot figure 1
-ggarrange(aging_plot, length_plot, 
-          go_aging, go_aging_CC,
-          ncol = 2, nrow = 2, labels = c("A", "B", "C", "D"),
-          #         align = "hv",
-          #          axis = "tblr",
-          label.x = 0.05,
-          #         label.y = 0.05,
-          font.label = list(size = 11),
-          heights = c(1.3, 1),
-          widths = c(1, 1.2))
-
-
-ggsave("Figures/newest_version/Figure1.png", bg = "white",scale = 2.5, dpi = 400)
-# there was no obvious molecular function
+# ggarrange(aging_plot, length_plot, 
+#           go_aging, go_aging_CC,
+#           ncol = 2, nrow = 2, labels = c("A", "B", "C", "D"),
+#           #         align = "hv",
+#           #          axis = "tblr",
+#           label.x = 0.05,
+#           #         label.y = 0.05,
+#           font.label = list(size = 11),
+#           heights = c(1.3, 1),
+#           widths = c(1, 1.2))
+# 
+# 
+# ggsave("Figures/newest_version/Figure1.png", bg = "white",scale = 2.5, dpi = 400)
+# # there was no obvious molecular function
 
 
 

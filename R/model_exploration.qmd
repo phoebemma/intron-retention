@@ -1,0 +1,480 @@
+---
+title: "Model_exploration"
+format: html
+editor: visual
+execute: 
+  warning: false
+  message: false
+  code-summary: "Code"
+  code-fold: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Model exploration
+
+This explores the model and visualises its output
+
+Load the relevant libraries and files
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(gridExtra)
+library(ggpubr)
+library(cowplot)
+library(ggridges)
+library(UpSetR)
+library(ggplot2)
+library(ggplotify)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(magick)
+
+
+# Load the model summary
+model_summary <- readRDS("data/RT_model_summary.RDS")
+
+# Load original splicing data 
+all_splicing <- readRDS("data/all_splice.RDS") %>%
+  drop_na()
+all_metadata <- readRDS("data/all_full_metadata.RDS")
+
+
+# Load the batch-corrected gene expression data
+gene_exp_df <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS") #%>%
+  # remove the version number to match gene_id
+ # mutate(gene_id = gsub("\\..*", "",  gene_id))
+
+
+
+# Load the gene annotation file
+gene_annotation <- readRDS("data/ensembl_gene_annotation.RDS")
+
+
+
+```
+
+Extract the relevant files
+
+```{r}
+
+# extract the model summaries.. 
+RT_model_summary<- model_summary$summaries %>%
+  # The summaries contain both the model summaries and the predictions
+  # select only the summary outputs
+  dplyr::select(coef, target,Estimate, Pr...z..) %>%
+  # select the model results of those affected by RT alone or interaction with aging
+  filter(coef == "timePostExc" | coef == "scaled_age:timePostExc" | coef == "scaled_age") %>%
+  mutate(adj.p = p.adjust( Pr...z.., method = "fdr"),
+         log2fc = Estimate/log(2),
+         fcthreshold = if_else(abs(log2fc) > 0.5, "s", "ns"),
+         odds_ratio = exp(Estimate)) %>%
+  inner_join(intron_length, by = c("target" = "transcript_ID"))
+
+
+
+
+# Extract the prdictions
+
+# From the model summary, extract those that are predictions
+RT_predictions <- mod_sum %>%
+  dplyr::select(scaled_age, time, fit, target) %>%
+  drop_na() %>%
+  # Extract the transcript_id from the target
+  mutate(transcript_ID = str_split(target, "_",simplify= T) [,1])
+
+
+
+# Merge the summary and predictions into one clearner dataframe
+# merge dataset
+RT_merged <- RT_predictions %>%
+  inner_join(RT_model_summary, by = "target") %>%
+  drop_na() %>%
+  # based on model estimate and p values, group the introns into how they are affected by aging
+  mutate(effect = case_when(Estimate > 0 & Pr...z.. <= 0.05 ~ "Improved SE", 
+                            Estimate < 0 & Pr...z.. <= 0.05 ~ "Reduced SE" ,
+                            Estimate < 0 & Pr...z.. > 0.05 ~ "No effect",
+                            Estimate > 0 & Pr...z.. > 0.05 ~ "No effect")) %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
+
+# length(unique(RT_merged$target))
+saveRDS(RT_merged, "data/RT_model_df.RDS")
+
+```
+
+## Basic visualisation
+
+```{r}
+# plot the distribution of gene biotypes of the genec containing the introns
+intron_distribution <- RT_merged %>%
+  distinct(target, transcript_biotype, .keep_all = T) %>%
+  ggplot(aes(transcript_biotype, fill = transcript_biotype))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5),
+        legend.position = "none")+ # no legend
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.08) +
+  ggtitle("Distribution of biotypes of genes containing the introns") +
+  ylab("Number of introns per biotype") 
+  
+print(intron_distribution)
+```
+
+```{r}
+
+# Plot the gene biotype to check if the distribution of biotypes also fit that of those containing introns
+gene_distribution <- gene_annotation %>%
+  distinct(external_gene_name, .keep_all = T) %>%
+  inner_join((gene_exp_df %>%
+                dplyr::select(gene_name) ), by = c("external_gene_name" = "gene_name")) %>%
+#  distinct(gene_id, transcript_biotype, .keep_all = T)%>%
+  ggplot(aes(transcript_biotype, fill = transcript_biotype))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5),
+        legend.position = "none")+
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.1) +
+  ggtitle("Distribution of gene biotypes in the gene expression data") +
+  ylab("Number of genes per biotype")
+print(gene_distribution)
+```
+
+## Aging-associated effects
+
+```{r}
+
+# Explore the effect of aging alone and extract the number of introns per category
+Aging_effect <- RT_merged %>%
+  filter(coef == "scaled_age" & time == "PreExc") %>%
+  group_by(effect) %>%
+  mutate(num_targets = n_distinct(target)) %>%
+  ungroup() %>%
+  mutate(effect_label = paste(effect, "(No of introns:", num_targets, ")"))
+
+
+# Visualise the plot
+aging_plot <- ggplot(Aging_effect, aes(x = scaled_age, y = fit, color = effect_label)) +
+  geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
+  theme_minimal() +
+  labs(title = "Relationship between aging and Splicing Efficiency at baseline", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 10, face = "italic"),
+        legend.title = element_text(size = 10, face = "bold", hjust = 0.5))
+print(aging_plot)
+```
+
+## Visualize length of introns
+
+This would produce a histogram of the distribution of intron length in the dataset with an inset of the distribution of the length of those affected by aging. This is hoped to gain an insight into how many nucleotide base pairs are likely involved when we refer to ratios or percentage introns retained
+
+```{r}
+
+
+# Prepare data
+length_introns <- Aging_effect %>%
+ dplyr::select(target, intron_length, effect) %>%
+  distinct()
+
+# Create main plot
+main_plot <- length_introns %>%
+  ggplot(aes(x = intron_length)) +
+  geom_histogram(fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of Intron Lengths",
+    x = "Intron Length",
+    y = "Number of Introns"
+  ) +
+  scale_x_continuous(limits = c(70, 30000)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Create inset plot for Reduced SE
+Red_plot <- length_introns %>%
+  filter(effect == "Reduced SE") %>%
+  ggplot(aes(x = intron_length)) +
+  geom_histogram(fill = "tomato", color = "white") +
+  labs(title = "Declining SE with Aging", x = "Intron Length", y = "Number of Introns") +
+  scale_x_continuous(limits = c(70, NA)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Create inset plot for Improved SE
+Imp_plot <- length_introns %>%
+  filter(effect == "Improved SE") %>%
+  ggplot(aes(x = intron_length)) +
+  geom_histogram(fill = "seagreen", color = "white") +
+  labs(title = "Improving SE with Aging", x = "Intron Length", y = "Number of Introns") +
+  scale_x_continuous(limits = c(70, NA)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Combine plots
+length_plot <- ggdraw() +
+  draw_plot(main_plot) +
+  draw_plot(Red_plot, x = 0.65, y = 0.65, width = 0.3, height = 0.3) +
+  draw_plot(Imp_plot, x = 0.65, y = 0.25, width = 0.3, height = 0.3)
+
+# Display
+print(length_plot)
+
+```
+
+Explore the most affected introns based on their fcthreshold and fit values. It would produce a figure of the actual aggregated SE values per scaled age and the predicted trend line
+
+```{r}
+# 1. Extract significantly age-affected introns
+doubled_aging <- Aging_effect %>%
+  filter(fcthreshold == "s") %>%
+  arrange(fit) %>%
+  dplyr::select(target, external_gene_name, time, fit, Estimate, transcript_biotype, scaled_age, external_transcript_name)
+
+
+# 2. Reshape splicing data and join with metadata
+long_df <- all_splicing %>%
+  pivot_longer(cols = -transcript_ID, names_to = "seq_sample_id", values_to = "SE") %>%
+  inner_join(all_metadata, by = "seq_sample_id")
+
+# 3. Select top introns for plotting
+top_introns <- c(
+  "ENST00000526182.1_1_1", "ENST00000343257.7_20_7", "ENST00000689936.2_70_19",
+  "ENST00000258888.6_9_15", "ENST00000504055.1_2_6", "ENST00000487126.5_6_10",
+  "ENST00000290219.11_5_21", "ENST00000272167.10_7_1", "ENST00000372642.5_2_9",
+  "ENST00000649427.1_5_2", "ENST00000228641.4_2_12", "ENST00000306336.6_3_2"
+)
+
+# Predicted fit values
+ranked <- Aging_effect %>%
+  filter(target %in% top_introns) %>%
+  dplyr::select(target, scaled_age, fit) %>%
+  mutate(type = "prediction")
+
+# Observed SE values
+ranked_original <- long_df %>%
+  filter(transcript_ID %in% top_introns, time == "PreExc") %>%
+  group_by(scaled_age, transcript_ID) %>%
+  summarize(SE = mean(SE), .groups = "drop") %>%
+  mutate(target = transcript_ID, fit = SE, type = "SE") %>%
+  dplyr::select(target, scaled_age, fit, type)
+
+# 4. Combine and annotate
+ranked_df <- bind_rows(ranked, ranked_original) %>%
+  mutate(transcript_ID = str_split(target, "_", simplify = TRUE)[, 1]) %>%
+  inner_join(gene_annotation, by = c("transcript_ID" = "ensembl_transcript_id_version"))
+
+# 5. Plot
+top_decline <- ggplot(ranked_df, aes(x = scaled_age, y = fit, shape = type, colour = type)) +
+  geom_point(aes(alpha = 1)) +
+  facet_wrap(~target, scales = "free") +
+  theme_minimal() +
+  scale_alpha_identity() +
+  labs(
+    title = "Some of the introns with most age-associated decline in SE",
+    x = "Scaled Age",
+    y = "Splicing Efficiency"
+  ) +
+  geom_text(
+    aes(x = Inf, y = Inf, label = paste("Transcript name:", external_transcript_name)),
+    vjust = 1.1, hjust = 1.1, size = 2.5, colour = "darkgrey"
+  ) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  guides(colour = "none", shape = guide_legend(title = "type"))
+
+print(top_decline)
+
+```
+
+The topmost affected introns appear to be those with declining SE with aging. The code block below will extract and visualize introns with SE that tend to improve with aging
+
+```{r}
+# 1. Identify introns with improved SE due to aging
+improved_with_aging <- Aging_effect %>%
+  filter(effect == "Improved SE", fcthreshold == "s") %>%
+  arrange(fit) %>%
+  dplyr::select(target, external_gene_name, time, fit, Estimate, transcript_biotype, scaled_age, external_transcript_name)
+
+# 2. Define top improved introns
+top_improved_ids <- c(
+  "ENST00000369541.4_1_1", "ENST00000304992.11_38_17", "ENST00000640292.2_3_1",
+  "ENST00000242728.5_4_12", "ENST00000640575.2_1_2", "ENST00000615631.5_6_8",
+  "ENST00000471642.6_8_1", "ENST00000544216.8_4_19", "ENST00000609742.3_4_10",
+  "ENST00000558134.5_3_15", "ENST00000456057.5_9_6", "ENST00000650546.1_2_1"
+)
+
+# 3. Extract predicted fit values
+ranked_improved <- Aging_effect %>%
+  filter(target %in% top_improved_ids) %>%
+  dplyr::select(target, scaled_age, fit) %>%
+  mutate(type = "prediction")
+
+# 4. Extract observed SE values
+improved_original <- long_df %>%
+  filter(transcript_ID %in% top_improved_ids) %>%
+  group_by(scaled_age, transcript_ID) %>%
+  summarize(SE = mean(SE), .groups = "drop") %>%
+  mutate(target = transcript_ID, fit = SE, type = "SE") %>%
+  dplyr::select(target, scaled_age, fit, type)
+
+# 5. Combine and annotate
+improved_df <- bind_rows(ranked_improved, improved_original) %>%
+  mutate(transcript_ID = str_split(target, "_", simplify = TRUE)[, 1]) %>%
+  inner_join(gene_annotation, by = c("transcript_ID" = "ensembl_transcript_id_version"))
+
+# 6. Plot SE improvement with aging
+top_improved <- ggplot(improved_df, aes(x = scaled_age, y = fit, shape = type, color = type)) +
+  geom_point(alpha = 1) +
+  geom_smooth(method = "lm", se = FALSE, aes(group = type), linetype = "dashed", size = 0.6) +
+  facet_wrap(~target, scales = "free") +
+  theme_minimal() +
+  scale_color_manual(values = c("prediction" = "blue", "SE" = "green")) +
+  labs(
+    title = "Introns with Most Age-Associated Improvement in Splicing Efficiency",
+    x = "Scaled Age",
+    y = "Splicing Efficiency"
+  ) +
+  geom_text(
+    aes(x = Inf, y = Inf, label = paste("Transcript name:", external_transcript_name)),
+    vjust = 1.1, hjust = 1.1, size = 3, colour = "darkgrey"
+  ) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  guides(shape = guide_legend(title = "Type"), color = guide_legend(title = "Type"))
+
+print(top_improved)
+```
+
+Merge the top introns in both categories into one dataframe
+
+```{r}
+ggarrange(top_decline,NULL,  top_improved,
+          nrow = 3,
+          heights = c(1,0.1,1),
+          labels = c("A", "", "B"),
+          align = "hv")
+
+
+ggsave("plots/FigureEV2.png", bg = "white",scale = 2.5, dpi = 400)
+```
+
+## Gene ontology analysis for genes containing introns affected by aging
+
+```{r}
+# select only genes present in the splicing data
+gene_exp <- gene_exp_df[gene_exp_df$gene_name %in% RT_merged$external_gene_name, ]
+
+Aging_df <- Aging_effect  %>%
+  filter(effect != "No effect")
+
+
+# Functional annotation of the genes affected
+ego_aging <- enrichGO(gene = unique(Aging_df$external_gene_name) ,
+                      keyType = "SYMBOL",
+                      universe = gene_exp$gene_name,
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "BP", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+
+go_aging <- dotplot(ego_aging,
+                    
+                    font.size = 8, title = "Enriched biological processes in genes containing introns with aging-associated SE") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
+        plot.title = element_text(hjust = 0) )
+
+print(go_aging)
+```
+
+Plotting those with improving SE alone didnt produce any results
+
+```{r}
+imp_df <- Aging_effect  %>%
+  filter(effect == "Improved SE")
+
+
+# Functional annotation of the genes affected
+ego_imp<- enrichGO(gene = unique(imp_df$external_gene_name) ,
+                      keyType = "SYMBOL",
+                      universe = gene_exp$gene_name,
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "BP", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+
+ dotplot(ego_imp,
+                    
+                    font.size = 8, title = "Enriched biological processes in genes containing introns with aging-associated improved SE") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
+        plot.title = element_text(hjust = 0) )
+```
+
+Exploring only those that decline with aging
+
+```{r}
+dec_df <- Aging_effect  %>%
+  filter(effect == "Reduced SE")
+
+
+# Functional annotation of the genes affected
+ego_dec<- enrichGO(gene = unique(dec_df$external_gene_name) ,
+                      keyType = "SYMBOL",
+                      universe = gene_exp$gene_name,
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "BP", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+
+ dotplot(ego_dec,
+                    
+                    font.size = 8, title = "Enriched biological processes in genes containing introns with aging-associated declines in SE") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
+        plot.title = element_text(hjust = 0) )
+```
+
+### cellular compartments of genes affected by aging
+
+```{r}
+# Functional annotation of the genes affected
+ego_aging_CC <- enrichGO(gene = unique(Aging_df$external_gene_name) ,
+                         keyType = "SYMBOL",
+                         universe = gene_exp$gene_name,
+                         OrgDb = org.Hs.eg.db, 
+                         ont = "CC", 
+                         pAdjustMethod = "BH", 
+                         qvalueCutoff = 0.05, 
+                         readable = T)
+
+
+go_aging_CC <- dotplot(ego_aging_CC,
+                       
+                       font.size = 8, title = "Cellular compartment of genes containing introns with aging-associated SE") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 10),
+        plot.title = element_text(hjust = 0))
+
+print(go_aging_CC)
+```
+
+```{r}
+
+ggarrange(aging_plot, length_plot, go_aging, go_aging_CC,
+          ncol = 2, nrow = 2, labels = c("A", "B", "C", "D"),
+         #align = "v",
+          #          axis = "tblr",
+          label.x = 0.05,
+          #         label.y = 0.05,
+          font.label = list(size = 11),
+          heights = c(1.3, 1),
+          widths = c(1, 1.2))
+
+
+ggsave("plots/Figure1.png", bg = "white",scale = 2.5, dpi = 400)
+# there was no obvious molecular function
+```
+
+The effect of aging on SE was intron-specific. The following script will be visualising that using an upset plot

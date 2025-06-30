@@ -1,7 +1,6 @@
 ---
 title: "Data analysis:"
 format: html
-bibliography: "My_Library.bib"
 execute: 
   warning: false
   message: false
