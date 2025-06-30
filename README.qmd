@@ -35,7 +35,7 @@ and
 
     4.  `model_building.R` . This uses seqwrap to build the model
 
-    5.  `model_exploration.R` This script explores the built model and generates the images used in the script
+    5.  `model_exploration.qmd` This script explores the built model and generates the images used in the script
 
     6.  `/archive/Data_exploration.R` Basic exploration of the old intron retention data . This was used before SpliceQ splice junction strigency was reduced to 5. The gene annotation used in the analysis was generated in this script
 
@@ -65,4 +65,4 @@ To reproduce the analysis from scratch request access to the folder containing t
 
 -   `model_building.R` .
 
--   `model_exploration.R`
+-   `model_exploration.qmd`

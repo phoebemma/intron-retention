@@ -43,7 +43,7 @@ and
 
   4.  `model_building.R` . This uses seqwrap to build the model
 
-  5.  `model_exploration.R` This script explores the built model and
+  5.  `model_exploration.qmd` This script explores the built model and
       generates the images used in the script
 
   6.  `/archive/Data_exploration.R` Basic exploration of the old intron
@@ -84,4 +84,4 @@ order
 
 - `model_building.R` .
 
-- `model_exploration.R`
+- `model_exploration.qmd`
