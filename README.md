@@ -69,10 +69,10 @@ and
 ## Reproducing the analysis
 
 To reproduce the analysis from scratch request access to the folder
-containing the raw SpliceQ counts, the run the scripts in the following
-order
+containing the raw SpliceQ counts, first run the data and metadata
+extraction scripts in the Data_extraction sub-folder
 
-- `/Data_extraction`
+- `/R/Data_extraction`
 
   ## Else
 
@@ -80,8 +80,8 @@ order
   the `data/` folder and run the following scripts in the order they
   appear
 
-- `data_compilation.R`
+- `/R/data_compilation.R`
 
-- `model_building.R` .
+- `/R/model_building.R`
 
-- `model_exploration.qmd`
+- `/R/model_exploration.qmd`
