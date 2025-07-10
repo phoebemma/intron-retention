@@ -34,6 +34,10 @@ library(clusterProfiler)
 library(org.Hs.eg.db)
 library(magick)
 
+# This file is contained in the R subfolder.
+# The following code will set the working directory to the project directory
+# This allows us access the /data folder directy
+setwd("..")
 
 # Load the model summary
 model_summary <- readRDS("data/RT_model_summary.RDS")
@@ -69,7 +73,7 @@ distinct(across(6:ncol(.)), .keep_all = T) %>% # Removes duplicates based on col
 Extract the relevant columns
 
 ```{r}
-
+setwd("..")
 # extract the model summaries.. 
 RT_model_summary<- model_summary$summaries %>%
   # The summaries contain both the model summaries and the predictions

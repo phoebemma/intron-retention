@@ -573,10 +573,10 @@ RT_effect <- RT_merged %>%
   group_by(effect) %>%
   mutate(num_targets = n_distinct(target)) %>%
   ungroup() %>%
-  mutate(effect_label = paste(effect, "(No of introns:", num_targets, ")")) %>%
+  mutate(effect_label = paste(effect, "(No of introns:", num_targets, ")")) #%>%
   # To make it exclusive to those not affected by an interaction with age,
   # We exclude those in the age-dependent RT effect group
-  filter(!target %in% Age_dep_RT$target)
+  #filter(!target %in% Age_dep_RT$target)
 
 
 saveRDS(RT_effect, "data/RT_alone_effect.RDS")
@@ -592,6 +592,42 @@ RT_plot  <- ggplot(RT_effect, aes(x = scaled_age, y = fit, color = effect_label,
   theme(plot.title = element_text(hjust = 0.5),
         legend.text = element_text(size = 10, face = "italic"),
         legend.title = element_text(size = 12, face = "bold", hjust = 0.5))
+
+
+
+
+# How did RT affect the aging-affected introns
+
+age_variables <- Aging_df %>%
+  dplyr::select(target, effect, effect_label) %>%
+  dplyr::rename(age_effect = effect)
+
+
+Rt_on_age <- RT_effect %>%
+  filter(target %in% Aging_df$target) %>%
+  # drop the effect label %>%
+  dplyr::select(-effect_label) %>%
+  inner_join(age_variables, by = "target") %>%
+  # extract its own effect label
+  group_by(effect) %>%
+  mutate(num_targets = n_distinct(target)) %>%
+  ungroup() %>%
+  mutate(effect_label = paste(effect, "(No of introns:", num_targets, ")")) 
+  
+
+  ggplot(Rt_on_age, aes(x = scaled_age, y = fit, color = effect_label, linetype = time)) +
+  geom_smooth(method = "lm", se = FALSE) + # se = FALSE to remove confidence intervals
+  theme_minimal() +
+  labs(title = "Relationship between  RT and Splicing Efficiency", 
+       x = "Scaled Age", 
+       y = "Splicing Efficiency") +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 10, face = "italic"),
+        legend.title = element_text(size = 12, face = "bold", hjust = 0.5))+
+    facet_wrap(~ age_effect)
+
+
 
 
 
