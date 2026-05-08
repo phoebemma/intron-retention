@@ -831,3 +831,7 @@ go_RT_cc <- dotplot(ego_RT_cc,
 #           heights = c(1.3, 1, 1),
 #           widths = c(1, 1.2))
 # 
+
+# Look at RT effect
+
+
