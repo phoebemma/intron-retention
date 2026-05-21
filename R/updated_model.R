@@ -4,7 +4,6 @@ library(seqwrap)
 library(effects)
 library(scales)
 library(glmmTMB)
-library(DHARMa)
 #source("R/Trainome_functions.R")
 
 
@@ -41,7 +40,7 @@ one_inflated_mat[-1] <- lapply(
 )
 
 # Intialise argument
-args_binom <- list( formula = y ~ scaled_age * time + sex +
+args_binom <- list( formula = y ~ scaled_age + time + sex +
                       (1 | study) + (1 | participant), family  = binomial)
 
 # containerise
@@ -53,7 +52,7 @@ binom <- seqwrap_compose(data       = one_inflated_mat,
 
 binom_results <- seqwrap(binom,
                           return_models = FALSE,
-                          cores = 6)
+                          cores = 10)
 
 saveRDS(binom_results, "data/binom_model.RDS")
 
@@ -123,7 +122,7 @@ informed_binom <- seqwrap_compose(data = one_inflated_mat,
                           samplename = "seq_sample_id",
                           modelfun = glmmTMB::glmmTMB,
                           arguments = alist(
-                            formula= y ~ scaled_age * time + sex +
+                            formula= y ~ scaled_age + time + sex +
                               (1 | study) + (1 | participant),
                             family = binomial,
                             priors = data.frame(
@@ -185,8 +184,8 @@ all_splice_reordered[all_splice_reordered == 1 ] <- 0.999
 
 
 
-# initialise the argument
-args_full <-list(formula = y ~  scaled_age * time + sex + (1|study) +(1|participant), 
+# initialise the argument. This time we check the interaction of age and time
+args_full <-list(formula = y ~  scaled_age + time + sex + (1|study) +(1|participant), 
                  family = glmmTMB::beta_family(link = "logit"))
 
 
@@ -205,13 +204,13 @@ full_model <- seqwrap(container,
                  # summary_fun = sum_with_pred,
                  #eval_fun = eval_mod,
                  return_models = F,
-                 # subset = 1:15,
+                 # subset = 1:150,
                  cores = 10)
 
 
 # full_model<- readRDS("data/full_model.RDS")
 
-saveRDS(full_model, "data/full_model.RDS")
+ saveRDS(full_model, "data/full_model.RDS")
 
 full_model_sum <- seqwrap_summarise(full_model)
 
@@ -231,19 +230,24 @@ full_params <- full_model_sum$summaries %>%
   summarise(.by = term, 
             m = mean(estimate), 
             s = sd(estimate))  %>% 
-  filter(term %in% c("scaled_age", "timePostExc", "sexmale", "scaled_age:timePostExc") )
+  filter(term %in% c("scaled_age", "timePostExc", "sexmale", "scaled_age:timePostExc") ) %>%
+  mutate(
+    m_adj = m * 0.5,
+    s_adj = pmax(ifelse(grepl(":", term), s * 3, s * 2), 0.5)
+  )
+
 
 
 
 
 # Combine parameters in a data frame...
 full_Priors_df <-  data.frame(prior = paste0("normal(",
-                            round(full_params$m, ),
+                            round(full_params$m_adj, 2),
                             ",",
-                            round(full_params$s,4 ), 
+                            round(full_params$s_adj,4 ), 
                             ")"),
-             class = rep("fixef", 4),
-             coef = full_params$term)
+             class = rep("beta", 4),
+             coef = full_params$term) 
 
 
 
@@ -261,7 +265,8 @@ informed_full_model <- seqwrap_compose(data = all_splice_reordered,
                                   samplename = "seq_sample_id",
                                   modelfun = glmmTMB::glmmTMB,
                                   arguments = alist(
-                                    formula= y ~ scaled_age * time + sex + (1 | study) + (1 | participant),
+                                    formula= y ~ scaled_age * time + sex +
+                                      (1 | study) + (1 | participant),
                                     family = beta_family(link = "logit"),
                                     priors = data.frame(
                                       prior = prior,
@@ -272,7 +277,7 @@ informed_full_model <- seqwrap_compose(data = all_splice_reordered,
 
 informed_full_model_results <- seqwrap(informed_full_model,
                                   return_models = FALSE,
-                                  #  subset = 1:2000,
+                                  #  subset = 1:150,
                                   cores = 10)
 
 

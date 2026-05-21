@@ -1,0 +1,808 @@
+---
+title: "Model_building"
+format: html
+editor: visual
+---
+
+## Introduction
+
+This file contains the codes for the intron retention manuscript investigating the impact of aging and resistance training on intron retention in the skeletal muscle
+
+```{r}
+# echo: false
+# Load the required packages
+library(dplyr)
+library(tidyverse)
+library(seqwrap)
+library(glmmTMB)
+
+
+
+# Load the dataframe containing the 6 different RT intervention studies
+# Check the /Data_extraction subfolder for how each individual study's data extraction was done
+
+# Check "data_compilation.R for how data was compiled
+
+
+
+all_splice_df <- readRDS("data/all_splice.RDS") %>%
+  mutate(across(where(is.numeric), ~ round(.x, 2))) 
+
+
+
+all_full_metadata <- readRDS("data/all_full_metadata.RDS")
+colnames(all_full_metadata)
+
+
+# REORDER THE SEQUENCE ID TO MATCH BOTH DATAFRAMMES
+all_splice_reordered <- all_splice_df[, c("transcript_ID",all_full_metadata$seq_sample_id)] 
+
+# Check if everything matches except the transcript_id
+match(colnames(all_splice_reordered), all_full_metadata$seq_sample_id)
+
+
+
+```
+
+First, visualise the data
+
+```{r}
+library(ggplot2)
+
+## Color scale ##
+colors <-  c("#d7191c", "#fdae61", "#ffffbf", "#abd9e9", "#2c7bb6", "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
+
+
+# plot a distribution of the participants in each study
+
+
+
+
+# In the metadata, most participants contributed two samples
+
+# subset the data to only count one participant once
+meta_unique <- all_full_metadata %>%
+  distinct(participant, .keep_all = TRUE)%>%
+  mutate(study = recode(study,
+                        "ReLiEf" = "RELIEF",
+                        "copd" = "COPD",
+                        "ct" = "ContraTRAIN",
+                        "vol" = "VOLUME"))
+
+# create counts per study
+# Aim is to add number of participants  in image
+
+counts_df <- meta_unique %>%
+  group_by(study) %>%
+  summarise(
+    n = n(),
+    male = sum(sex == "male"),
+    female = sum(sex == "female"),
+    .groups = "drop"
+  )
+
+
+# for the summarised image
+
+sum_df <- meta_unique %>%
+  summarise(
+    n = n(),
+    male = sum(sex == "male"),
+    female = sum(sex == "female")
+  )
+
+
+# To help set in-image text
+max_count <- ggplot_build(
+  ggplot(meta_unique, aes(x = age)) +
+    geom_histogram(binwidth = 5)
+)$data[[1]]$count %>% max()
+
+
+
+
+# Plot the distribution of all participants in one image
+ggplot(meta_unique, aes(x = age, fill = sex)) +
+  geom_histogram(position = position_dodge(width = 5),
+                 alpha = 0.5,
+                 binwidth = 5,
+                 color = "black") +
+  scale_fill_manual(
+    values = c(
+      "male" = colors[7],
+      "female" = colors[3]
+    )
+  ) +
+  geom_text(
+    data = sum_df, aes(x = min(meta_unique$age), y= 0.5 * max_count,
+                          label = paste0("n = ", n,
+                                         "\nMales = ", male,
+                                         "\nFemales = ", female)),
+    inherit.aes = F,
+    hjust = 0.5,
+    vjust = 0.5,
+    size = 4,
+     fontface= "bold.italic"
+  )+
+ # facet_wrap(~ study, ncol = 2) +
+  theme_minimal(base_size = 12) +
+  labs(
+    title = "Age distribution of all participants",
+    x = "Age",
+    y = "Number of participants"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.title = element_blank()
+  )
+
+
+
+# ggsave("Figures/Dist_all_participants.png", bg = colors[4], scale = 2.5, dpi = 400)
+
+
+
+ggplot(meta_unique, aes(x = age, fill = sex)) +
+  geom_histogram(position = "dodge",
+                 alpha = 0.5,
+                 binwidth = 5,
+                 color = "black") +
+  scale_fill_manual(
+    values = c(
+      "male" = colors[7],
+      "female" = colors[3]
+    )
+  ) +
+  facet_wrap(~ study, ncol = 2, scales = "fixed") +
+  geom_text(
+    data = counts_df, aes(x = min(meta_unique$age), y= 0.5 * max_count,
+                          label = paste0("n = ", n,
+                                         "\nMales = ", male,
+                                         "\nFemales = ", female)),
+                          inherit.aes = F,
+                          hjust = 0.1,
+                          vjust = 1.5,
+                          size = 4,
+                         # fontface= "bold.italic"
+  )+
+  theme_minimal(base_size = 12) +
+  labs(
+    title = " Distribution of Participants across all studies",
+    x = "Age",
+    y = "Count"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.title = element_blank()
+  )
+
+
+
+# ggsave("Figures/Dist_all_participants_by_study.png", bg = colors[4], scale = 2.5, dpi = 400)
+```
+
+### Investigating a binary outcome
+
+SPLICE-q scores the splicing efficiency at every junction 0-1 with one being a perfectly removed intron. This binary model investigates the question, "given an intron, what is the probability of perfect splicing as a function of age and resistance exercise training"
+
+```{r}
+#| echo: false
+
+# derive a matrix that indicates 0 if SE is not 1
+one_inflated_mat <- all_splice_reordered
+
+one_inflated_mat[-1] <- lapply(
+  one_inflated_mat[-1],
+  function(x) as.integer(x == 1)
+)
+
+
+
+
+# Intialise argument
+args_binom <- list( formula = y ~ scaled_age + time + sex +
+                      (1 | study) + (1 | participant), family  = binomial)
+
+# containerise using seqwrap_compose
+binom <- seqwrap_compose(data       = one_inflated_mat,
+                        metadata   = all_full_metadata,
+                        samplename = "seq_sample_id",
+                        modelfun   = glmmTMB::glmmTMB,
+                        arguments  = args_binom)
+
+# build model
+binom_results <- seqwrap(binom,
+                          return_models = FALSE,
+                          cores = 10)
+
+#saveRDS(binom_results, "data/binom_model.RDS")
+# binom_results<- readRDS("data/binom_model.RDS")
+```
+
+### Second model
+
+This model accepts as input the full spectrum of SE values. It investigates the impact of resistance training and aging on the slightest SE variations of introns.
+
+```{r}
+# convert the 1.0 to 0.999. This is becasue beta-model accepts only values between 0 and one
+all_splice_reordered[all_splice_reordered == 1 ] <- 0.999
+
+
+
+# initialise the argument. This time we check the interaction of age and time
+args_full <-list(formula = y ~  scaled_age + time + sex + (1|study) +(1|participant), 
+                 family = glmmTMB::beta_family(link = "logit"))
+
+
+
+
+# check the functions and datasets
+container <- seqwrap_compose(data = all_splice_reordered,
+                             metadata = all_full_metadata,
+                             samplename = "seq_sample_id",
+                             modelfun = glmmTMB::glmmTMB,
+                             arguments = args_full)
+
+
+# build model
+full_model <- seqwrap(container,
+                 # summary_fun = sum_with_pred,
+                 #eval_fun = eval_mod,
+                 return_models = F,
+                 # subset = 1:150,
+                 cores = 10)
+
+
+# full_model<- readRDS("data/full_model.RDS")
+
+# saveRDS(full_model, "data/full_model.RDS")
+
+
+
+
+
+
+```
+
+### Visualising the results of both models
+
+```{r}
+#| warning: False  
+library(dplyr)
+library(tidyverse)
+library(gridExtra)
+library(ggpubr)
+library(cowplot)
+library(ggridges)
+library(UpSetR)
+library(ggplot2)
+library(ggplotify)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(magick)
+
+
+
+
+informed_binom_sum <- seqwrap_summarise(binom_results)
+
+
+binom_model_outputs <- informed_binom_sum$summaries %>% 
+  dplyr::select(-group) %>%
+  dplyr::filter(term != "(Intercept)") %>%
+  drop_na() %>%
+  group_by(term) %>%                                  
+  mutate(adj.p = p.adjust(p.value, method = "fdr")) %>% 
+  ungroup() %>%
+  # select significantly differentially spliced introns
+  filter(adj.p <= 0.05) %>%
+   mutate(term = recode(term,
+                        "scaled_age" = "Aging",
+                        "timePostExc" = "Resistance Exercise Training"))
+
+# saveRDS(binom_model_outputs, "data/binom_model_outputs.RDS")
+
+# subset those by age 
+
+ds_introns_age <- binom_model_outputs %>%
+  dplyr::filter(term == "Aging")
+
+ds_introns_RT <- binom_model_outputs %>%
+  dplyr::filter(term == "Resistance Exercise Training")
+
+
+
+
+# extract the results of the non-binarised model
+
+full_model_sum <- seqwrap_summarise(full_model)
+
+# The non-binarised model 
+full_model_outputs <- full_model_sum$summaries %>% 
+  dplyr::select(-group) %>%
+  dplyr::filter(term != "(Intercept)") %>%
+  drop_na() %>%
+  group_by(term) %>%                                  
+  mutate(adj.p = p.adjust(p.value, method = "fdr")) %>% 
+  ungroup() %>%
+  # select significantly differentially spliced introns
+  filter(adj.p <= 0.05) %>%
+   mutate(term = recode(term,
+                        "scaled_age" = "Aging",
+                        "timePostExc" = "Resistance Exercise Training"))
+
+#saveRDS(full_model_outputs, "data/full_model_outputs.RDS")
+# x <- informed_binom_sum$summaries 
+# length(unique(x$target))
+
+full_ds_age <- full_model_outputs %>%
+  dplyr::filter(term == "Aging")
+
+full_ds_RT <- full_model_outputs %>%
+  dplyr::filter(term == "Resistance Exercise Training")
+```
+
+```{r}
+# identify the genes containing these introns and the intron lengths
+
+
+
+# Load the gene annotation file
+gene_annotation <- readRDS("data/ensembl_gene_annotation.RDS")
+
+# Load one file from which we will extract intron length
+# This is valid as only introns quantified in all samples were included in the analyses
+intron_length <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/A_102.tsv") %>%
+  
+  distinct(across(6:ncol(.)), .keep_all = T) %>% # Removes duplicates based on columns 6 to end
+  mutate(transcript_ID = paste0(transcript_ID, "_", intron_ID, "_", chr),
+         intron_length = abs((sj3start - sj5end) + 1) ) %>% # Ensures positive length regardless of strand
+  dplyr::select(transcript_ID, intron_length)
+
+
+binom_model_outputs <- binom_model_outputs %>%
+  inner_join(intron_length, by = c("target" = "transcript_ID")) %>%
+  mutate(effect = case_when(estimate > 0 & adj.p <= 0.05 ~ "Improved SE", 
+                            estimate < 0 & adj.p <= 0.05 ~ "Reduced SE" ,
+                            estimate < 0 & adj.p > 0.05 ~ "No effect",
+                            estimate > 0 & adj.p > 0.05 ~ "No effect")) %>%
+  mutate(transcript_ID = str_split(target, "_",simplify= T) [,1]) %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
+
+
+# plot distribution of phenotypes
+binom_model_outputs %>%
+  filter(term != "sexmale") %>%
+  distinct(target, transcript_biotype, .keep_all = T) %>%
+  ggplot(aes(transcript_biotype, fill = transcript_biotype))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5),
+        legend.position = "none")+ # no legend
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.1) +
+  ggtitle("Distribution of biotypes of genes containing the differentially spliced introns") +
+  ylab("Number of introns per biotype") 
+  
+
+
+binom_model_outputs %>%
+  filter(term != "sexmale") %>%
+  dplyr::select(target, intron_length, effect) %>%
+  ggplot(aes(x = intron_length, fill = effect)) +
+  geom_histogram() +
+  labs(
+    title = "Distribution of Intron Length in model 1",
+    x = "Intron Length",
+    y = "Number of Introns"
+  ) +
+ # scale_x_continuous(limits = c(70, 30000)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+min(binom_model_outputs$intron_length)
+
+max(binom_model_outputs$intron_length)
+# binom_model_outputs %>%
+#   filter(term == "scaled_age") %>%
+#   dplyr::select(target, intron_length, effect) %>%
+#   ggplot(aes(x = intron_length, fill = effect)) +
+#   geom_histogram() +
+#   labs(
+#     title = "Distribution of Intron Lengths in those affected by RT",
+#     x = "Intron Length",
+#     y = "Number of Introns"
+#   ) +
+#  # scale_x_continuous(limits = c(70, 30000)) +
+#   theme_minimal() +
+#   theme(plot.title = element_text(hjust = 0.5))
+
+
+
+
+  
+```
+
+```{r}
+# Evaluating the betabinomial model
+
+full_model <- full_model_outputs %>%
+  inner_join(intron_length, by = c("target" = "transcript_ID")) %>%
+  mutate(effect = case_when(estimate > 0 & adj.p <= 0.05 ~ "Improved SE", 
+                            estimate < 0 & adj.p <= 0.05 ~ "Reduced SE" ,
+                            estimate < 0 & adj.p > 0.05 ~ "No effect",
+                            estimate > 0 & adj.p > 0.05 ~ "No effect")) %>%
+  mutate(transcript_ID = str_split(target, "_",simplify= T) [,1]) %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
+
+
+# plot distribution of phenotypes
+full_model %>%
+  filter(term != "sexmale") %>%
+  distinct(target, transcript_biotype, .keep_all = T) %>%
+  ggplot(aes(transcript_biotype, fill = transcript_biotype))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5),
+        legend.position = "none")+ # no legend
+  stat_count(geom = "Text", aes(label = ..count..), vjust = -0.1) +
+  ggtitle("Distribution of biotypes of genes containing the introns") +
+  ylab("Number of introns per biotype") 
+  
+
+
+full_model %>%
+  filter(term != "sexmale") %>%
+  dplyr::select(target, intron_length, effect) %>%
+  ggplot(aes(x = intron_length, fill = effect)) +
+  geom_histogram() +
+  labs(
+    title = "Distribution of Intron Lengths in those affected by RT",
+    x = "Intron Length",
+    y = "Number of Introns"
+  ) +
+ # scale_x_continuous(limits = c(70, 30000)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# min(full_model$intron_length)
+# max(full_model$intron_length)
+
+full_model %>%
+  filter(term == "Aging") %>%
+  dplyr::select(target, intron_length, effect) %>%
+  ggplot(aes(x = intron_length, fill = effect)) +
+  geom_histogram() +
+  labs(
+    title = "Distribution of Intron Lengths in those affected by RT",
+    x = "Intron Length",
+    y = "Number of Introns"
+  ) +
+ # scale_x_continuous(limits = c(70, 30000)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+
+```
+
+```{r}
+
+df <- binom_model_outputs %>%
+  dplyr::filter(term != "sexmale") %>%
+  separate(target, into = c(NA, "intron_ID", NA), sep = "_") %>%
+  mutate(
+    gene_label = ifelse(
+      is.na(external_gene_name) | external_gene_name == "",
+      ensembl_gene_id,
+      external_gene_name
+    ),
+    gene_intron = paste(gene_label, intron_ID, sep = " : ")
+  )
+
+ggplot(df, aes(x = estimate, y = reorder(gene_intron, estimate), color = effect)) +
+  geom_point(size = 3) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_wrap(~ term, scales = "free_y") +
+  scale_color_manual(values = c("Improved SE" =  colors[2], "Reduced SE" = colors[1])) +
+  labs(
+    x = "Effect size",
+    y = "Gene : Intron_ID",
+    title = "Complete Intron Splicing Changes in Aging and Resistance Training",
+   subtitle = "Binomial model (splicing efficiency coded as 0/1)"
+  ) +
+  theme_minimal() +
+  theme(
+  axis.text.y = element_text(size = 6),
+  plot.title = element_text(hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5, size = 8)
+)
+ggsave("Figures/DS_introns_binary_model.png", bg = colors[4], scale = 2.5, dpi = 400)
+
+```
+
+```{r}
+full <- full_model %>%
+  dplyr::filter(term != "sexmale") %>%
+  separate(target, into = c(NA, "intron_ID", NA), sep = "_") %>%
+ # mutate(gene_intron = paste(external_gene_name, intron_ID, sep = " : "))
+  mutate(
+    gene_label = ifelse(
+      is.na(external_gene_name) | external_gene_name == "",
+      ensembl_gene_id,
+      external_gene_name
+    ),
+    gene_intron = paste(gene_label, intron_ID, sep = " : ")
+  )
+
+ggplot(full, aes(x = estimate, y = reorder(gene_intron, estimate), color = effect)) +
+  geom_point(size = 2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_wrap(~ term, scales = "free_y") +
+  scale_color_manual(values = c("Improved SE" =  colors[2], "Reduced SE" = colors[1])) +
+  labs(
+    x = "Effect size",
+    y = "Gene : Intron",
+    title = "Intron Splicing Efficiency Changes in Aging and Resistance Training",
+   # subtitle = "Only FDR-significant results shown"
+  ) +
+  theme_minimal()+
+  theme(
+    axis.text.y = element_text(size = 6),
+    plot.title = element_text(hjust = 0.5)
+  )
+
+ggsave("Figures/DS_introns_beta_binomial_model.png", bg = colors[4], scale = 2.5, dpi = 400)
+
+
+```
+
+```{r}
+# plot those affected by both aging and exercise
+
+shared <- full %>%
+  group_by(gene_intron) %>%
+  filter(n_distinct(term) == 2) %>%   # keeps only those seen in both terms
+  ungroup()
+
+
+shared_gene <- full %>%
+  group_by(gene_label) %>%
+  filter(n_distinct(term) == 2) %>%
+  ungroup() %>%
+  arrange(gene_label, estimate) %>%   # gene first, then introns
+  mutate(gene_intron = factor(gene_intron, levels = unique(gene_intron)))
+  
+# plot introns affected by both aging and RT
+ggplot(shared, aes(x = estimate, y = reorder(gene_intron, estimate), color = effect)) +
+  geom_point(size = 3) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_wrap(~ term, scales = "free_y") +
+  scale_color_manual(values = c("Improved SE" = colors[2],
+                                "Reduced SE" = colors[1])) +
+  labs(
+    x = "Effect size",
+    y = "Gene : Intron",
+    title = "Introns Affected by Both Age and Training"
+  ) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 8))
+
+
+
+# plot genes affected by both aging and RT
+
+ggplot(shared_gene, aes(x = estimate, y = gene_intron, color = effect)) +
+  geom_point(size = 3) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_wrap(~ term, scales = "free_y") +
+  scale_color_manual(values = c("Improved SE" = colors[2],
+                                "Reduced SE" = colors[1])) +
+  labs(
+    x = "Effect size",
+    y = "Gene : Intron",
+    title = "Introns Affected by Both Age and Training"
+  ) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 8))
+
+ggsave("Figures/introns_affected_both_RT_and_aging.png", bg = colors[4], scale = 2.5, dpi = 400)
+
+
+```
+
+```{r}
+# quantify the terms in each 
+full %>%
+  group_by(term, effect) %>%
+  summarise(n = n_distinct(gene_label))
+
+
+df %>%
+  group_by(term, effect) %>%
+  summarise(n = n_distinct(gene_label))
+
+
+```
+
+```{r}
+ggplot(shared_gene, aes(x = term, y = estimate, group = gene_intron)) +
+  geom_line(alpha = 0.4, color = "grey") +
+  geom_point(aes(color = effect), size = 3) +
+  scale_color_manual(values = c("Improved SE" = colors[2],
+                                "Reduced SE" = colors[1])) +
+  theme_minimal()
+
+
+ggplot(full, aes(x = term, y = estimate, group = gene_intron)) +
+  geom_line(alpha = 0.4, color = "grey") +
+  geom_point(aes(color = effect), size = 3) +
+  scale_color_manual(values = c("Improved SE" = colors[2],
+                                "Reduced SE" = colors[1])) +
+  theme_minimal() 
+
+
+
+
+
+full %>%
+  filter(term == "Aging" ) %>%
+  arrange(desc(abs(estimate)))%>%
+  select(gene_intron, effect,  estimate, gene_label )
+
+
+
+full %>%
+  filter(term == "Resistance Exercise Training") %>%
+  arrange(desc(abs(estimate))) %>%
+  select(gene_intron, effect,  estimate, gene_label )
+```
+
+\
+
+```{r}
+library(clusterProfiler)
+library(org.Hs.eg.db)
+
+
+
+# Functional annotation of genes affecetd by aging and RT
+
+# First load the gene expression dataset
+gene_exp_df <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS") 
+
+full_ds_RT <- full %>%
+  filter(term == "Resistance Exercise Training")
+
+# Functional annotation of the genes affected
+ego_RT <- enrichGO(gene =  full_ds_RT$external_gene_name,
+                      keyType = "SYMBOL",
+                      universe = gene_exp_df$gene_name,
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "BP", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+
+## Output results from GO analysis to a table
+cluster_RT <- data.frame(ego_RT)
+
+go_RT <- dotplot(ego_RT,
+                    
+                    font.size = 8, title = "Enriched biological processes in genes containing introns with RT-associated SE") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
+        plot.title = element_text(hjust = 0) )
+
+print(go_RT)
+
+```
+
+```{r}
+full_ds_aging <- full %>%
+  filter(term == "Aging")
+
+# Functional annotation of the genes affected
+ego_aging <- enrichGO(gene =  full_ds_aging$external_gene_name,
+                      keyType = "SYMBOL",
+                      universe = gene_exp_df$gene_name,
+                      OrgDb = org.Hs.eg.db, 
+                      ont = "BP", 
+                      pAdjustMethod = "BH", 
+                      qvalueCutoff = 0.05, 
+                      readable = T)
+
+
+## Output results from GO analysis to a table
+cluster_aging <- data.frame(ego_aging)
+
+go_aging <- dotplot(ego_aging,
+                    
+                    font.size = 8, title = "Enriched biological processes in genes containing introns with aging SE") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
+        plot.title = element_text(hjust = 0) )
+
+print(go_aging)
+
+```
+
+```{r}
+age_introns <- full_model_outputs %>%
+  dplyr::filter(term == "Aging") %>%
+  dplyr::arrange(desc(abs(estimate)))%>%
+  dplyr::slice(1:10) # %>%
+ # pull(target)
+  
+
+
+age_introns_df <- all_splice_df %>%
+  dplyr::filter(transcript_ID %in% age_introns$target) %>%
+    pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID) ) %>%
+  inner_join(age_introns, by = c("transcript_ID" = "target")) %>%
+  separate(transcript_ID, into = c("transcript_ID", "intron_ID", NA), sep = "_") %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+   
+  mutate(
+    gene_label = ifelse(
+      is.na(external_gene_name) | external_gene_name == "",
+      ensembl_gene_id,
+      external_gene_name
+    ),
+    gene_intron = paste(gene_label, intron_ID, sep = " : ")) %>%
+  inner_join(all_full_metadata, by = "seq_sample_id")%>%
+  group_by(scaled_age, gene_intron) %>%
+  summarise(mean_SE = mean(SE, na.rm = TRUE), .groups = "drop")
+
+ggplot(age_introns_df, aes(x = scaled_age, y = mean_SE, color = gene_intron)) +
+  geom_point(alpha = 0.4, size = 1) +   # ???? dots instead of lines
+  geom_smooth(aes(group = 1), method = "lm", color = "red", size = 1.2) +
+  theme_minimal()
+
+
+ggplot(age_introns_df, aes(x = scaled_age, y = mean_SE, group = gene_intron)) +
+  geom_point(alpha = 0.3, size = 0.8) +
+  geom_smooth(aes(color = gene_intron), method = "lm", se = FALSE, size = 0.8) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+```{r}
+RT_introns <- full_model_outputs %>%
+  dplyr::filter(term == "Resistance Exercise Training") %>%
+  dplyr::arrange(desc(abs(estimate)))%>%
+  dplyr::slice(1:10) # %>%
+ # pull(target)
+  
+
+
+RT_introns_df <- all_splice_df %>%
+  dplyr::filter(transcript_ID %in% RT_introns$target) %>%
+    pivot_longer(names_to = "seq_sample_id",
+               values_to = "SE",
+               cols = -(transcript_ID) ) %>%
+  inner_join(RT_introns, by = c("transcript_ID" = "target")) %>%
+  separate(transcript_ID, into = c("transcript_ID", "intron_ID", NA), sep = "_") %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+   
+  mutate(
+    gene_label = ifelse(
+      is.na(external_gene_name) | external_gene_name == "",
+      ensembl_gene_id,
+      external_gene_name
+    ),
+    gene_intron = paste(gene_label, intron_ID, sep = " : ")) %>%
+  inner_join(all_full_metadata, by = "seq_sample_id") %>%
+   group_by(time, gene_intron) %>%
+   summarise(mean_SE = mean(SE, na.rm = TRUE), .groups = "drop")
+
+
+ggplot(RT_introns_df, aes(x = time, y = mean_SE, colour = gene_intron)) +
+  geom_point(outlier.shape = NA) +
+  geom_jitter(alpha = 0.2, width = 0.5, size = 1) +
+  theme_minimal()
+
+
+
+```
