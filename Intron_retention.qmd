@@ -554,7 +554,49 @@ ggplot(full, aes(x = estimate, y = reorder(gene_intron, estimate), color = effec
 ggsave("Figures/DS_introns_beta_binomial_model.png", bg = colors[4], scale = 2.5, dpi = 400)
 
 
+# library(dplyr)
+# library(ggplot2)
+# library(forcats)
+
+df <- full %>%
+  arrange(gene_label, estimate) %>%
+  mutate(gene_intron = factor(gene_intron, levels = unique(gene_intron)))
+
+ggplot(df, aes(x = estimate, y = gene_intron, color = effect)) +
+  geom_point(size = 2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_wrap(~ term, scales = "free_y") +
+  scale_color_manual(values = c("Improved SE" = colors[2],
+                                "Reduced SE" = colors[1])) +
+  labs(
+    x = "Effect size",
+    y = "Gene : Intron",
+    title = "Intron-Specific Splicing Effects within Genes"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 6),
+    plot.title = element_text(hjust = 0.5)
+  )
+
+
+
+# 
+# ggplot(df, aes(x = estimate, y = gene_intron)) +
+#   geom_point(aes(color = shared), size = 2) +
+#   geom_vline(xintercept = 0, linetype = "dashed") +
+#   facet_wrap(~ term, scales = "free_y") +
+#   scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70")) +
+#   theme_minimal() +
+#   labs(
+#     x = "Effect size",
+#     y = "Gene : Intron",
+#     title = "Intron-Specific Splicing Effects within Genes",
+#     subtitle = "Shared introns (affected by both aging and training) highlighted in red"
+#   )
 ```
+
+shared
 
 ```{r}
 # plot those affected by both aging and exercise
@@ -564,7 +606,7 @@ shared <- full %>%
   filter(n_distinct(term) == 2) %>%   # keeps only those seen in both terms
   ungroup()
 
-
+shared$ensembl_gene_id
 shared_gene <- full %>%
   group_by(gene_label) %>%
   filter(n_distinct(term) == 2) %>%
@@ -804,5 +846,33 @@ ggplot(RT_introns_df, aes(x = time, y = mean_SE, colour = gene_intron)) +
   theme_minimal()
 
 
+
+```
+
+```{r}
+# explore how the aging-affected genes were expressed in relation to aging
+
+gene_exp_df
+
+x <- full_ds_aging %>%
+   dplyr::arrange(desc(abs(estimate)))%>%
+  dplyr::slice(1:5) 
+
+exp_df <- gene_exp_df %>%
+  dplyr::filter(gene_name %in% x$gene_label) %>%
+    pivot_longer(names_to = "seq_sample_id",
+               values_to = "gene_count",
+               cols = -(gene_name) ) %>%
+  inner_join(all_full_metadata, by = "seq_sample_id") %>%
+  group_by(scaled_age, gene_name) %>%
+  summarise(mean_count = mean(gene_count, na.rm = TRUE), .groups = "drop")
+
+
+
+
+ggplot(exp_df, aes(x = scaled_age, y = mean_count, colour= gene_name)) +
+  geom_point(outlier.shape = NA) +
+  geom_jitter(alpha = 0.2, width = 0.5, size = 1) +
+  theme_minimal()
 
 ```
