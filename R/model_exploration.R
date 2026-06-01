@@ -13,7 +13,9 @@ library(clusterProfiler)
 library(org.Hs.eg.db)
 library(magick)
 library(forcats)
+library(patchwork)
 
+# Load both splicing and metadata files
 
 all_splice_df <- readRDS("data/all_splice.RDS") %>%
   mutate(across(where(is.numeric), ~ round(.x, 2))) 
@@ -27,7 +29,6 @@ colnames(all_full_metadata)
 # REORDER THE SEQUENCE ID TO MATCH BOTH DATAFRAMMES
 all_splice_reordered <- all_splice_df[, c("transcript_ID",all_full_metadata$seq_sample_id)] 
 
-library(ggplot2)
 
 ## Color scale ##
 colors <-  c("#d7191c", "#fdae61", "#ffffbf", "#abd9e9", "#2c7bb6", "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
@@ -82,7 +83,7 @@ max_count <- ggplot_build(
 
 
 # Plot the distribution of all participants in one image
-ggplot(meta_unique, aes(x = age, fill = sex)) +
+all <- ggplot(meta_unique, aes(x = age, fill = sex)) +
   geom_histogram(position = position_dodge(width = 5),
                  alpha = 0.5,
                  binwidth = 5,
@@ -109,7 +110,7 @@ ggplot(meta_unique, aes(x = age, fill = sex)) +
   labs(
     title = "Age distribution of all participants",
     x = "Age",
-    y = "Number of participants"
+    y = NULL
   ) +
   theme(
     plot.title = element_text(hjust = 0.5),
@@ -121,8 +122,8 @@ ggplot(meta_unique, aes(x = age, fill = sex)) +
 # ggsave("Figures/Dist_all_participants.png", bg = colors[4], scale = 2.5, dpi = 400)
 
 
-
-ggplot(meta_unique, aes(x = age, fill = sex)) +
+# Visualise the participants by study
+by_study <- ggplot(meta_unique, aes(x = age, fill = sex)) +
   geom_histogram(position = "dodge",
                  alpha = 0.5,
                  binwidth = 5,
@@ -149,12 +150,31 @@ ggplot(meta_unique, aes(x = age, fill = sex)) +
   labs(
     title = " Distribution of Participants across all studies",
     x = "Age",
-    y = "Count"
+    y = "Number of participants"
   ) +
   theme(
     plot.title = element_text(hjust = 0.5),
-    legend.title = element_blank()
+    legend.title = element_blank(),
+    legend.position = "None"
   )
+
+
+
+
+
+Fig1_plot <-  by_study + all
+Fig1_plot +
+  plot_annotation(tag_levels = "A") &
+  #plot_layout(widths = c(1.1, 1))
+theme(
+  plot.tag = element_text(size = 14, face = "bold")
+  ,
+  plot.tag.position = c(0.08, 0.98)
+) 
+
+
+# ggsave("Figures/Figure_1.png", bg = colors[4], scale = 4, dpi = 400)
+
 
 
 # Load the binary model
@@ -204,6 +224,10 @@ full_model_outputs <- full_model_sum$summaries %>%
                        "timePostExc" = "Resistance Training"))
 
 
+
+
+
+
 # BELOW IS EXPLORATION OF THE DATA OUTPUTS
 
 # Load the gene annotation file
@@ -241,20 +265,25 @@ biotype_binom <- binom_model_outputs %>%
         plot.title = element_text(hjust = 0.5),
         legend.position = "none")+ # no legend
   stat_count(geom = "Text", aes(label = ..count..), vjust = -0.1) +
-  ggtitle("Biotypes of genes containing ds introns in the binomial model") +
-  ylab("Number of introns per biotype") 
+  labs(
+    title = "Biotypes of genes containing ds introns in the binomial model",
+    x = "Biotype",
+    y = NULL
+  ) 
+  
+
 
 
 # plot distribution of intron length
-binom_model_outputs %>%
+intron_length_binom <- binom_model_outputs %>%
   filter(term != "sexmale") %>%
   dplyr::select(target, intron_length, effect) %>%
   ggplot(aes(x = intron_length, fill = effect)) +
   geom_histogram() +
   labs(
-    title = "Distribution of Intron Length in model 1",
+    title = "Distribution of intron length of ds introns the binomial model",
     x = "Intron Length",
-    y = "Number of Introns"
+    y = NULL
   ) +
   # scale_x_continuous(limits = c(70, 30000)) +
   theme_minimal() +
@@ -274,6 +303,7 @@ full_model <- full_model_outputs %>%
   inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version"))
 
 
+
 # plot distribution of phenotypes
 biotype_full <- full_model %>%
   filter(term != "sexmale") %>%
@@ -284,55 +314,65 @@ biotype_full <- full_model %>%
         plot.title = element_text(hjust = 0.5),
         legend.position = "none")+ # no legend
   stat_count(geom = "Text", aes(label = ..count..), vjust = -0.1) +
-  ggtitle("Biotypes of genes containing ds introns in the betabinomial model") +
-  ylab("Number of introns per biotype") 
+  labs(
+    title = "Biotypes of genes containing ds introns in the betabinomial model",
+    x = "Biotype",
+    y = "Number of introns per biotype"
+  ) 
 
 
-
-full_model %>%
+# Plot the intron lengths
+intron_length_full <- full_model %>%
   filter(term != "sexmale") %>%
   dplyr::select(target, intron_length, effect) %>%
   ggplot(aes(x = intron_length, fill = effect)) +
   geom_histogram() +
   labs(
-    title = "Distribution of Intron Lengths in those affected by RT",
+    title = "Distribution of Intron Lengths of ds introns in the betabinomial model",
     x = "Intron Length",
-    y = "Number of Introns"
+    y = "Number of introns"
   ) +
   # scale_x_continuous(limits = c(70, 30000)) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none")
 
 
 
-full_model %>%
-  filter(term == "Aging") %>%
-  dplyr::select(target, intron_length, effect) %>%
-  ggplot(aes(x = intron_length, fill = effect)) +
-  geom_histogram() +
-  labs(
-    title = "Distribution of Intron Lengths in those affected by RT",
-    x = "Intron Length",
-    y = "Number of Introns"
-  ) +
-  # scale_x_continuous(limits = c(70, 30000)) +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
+# full_model %>%
+#   filter(term == "Aging") %>%
+#   dplyr::select(target, intron_length, effect) %>%
+#   ggplot(aes(x = intron_length, fill = effect)) +
+#   geom_histogram() +
+#   labs(
+#     title = "Distribution of Intron Lengths in those affected by aging",
+#     x = "Intron Length",
+#     y = "Number of Introns"
+#   ) +
+#   # scale_x_continuous(limits = c(70, 30000)) +
+#   theme_minimal() +
+#   theme(plot.title = element_text(hjust = 0.5))
 
 
-ggarrange(biotype_full , biotype_binom,
-          labels = c("A", "B"),
-          font.label = list(size = 8), 
-          align = "hv",
-          label.x = 0.05)
+
+sup_Fig1 <-  biotype_full + biotype_binom + intron_length_full +intron_length_binom 
+sup_Fig1 +
+  plot_annotation(tag_levels = "A") &
+  #plot_layout(widths = c(1.1, 1))
+  theme(
+    plot.tag = element_text(size = 14, face = "bold")
+    ,
+    plot.tag.position = c(0.08, 0.98)
+  ) 
 
 
 
 
 
 # simplify visualisation by generating gene_intro
-# this used the gene name followed by semicolon and intron_id number
+# this uses the gene name followed by semicolon and intron_id number
 # it makes identifying it easier in charts
+
 df <- binom_model_outputs %>%
   dplyr::filter(term != "sexmale") %>%
   separate(target, into = c(NA, "intron_ID", NA), sep = "_") %>%
@@ -347,26 +387,35 @@ df <- binom_model_outputs %>%
   arrange(gene_label, estimate) %>%
   mutate(gene_intron = factor(gene_intron, levels = unique(gene_intron)))
 
-ds_binom <- ggplot(df, aes(x = estimate, y = gene_intron, color = effect)) +
+
+
+
+# visualise the dofferentially spliced introns in the binomial model
+
+ds_binom <- ggplot(df, aes(x = estimate, y =(gene_intron), color = effect)) +
   geom_point(size = 3) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   facet_wrap(~ term, scales = "free_y") +
-  scale_color_manual(values = c("Improved SE" =  colors[2], "Reduced SE" = colors[1])) +
+  scale_color_manual(values = c("Improved SE" =  colors[6], "Reduced SE" = colors[1]),
+                     name = "Effect") +
   labs(
     x = "Effect size",
-    y = "Gene : Intron_ID",
+    y = NULL,
     title = "DS introns due to Aging and Resistance Training (RT)",
     subtitle = "Binomial model (splicing efficiency coded as 0/1)"
   ) +
-  theme_minimal() +
+  theme_minimal(base_size = 11) +
   theme(
-    axis.text.y = element_text(size = 6),
+    axis.text.y = element_text(size = 8),
     plot.title = element_text(hjust = 0.5),
-    plot.subtitle = element_text(hjust = 0.5, size = 8)
+    plot.subtitle = element_text(hjust = 0.5, size = 8),
+    strip.text = element_text(face= "bold"),
+    legend.position = "none"
   )
 
 
 
+# exstract and visualise data from the beta-binomial model
 full <- full_model %>%
   dplyr::filter(term != "sexmale") %>%
   separate(target, into = c(NA, "intron_ID", NA), sep = "_") %>%
@@ -382,23 +431,27 @@ full <- full_model %>%
   arrange(gene_label, estimate) %>%
   mutate(gene_intron = factor(gene_intron, levels = unique(gene_intron)))
 
-ds_beta<- ggplot(full, aes(x = estimate, y = gene_intron, color = effect)) +
+
+
+ds_beta <- ggplot(full, aes(x = estimate, y = gene_intron, color = effect)) +
   geom_point(size = 2) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   facet_wrap(~ term, scales = "free_y") +
-  scale_color_manual(values = c("Improved SE" = colors[2],
-                                "Reduced SE" = colors[1])) +
+  scale_color_manual(values = c("Improved SE" = colors[6],
+                                "Reduced SE" = colors[1]),
+                     name = "Effect") +
   labs(
     x = "Effect size",
-    y = "Gene : Intron",
+    y = NULL,
     title = "DS introns due to Aging and Resistance Training (RT)",
     subtitle = "Beta-binomial model (0,1)"
   ) +
-  theme_minimal() +
+  theme_minimal(base_size = 11) +
   theme(
-    axis.text.y = element_text(size = 6),
+    axis.text.y = element_text(size = 8),
     plot.title = element_text(hjust = 0.5),
-    plot.subtitle = element_text(hjust = 0.5, size = 8)
+    plot.subtitle = element_text(hjust = 0.5, size = 8),
+    strip.text = element_text(face= "bold")
   )
 
 
@@ -420,46 +473,72 @@ shared_gene <- full %>%
   mutate(gene_intron = factor(gene_intron, levels = unique(gene_intron)))
 
 # plot introns affected by both aging and RT
-shared_plot <- ggplot(shared, aes(x = estimate, y = reorder(gene_intron, estimate), color = effect)) +
+shared_plot <- ggplot(shared, aes(x = estimate, y = gene_intron, estimate, color = effect)) +
   geom_point(size = 3) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   facet_wrap(~ term, scales = "free_y") +
-  scale_color_manual(values = c("Improved SE" = colors[2],
-                                "Reduced SE" = colors[1])) +
+  scale_color_manual(values = c("Improved SE" = colors[6],
+                                "Reduced SE" = colors[1]),
+                     name = "Effect") +
   labs(
     x = "Effect size",
-    y = "Gene : Intron",
+    y = NULL,
     title = "Introns Affected by Both Age and Training"
   ) +
   theme_minimal() +
-  theme(axis.text.y = element_text(size = 8))
+  theme(axis.text.y = element_text(size = 8),
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5, size = 8),
+        strip.text = element_text(face= "bold"),
+        legend.position = "none")
 
 
 
 # plot genes affected by both aging and RT
 
-ggplot(shared_gene, aes(x = estimate, y = gene_intron, color = effect)) +
+shared_gene_plot <- ggplot(shared_gene, aes(x = estimate, y = gene_intron, color = effect)) +
   geom_point(size = 3) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   facet_wrap(~ term, scales = "free_y") +
-  scale_color_manual(values = c("Improved SE" = colors[2],
-                                "Reduced SE" = colors[1])) +
+  scale_color_manual(values = c("Improved SE" = colors[6],
+                                "Reduced SE" = colors[1]),
+                     name = "Effect") +
   labs(
     x = "Effect size",
-    y = "Gene : Intron",
-    title = "Introns Affected by Both Age and Training"
+    y = NULL,
+    title = "Genes Containing Introns Affected by Both Age and Training"
   ) +
   theme_minimal() +
-  theme(axis.text.y = element_text(size = 8))
+  theme(axis.text.y = element_text(size = 8),
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5, size = 8),
+        strip.text = element_text(face= "bold"))
 
 
 
-ggarrange( ds_beta + theme(legend.position = "none"), ds_binom ,
-           labels = c("A", "B"),
-           font.label = list(size = 8), 
-           align = "hv",
-           label.x = 0.05)
-#ggsave("Figures/DS_introns_both.png", bg = colors[4], width = 13, height = 10, dpi = 400)
+
+
+layout <- "
+AB
+AC
+"
+
+final_plot <- ds_beta + ds_binom + shared_plot +
+  plot_layout(design = layout, widths = c(1.2,1))
+
+final_plot +
+  plot_annotation(tag_levels = "A") +
+  plot_layout(guides = "collect") &
+  theme(
+   # legend.position = "",
+    plot.tag = element_text(size = 14, face = "bold"),
+    plot.tag.position = c(0.08, 0.98)
+  ) &
+  guides(color = guide_legend(title = "Effect"))
+
+
+
+# ggsave("Figures/Figure_2.png", bg = colors[4], width = 13, height = 10, dpi = 400)
 
 
 
@@ -480,19 +559,21 @@ df %>%
 
 
 
-
-full %>%
+# extract the differentially spliced introns as a table ranked by their model estimates
+aging_table <- full %>%
   filter(term == "Aging" ) %>%
   arrange(desc(abs(estimate)))%>%
   dplyr::select(gene_intron, effect,  estimate, gene_label )
 
+# saveRDS(aging_table, "tables/aging_table.rds")
 
 
-full %>%
+RT_table <- full %>%
   filter(term == "Resistance Training") %>%
   arrange(desc(abs(estimate))) %>%
   dplyr::select(gene_intron, effect,  estimate, gene_label )
 
+# saveRDS(RT_table, "tables/RT_table.rds")
 
 
 
@@ -527,66 +608,66 @@ go_RT <- dotplot(ego_RT,
 print(go_RT)
 
 
+# 
+# RT_Reduced <- full_ds_RT %>%
+#   dplyr::filter(effect == "Reduced SE") %>%
+#   arrange(desc(abs(estimate))) #%>%
+# # select(gene_intron, effect,  estimate, gene_label )
+# 
+# RT_Improved <- full_ds_RT %>%
+#   dplyr::filter(effect == "Improved SE") %>%
+#   arrange(desc(abs(estimate)))
+# 
+# 
+# 
+# # Functional annotation of the genes affected
+# ego_RT_improved <- enrichGO(gene =  RT_Improved$external_gene_name,
+#                             keyType = "SYMBOL",
+#                             universe = gene_exp_df$gene_name,
+#                             OrgDb = org.Hs.eg.db, 
+#                             ont = "BP", 
+#                             pAdjustMethod = "BH", 
+#                             qvalueCutoff = 0.05, 
+#                             readable = T)
+# 
+# 
+# ## Output results from GO analysis to a table
+# cluster_RT_improved <- data.frame(ego_RT_improved)
+# 
+# go_RT_improved <- dotplot(ego_RT_improved,
+#                           
+#                           font.size = 8, title = "Enriched biological processes in genes containing introns with RT-associated improved SE") +
+#   theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
+#         plot.title = element_text(hjust = 0) )
+# 
+# print(go_RT_improved)
+# 
+# 
+# 
+# 
+# # Functional annotation of the genes affected
+# ego_RT_reduced <- enrichGO(gene =  RT_Reduced$external_gene_name,
+#                            keyType = "SYMBOL",
+#                            universe = gene_exp_df$gene_name,
+#                            OrgDb = org.Hs.eg.db, 
+#                            ont = "BP", 
+#                            pAdjustMethod = "BH", 
+#                            qvalueCutoff = 0.05, 
+#                            readable = T)
+# 
+# 
+# ## Output results from GO analysis to a table
+# cluster_RT_reduced <- data.frame(ego_RT_reduced)
+# 
+# go_RT_reduced <- dotplot(ego_RT_reduced,
+#                          
+#                          font.size = 8, title = "Enriched biological processes in genes containing introns with RT-associated improved SE") +
+#   theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
+#         plot.title = element_text(hjust = 0) )
+# 
+# print(go_RT_reduced)
 
-RT_Reduced <- full_ds_RT %>%
-  dplyr::filter(effect == "Reduced SE") %>%
-  arrange(desc(abs(estimate))) #%>%
-# select(gene_intron, effect,  estimate, gene_label )
-
-RT_Improved <- full_ds_RT %>%
-  dplyr::filter(effect == "Improved SE") %>%
-  arrange(desc(abs(estimate)))
-
-
-
-# Functional annotation of the genes affected
-ego_RT_improved <- enrichGO(gene =  RT_Improved$external_gene_name,
-                            keyType = "SYMBOL",
-                            universe = gene_exp_df$gene_name,
-                            OrgDb = org.Hs.eg.db, 
-                            ont = "BP", 
-                            pAdjustMethod = "BH", 
-                            qvalueCutoff = 0.05, 
-                            readable = T)
-
-
-## Output results from GO analysis to a table
-cluster_RT_improved <- data.frame(ego_RT_improved)
-
-go_RT_improved <- dotplot(ego_RT_improved,
-                          
-                          font.size = 8, title = "Enriched biological processes in genes containing introns with RT-associated improved SE") +
-  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
-        plot.title = element_text(hjust = 0) )
-
-print(go_RT_improved)
-
-
-
-
-# Functional annotation of the genes affected
-ego_RT_reduced <- enrichGO(gene =  RT_Reduced$external_gene_name,
-                           keyType = "SYMBOL",
-                           universe = gene_exp_df$gene_name,
-                           OrgDb = org.Hs.eg.db, 
-                           ont = "BP", 
-                           pAdjustMethod = "BH", 
-                           qvalueCutoff = 0.05, 
-                           readable = T)
-
-
-## Output results from GO analysis to a table
-cluster_RT_reduced <- data.frame(ego_RT_reduced)
-
-go_RT_reduced <- dotplot(ego_RT_reduced,
-                         
-                         font.size = 8, title = "Enriched biological processes in genes containing introns with RT-associated improved SE") +
-  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
-        plot.title = element_text(hjust = 0) )
-
-print(go_RT_reduced)
-
-
+ggsave("Figures/GO_RT.png", bg = colors[4], scale=2.5, dpi = 400)
 
 full_ds_aging <- full %>%
   filter(term == "Aging")
@@ -607,13 +688,31 @@ cluster_aging <- data.frame(ego_aging)
 
 go_aging <- dotplot(ego_aging,
                     
-                    font.size = 8, title = "Enriched biological processes in genes containing introns with aging SE") +
+                    font.size = 8, title = "Enriched biological processes in genes containing introns with aging-associated SE") +
   theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 8), axis.title.x = element_text(size = 10),
         plot.title = element_text(hjust = 0) )
 
 print(go_aging)
 
+ggsave("Figures/GO_aging.png", bg = colors[4],height = 20, width = 15, dpi = 400)
 
+
+
+
+Fig4 <-  go_RT + go_aging 
+Fig4 +
+  plot_annotation(tag_levels = "A") &
+  #plot_layout(widths = c(1.1, 1))
+  theme(
+    plot.tag = element_text(size = 14, face = "bold")
+    ,
+    plot.tag.position = c(0.08, 0.98)
+  ) 
+
+
+ggsave("Figures/Figure_4.png", bg = colors[4], scale = 4, dpi = 400)
+
+# Plot the top differentially expressed genes
 top_age_introns <- full_model_outputs %>%
   dplyr::filter(term == "Aging") %>%
   dplyr::arrange(desc(abs(estimate)))%>%
@@ -641,15 +740,16 @@ age_introns_df <- all_splice_df %>%
 
 
 aging_df <- ggplot(age_introns_df, aes(x = scaled_age, y = mean_SE, group = gene_intron, color = gene_intron)) +
-  geom_point(alpha = 1, size = 0.8) +
+  geom_point(alpha = 1, size = 2) +
   geom_smooth(aes(color = gene_intron), method = "lm", se = FALSE, size = 0.5) +
   theme_minimal() +
   labs(
-    y = "mean splicing efficiency",
+    y = "Splicing efficiency",
     x = "scaled age of participants",
     title = "Top 5 introns with aging-associated changes in SE"
   )+
-  theme(plot.title = element_text(hjust = 0.2))
+  theme(plot.title = element_text(hjust = 0.2),
+        strip.text = element_text(face= "bold"))
 
 
 
@@ -685,22 +785,22 @@ RT_introns_df <- all_splice_df %>%
 
 
 RT_df <- ggplot(RT_introns_df, aes(x = time, y = mean_SE, colour = gene_intron)) +
-  geom_point(outlier.shape = NA) +
+  geom_point(size = 3) +
  # geom_jitter(alpha = 1, width = 0.5, size = 1) +
   theme_minimal()+
   labs(
-    y = "mean splicing efficiency",
+    y = "Splicing efficiency",
     x = "Time",
     title = "Top 5 introns with RT-associated changes in SE"
   )+
-  theme(plot.title = element_text(hjust = 0.1))
+  theme(plot.title = element_text(hjust = 0.1),
+        strip.text = element_text(face= "bold"))
 
 
 
 
 # exploring if the expression of genes follow the ds patterns
 
-gene_exp_df
 
 
 RT_expression <- full_model %>%
@@ -722,15 +822,15 @@ exp_df <- gene_exp_df %>%
 
 
 train <- ggplot(exp_df, aes(x = time, y = mean_count, colour= gene_name)) +
-  geom_point(outlier.shape = NA) +
-  #geom_jitter(alpha = 0.2, width = 0.5, size = 1) +
+  geom_point(size = 3) +
   theme_minimal()+
   labs(
-    y = "mean gene expression",
-    x = "scaled age of participants",
-    title = "Top 5 genes containing introns with training-associated changes in SE"
+    y = "Gene expression value",
+    x = "Time",
+    title = "Genes containing top 5 ds introns due to training"
   )+
-  theme(plot.title = element_text(hjust = 0.1))
+  theme(plot.title = element_text(hjust = 0.1),
+        strip.text = element_text(face= "bold"))
 
 
 
@@ -752,22 +852,34 @@ age_exp_df <- gene_exp_df %>%
 
 
 age <- ggplot(age_exp_df, aes(x = scaled_age, y = mean_count, colour= gene_name)) +
-  geom_point(alpha = 1, size = 0.8) +
+  geom_point(alpha = 1, size = 2) +
   geom_smooth(aes(color = gene_name), method = "lm", se = FALSE, size = 0.5) +
   theme_minimal() +
   labs(
-    y = "mean gene expression",
+    y = "Gene expression value",
     x = "scaled age of participants",
-    title = "Top 5 genes containing introns with aging-associated changes in SE"
+    title = "Genes containing top 5 ds introns due to aging"
   )+
-  theme(plot.title = element_text(hjust = 0.2))
+  theme(plot.title = element_text(hjust = 0.2),
+        strip.text = element_text(face= "bold"))
 
 
 
-ggarrange( aging_df, age,  RT_df ,train,
-           labels = c("A", "B", "C", "D"),
-           font.label = list(size = 8), 
-           align = "hv",
-           label.x = 0.05)
+Fig2_plot <- (aging_df | age) /
+  plot_spacer() / 
+  (RT_df | train)
+Fig2_plot +
+  plot_annotation(tag_levels = "A") +
+  plot_layout(heights = c(1,0.15, 1))
+  theme(
+    plot.tag = element_text(size = 14, face = "bold"),
+    plot.tag.position = c(0.08, 0.98)
+  ) 
 
-ggsave("Figures/scatter_plot.png", bg = colors[4], scale = 2.5, dpi = 400)
+# ggarrange( aging_df, age,  RT_df ,train,
+#            labels = c("A", "B", "C", "D"),
+#            font.label = list(size = 8), 
+#            align = "hv",
+#            label.x = 0.05)
+
+ggsave("Figures/Figure_3.png", bg = colors[4], scale = 2.5, dpi = 400)
