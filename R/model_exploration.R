@@ -1,7 +1,6 @@
 library(dplyr)
 library(tidyverse)
 library(seqwrap)
-library(glmmTMB)
 library(gridExtra)
 library(ggpubr)
 library(cowplot)
@@ -14,6 +13,7 @@ library(org.Hs.eg.db)
 library(magick)
 library(forcats)
 library(patchwork)
+library(ggrepel)              
 
 # Load both splicing and metadata files
 
