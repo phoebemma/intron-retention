@@ -22,8 +22,7 @@ all_splice_df <- readRDS("data/all_splice.RDS") %>%
 
 
 
-all_full_metadata <- readRDS("data/all_full_metadata.RDS")
-colnames(all_full_metadata)
+all_full_metadata <- readRDS("data/all_full_metadata.RDS") 
 
 
 # REORDER THE SEQUENCE ID TO MATCH BOTH DATAFRAMMES

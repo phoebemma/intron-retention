@@ -2,6 +2,8 @@
 source("R/Load_data_for_visualisation.R")
 
 library(ggplot2)
+library(patchwork)
+
 
 # subset the data to only count one participant once
 meta_unique <- all_full_metadata %>%
@@ -46,7 +48,7 @@ max_count <- ggplot_build(
 # Plot the distribution of all participants in one image
 all <- ggplot(meta_unique, aes(x = age, fill = sex)) +
   geom_histogram(position = position_dodge(width = 5),
-                 alpha = 0.5,
+                 alpha = 0.7,
                  binwidth = 5,
                  color = "black") +
   scale_fill_manual(
@@ -82,7 +84,10 @@ all <- ggplot(meta_unique, aes(x = age, fill = sex)) +
   #  axis.title.y = element_text(size = 14, face = "bold"),
     
     axis.text.x = element_text(size = 14, face = "bold"),
-    axis.text.y = element_text(size = 14, face = "bold")
+    axis.text.y = element_text(size = 14, face = "bold"),
+  plot.background  = element_rect(fill = "white", colour = NA),
+  panel.background = element_rect(fill = "white", colour = NA)
+  
     
   )
 
@@ -91,7 +96,7 @@ all <- ggplot(meta_unique, aes(x = age, fill = sex)) +
 # Visualise the participants by study
 by_study <- ggplot(meta_unique, aes(x = age, fill = sex)) +
   geom_histogram(position = "dodge",
-                 alpha = 0.5,
+                 alpha = 0.7,
                  binwidth = 5,
                  color = "black") +
   scale_fill_manual(
@@ -127,7 +132,12 @@ theme(
     
     axis.text.x = element_text(size = 14, face = "bold"),
     axis.text.y = element_text(size = 14, face = "bold"),
-    strip.text = element_text(face = "bold", size = 14)
+    strip.text = element_text(face = "bold", size = 14),
+    strip.background = element_rect(fill = "grey90", colour = NA),
+    
+    plot.background  = element_rect(fill = "white", colour = NA),
+    panel.background = element_rect(fill = "white", colour = NA)
+    
     )
 
 
@@ -141,5 +151,5 @@ Fig1_plot +
   theme(
     plot.tag = element_text(size = 14, face = "bold")
     ,
-    plot.tag.position = c(0.08, 0.98)
-  ) 
+    plot.tag.position = c(0.08, 0.98)) 
+# ggsave("Figures/Figure_1.png",  width = 20, height = 12, dpi = 400, device = ragg::agg_png)

@@ -60,7 +60,7 @@ binom_results <- seqwrap(binom,
 
 saveRDS(binom_results, "data/Relief_binom_model.RDS")
 
-
+#binom_results <- readRDS("data/Relief_binom_model.RDS") 
 
 
 # The second model
@@ -98,5 +98,278 @@ full_model <- seqwrap(container,
                       cores = 10)
 
 saveRDS(full_model, "data/Relief_full_model.RDS")
+
+# full_model<- readRDS("data/Relief_full_model.RDS")
+
+
+
+# extract the model summaries in the beta binomial model
+Relief_binom <- seqwrap_summarise(binom_results)
+
+
+# filter significantly differantially spliced introns
+Relief_binom_outputs <- Relief_binom$summaries %>% 
+  dplyr::select(-group) %>%
+  inner_join(intron_length, by = c("target" = "transcript_ID")) %>%
+  filter(term != "(Intercept)", term != "sexmale") %>%
+  drop_na() %>%
+  group_by(term) %>%
+  mutate(
+    adj.p = p.adjust(p.value, method = "fdr"),
+    term = recode(term,
+                  "scaled_age" = "Aging",
+                  "timePostExc" = "Resistance Training"),
+    effect = case_when(estimate > 0 & adj.p <= 0.05 ~ "Improved SE", 
+                       estimate < 0 & adj.p <= 0.05 ~ "Reduced SE" ,
+                       estimate < 0 & adj.p > 0.05 ~ "No effect",
+                       estimate > 0 & adj.p > 0.05 ~ "No effect"),
+    transcript_ID = str_split(target, "_",simplify= T) [,1]) %>%
+  ungroup() %>%
+  mutate(
+    sig = adj.p <= 0.05,
+    neg_log10_fdr = -log10(adj.p)
+  ) %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+  separate(target, into = c(NA, "intron_ID", NA), sep = "_") %>%
+  # create a gene and intron label using the gene name and intron number
+  mutate(
+    gene_label = ifelse(
+      is.na(external_gene_name) | external_gene_name == "",
+      ensembl_gene_id,
+      external_gene_name
+    ),
+    gene_intron = paste(gene_label, intron_ID, sep = " : ")
+  ) %>%
+  arrange(gene_label, estimate) %>%
+  mutate(gene_intron = factor(gene_intron, levels = unique(gene_intron))) %>%
+  dplyr::select(intron_ID, term, effect, adj.p, estimate, p.value, intron_length,
+                sig, neg_log10_fdr, gene_intron, gene_label, transcript_biotype)
+
+
+
+top10_labels <- Relief_binom_outputs %>%
+  filter(sig) %>%
+  group_by(term) %>%
+  slice_max(abs(estimate), n = 15, with_ties = FALSE) %>%
+  ungroup()
+
+
+term_summary <- Relief_binom_outputs %>%
+  group_by(term) %>%
+  summarise(
+    n_total = n(),
+    n_sig = sum(sig),
+    perc_sig = 100 * n_sig / n_total,
+    x = max(estimate, na.rm = TRUE),
+    y = max(neg_log10_fdr, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    label = paste0(
+      "ds introns: ",
+      n_sig, "/", n_total,
+      " (", round(perc_sig, 1), "%)"
+    )
+  )
+
+ ggplot(Relief_binom_outputs, aes(estimate, neg_log10_fdr, colour = effect)) +
+  geom_point(aes(colour = effect), alpha = 0.7, size = 2) +
+  
+  geom_text_repel(
+    data = top10_labels,
+    aes(label = gene_intron),
+    size = 4,
+    max.overlaps = Inf
+  ) +
+  
+  # geom_text(
+  #   data = term_summary,
+  #   aes(x = -Inf, y = Inf, label = label),
+  #   inherit.aes = FALSE,
+  #   hjust = -0.1,
+  #   vjust = 1.2,
+  #   size = 3.5,
+  #   fontface = "bold"
+  # ) +
+  
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  
+  scale_color_manual(values = c("Improved SE" =  colors[6], "Reduced SE" = colors[1]),
+                     name = "Effect") +
+  
+  facet_wrap(~term, scales = "fixed") +
+  coord_cartesian(xlim = c(-3, 3))+
+  
+  labs(
+    title = "Differentially spliced introns due to Aging and Resistance Training",
+    subtitle = "Binomial model (splicing efficiency coded as 0/1)",
+    x = "Effect size",
+    y = expression(-log[10]("FDR value"), clip = "off")
+  ) +
+  
+  # theme_minimal(base_size = 16) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+    plot.subtitle = element_text(hjust = 0.5, size = 13),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14, face = "bold"), 
+    
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    strip.text = element_text(size = 14, face = "bold"), 
+    axis.text.x = element_text(size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14, face = "bold"),
+    plot.background  = element_rect(fill = "white", colour = NA),
+    panel.background = element_rect(fill = "white", colour = NA)
+    
+    
+  )
+
+
+
+# extract the results of the non-binarised model
+
+full_model_sum <- seqwrap_summarise(full_model)
+
+# The non-binarised model 
+Relief_beta_binom_outputs <- full_model_sum$summaries %>% 
+  dplyr::select(-group) %>%
+  inner_join(intron_length, by = c("target" = "transcript_ID")) %>%
+  filter(term != "(Intercept)", term != "sexmale") %>%
+  drop_na() %>%
+  group_by(term) %>%
+  mutate(
+    adj.p = p.adjust(p.value, method = "fdr"),
+    term = recode(term,
+                  "scaled_age" = "Aging",
+                  "timePostExc" = "Resistance Training"),
+    effect = case_when(estimate > 0 & adj.p <= 0.05 ~ "Improved SE", 
+                       estimate < 0 & adj.p <= 0.05 ~ "Reduced SE" ,
+                       estimate < 0 & adj.p > 0.05 ~ "No effect",
+                       estimate > 0 & adj.p > 0.05 ~ "No effect"),
+    transcript_ID = str_split(target, "_",simplify= T) [,1]) %>%
+  ungroup() %>%
+  mutate(
+    sig = adj.p <= 0.05,
+    neg_log10_fdr = -log10(adj.p)
+  ) %>%
+  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
+  separate(target, into = c(NA, "intron_ID", NA), sep = "_") %>%
+  # create a gene and intron label using the gene name and intron number
+  mutate(
+    gene_label = ifelse(
+      is.na(external_gene_name) | external_gene_name == "",
+      ensembl_gene_id,
+      external_gene_name
+    ),
+    gene_intron = paste(gene_label, intron_ID, sep = " : ")
+  ) %>%
+  arrange(gene_label, estimate) %>%
+  mutate(gene_intron = factor(gene_intron, levels = unique(gene_intron))) %>%
+  dplyr::select(intron_ID, term, effect, adj.p, estimate, p.value, intron_length,
+                sig, neg_log10_fdr, gene_intron, gene_label, transcript_biotype)
+
+relief_x <- Relief_beta_binom_outputs %>%
+  filter(adj.p <= 0.05)
+ggplot(relief_x, aes(x = estimate, y = gene_intron, color = effect)) +
+  geom_point(size = 2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_wrap(~ term, scales = "free_y") +
+  scale_color_manual(values = c("Improved SE" = colors[6],
+                                "Reduced SE" = colors[1]),
+                     name = "Effect") +
+  labs(
+    x = "Effect size",
+    y = NULL,
+    title = "DS introns due to Aging and Resistance Training (RT)",
+    subtitle = "Beta-binomial model (0,1)"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    axis.text.y = element_text(size = 8),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, size = 8),
+    strip.text = element_text(face= "bold")
+  )
+
+
+
+relief_top10_labels <- Relief_beta_binom_outputs %>%
+  filter(sig) %>%
+  group_by(term) %>%
+  slice_max(abs(estimate), n = 15, with_ties = FALSE) %>%
+  ungroup()
+
+
+relief_term_summary <- Relief_beta_binom_outputs %>%
+  group_by(term) %>%
+  summarise(
+    n_total = n(),
+    n_sig = sum(sig),
+    perc_sig = 100 * n_sig / n_total,
+    x = max(estimate, na.rm = TRUE),
+    y = max(neg_log10_fdr, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    label = paste0(
+      "ds introns: ",
+      n_sig, "/", n_total,
+      " (", round(perc_sig, 1), "%)"
+    )
+  )
+
+ggplot(Relief_beta_binom_outputs, aes(estimate, neg_log10_fdr, colour = effect)) +
+  geom_point(aes(colour = effect), alpha = 0.7, size = 2) +
+  
+  geom_text_repel(
+    data = relief_top10_labels,
+    aes(label = gene_intron),
+    size = 4,
+    max.overlaps = Inf
+  ) +
+  
+  # geom_text(
+  #   data = term_summary,
+  #   aes(x = -Inf, y = Inf, label = label),
+  #   inherit.aes = FALSE,
+  #   hjust = -0.1,
+  #   vjust = 1.2,
+  #   size = 3.5,
+  #   fontface = "bold"
+  # ) +
+  
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  
+  scale_color_manual(values = c("Improved SE" =  colors[6], "Reduced SE" = colors[1]),
+                     name = "Effect") +
+  
+  facet_wrap(~term, scales = "fixed") +
+  coord_cartesian(xlim = c(-3, 3))+
+  
+  labs(
+    title = "Differentially spliced introns due to Aging and Resistance Training",
+    subtitle = "Binomial model (splicing efficiency coded as 0/1)",
+    x = "Effect size",
+    y = expression(-log[10]("FDR value"), clip = "off")
+  ) +
+  
+  # theme_minimal(base_size = 16) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+    plot.subtitle = element_text(hjust = 0.5, size = 13),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14, face = "bold"), 
+    
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    strip.text = element_text(size = 14, face = "bold"), 
+    axis.text.x = element_text(size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14, face = "bold"),
+    plot.background  = element_rect(fill = "white", colour = NA),
+    panel.background = element_rect(fill = "white", colour = NA)
+    
+    
+  )
 
 

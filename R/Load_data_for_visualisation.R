@@ -26,3 +26,18 @@ beta_binom_model<- readRDS("data/full_model.RDS") %>%
   seqwrap_summarise()
 
 
+
+# Load the gene annotation file
+gene_annotation <- readRDS("data/ensembl_gene_annotation.RDS")
+
+# Load one file from which we will extract intron length
+# This is valid as only introns quantified in all samples were included in the analyses
+intron_length <- readr::read_tsv("data_new/Alpha_Omega_SpliceQ_outputs/A_102.tsv") %>%
+  
+  distinct(across(6:ncol(.)), .keep_all = T) %>% # Removes duplicates based on columns 6 to end
+  mutate(transcript_ID = paste0(transcript_ID, "_", intron_ID, "_", chr),
+         intron_length = abs((sj3start - sj5end) + 1) ) %>% # Ensures positive length regardless of strand
+  dplyr::select(transcript_ID, intron_length)
+
+#  load the gene expression dataset
+gene_exp_df <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS") 
