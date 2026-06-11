@@ -91,7 +91,9 @@ all_splice_df <-all_splice_df %>%
   drop_na()
 
 
-
+# saveRDS(all_splice_df, "data/Trainome_all_splice_df.RDS")
+# 
+# saveRDS(metadata, "data/Trainome_metadata.RDS")
 
 # REORDER THE SEQUENCE ID TO MATCH BOTH DATAFRAMMES
 all_splice_reordered <- all_splice_df[, c("transcript_ID",metadata$seq_sample_id)] 
@@ -361,7 +363,7 @@ gene_exp_df <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS")
  informed_binom_sum <- seqwrap_summarise(binom_results)
  
  
- # filter significantly differantially spliced introns
+ # filter the summary and create new columns
  binom_model_outputs <- informed_binom_sum$summaries %>% 
    dplyr::select(-group) %>%
    inner_join(intron_length, by = c("target" = "transcript_ID")) %>%

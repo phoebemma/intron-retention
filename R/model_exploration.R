@@ -13,7 +13,8 @@ library(org.Hs.eg.db)
 library(magick)
 library(forcats)
 library(patchwork)
-library(ggrepel)              
+library(ggrepel) 
+library(png)
 
 # Load both splicing and metadata files
 
@@ -170,6 +171,7 @@ theme(
   ,
   plot.tag.position = c(0.08, 0.98)
 ) 
+
 
 
 # ggsave("Figures/Figure_1.png", bg = colors[4], scale = 4, dpi = 400)

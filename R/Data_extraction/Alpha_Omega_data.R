@@ -2,7 +2,7 @@ library(AOData)
 library(dplyr)
 library(tidyverse)
 library(stringi)
-source("R/Trainome_functions.R")
+source("R/archive/Trainome_functions.R")
 
 
 #Load the SpliceQ data, from which we would get the sequence IDs

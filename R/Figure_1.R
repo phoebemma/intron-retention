@@ -1,12 +1,18 @@
 # load the file with the data
 source("R/Load_data_for_visualisation.R")
 
+library(dplyr)
+library(tidyverse)
 library(ggplot2)
 library(patchwork)
+library(ggrepel)
 
+# plot a distribution of the participants in each study
+
+# In the metadata, most participants contributed two samples
 
 # subset the data to only count one participant once
-meta_unique <- all_full_metadata %>%
+meta_unique <- metadata %>%
   distinct(participant, .keep_all = TRUE)%>%
   mutate(study = recode(study,
                         "ReLiEf" = "RELIEF",
@@ -45,10 +51,11 @@ max_count <- ggplot_build(
 
 
 
+
 # Plot the distribution of all participants in one image
 all <- ggplot(meta_unique, aes(x = age, fill = sex)) +
   geom_histogram(position = position_dodge(width = 5),
-                 alpha = 0.7,
+                 alpha = 0.5,
                  binwidth = 5,
                  color = "black") +
   scale_fill_manual(
@@ -63,40 +70,36 @@ all <- ggplot(meta_unique, aes(x = age, fill = sex)) +
                                       "\nMales = ", male,
                                       "\nFemales = ", female)),
     inherit.aes = F,
-    hjust = 0.5,
+    hjust = 0.01,
     vjust = 0.5,
-    size = 4,
+    size = 3,
     fontface= "bold.italic"
   )+
   # facet_wrap(~ study, ncol = 2) +
-  theme_minimal(base_size = 12) +
+  theme_minimal(base_size = 12, base_family = "Arial") +
   labs(
-    title = "Age and gender distribution of all participants",
+    title = "Age distribution of all participants",
     x = "Age",
     y = NULL
   ) +
   theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    strip.text = element_text(face= "bold"),
     legend.title = element_blank(),
     legend.text = element_text(size = 12, face = "bold"), 
-    
-    axis.title.x = element_text(size = 14, face = "bold"),
-  #  axis.title.y = element_text(size = 14, face = "bold"),
-    
-    axis.text.x = element_text(size = 14, face = "bold"),
-    axis.text.y = element_text(size = 14, face = "bold"),
-  plot.background  = element_rect(fill = "white", colour = NA),
-  panel.background = element_rect(fill = "white", colour = NA)
-  
-    
+    axis.text.y = element_text(size = 12, face= "bold"),
+    axis.text.x = element_text(size = 12, face= "bold"),
+    axis.title = element_text(size = 12, face= "bold")
   )
 
 
 
-# Visualise the participants by study
+
+
+
 by_study <- ggplot(meta_unique, aes(x = age, fill = sex)) +
   geom_histogram(position = "dodge",
-                 alpha = 0.7,
+                 alpha = 0.5,
                  binwidth = 5,
                  color = "black") +
   scale_fill_manual(
@@ -105,7 +108,7 @@ by_study <- ggplot(meta_unique, aes(x = age, fill = sex)) +
       "female" = colors[3]
     )
   ) +
-  facet_wrap(~ study, ncol = 2, scales = "fixed") +
+  facet_wrap(~ study, ncol = 2, scales = "free") +
   geom_text(
     data = counts_df, aes(x = min(meta_unique$age), y= 0.5 * max_count,
                           label = paste0("n = ", n,
@@ -114,42 +117,48 @@ by_study <- ggplot(meta_unique, aes(x = age, fill = sex)) +
     inherit.aes = F,
     hjust = 0.1,
     vjust = 1.5,
-    size = 4,
-     fontface= "bold.italic"
+    size = 3,
+    fontface= "bold.italic"
   )+
-  theme_minimal(base_size = 12) +
+  theme_minimal(base_size = 12, base_family = "Arial") +
   labs(
     title = " Distribution of Participants across all studies",
     x = "Age",
     y = "Number of participants"
   ) +
-theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
-    legend.position = "None", 
-    
-    axis.title.x = element_text(size = 14, face = "bold"),
-    axis.title.y = element_text(size = 14, face = "bold"),
-    
-    axis.text.x = element_text(size = 14, face = "bold"),
-    axis.text.y = element_text(size = 14, face = "bold"),
-    strip.text = element_text(face = "bold", size = 14),
-    strip.background = element_rect(fill = "grey90", colour = NA),
-    
-    plot.background  = element_rect(fill = "white", colour = NA),
-    panel.background = element_rect(fill = "white", colour = NA)
-    
-    )
+  
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    strip.text = element_text(face= "bold"),
+    # legend.title = element_blank(),
+    # legend.text = element_text(size = 12, face = "bold"), 
+    legend.position = "none",
+    axis.text.y = element_text(size = 12, face= "bold"),
+    axis.text.x = element_text(size = 12, face= "bold"),
+    axis.title = element_text(size = 12, face= "bold")
+  )
+
+
+# Load the bubble image
+bubble_img <- png::readPNG("Figures/Bubble_chart.PNG")
+image_grob <- grid::rasterGrob(bubble_img, interpolate = TRUE)
+
+image_plot <- wrap_elements(image_grob)
+
+# combine with the histograms from the participants' displa
 
 
 
+Figure_1 <- by_study + all / image_plot 
 
 
-Fig1_plot <-  by_study + all
-Fig1_plot +
+Figure_1 +
   plot_annotation(tag_levels = "A") &
   #plot_layout(widths = c(1.1, 1))
   theme(
     plot.tag = element_text(size = 14, face = "bold")
     ,
-    plot.tag.position = c(0.08, 0.98)) 
-# ggsave("Figures/Figure_1.png",  width = 20, height = 12, dpi = 400, device = ragg::agg_png)
+    plot.tag.position = c(0.08, 0.98)
+  ) 
+
+# ggsave("Figures/Trainome_Figure_2.png", bg = colors[4], width = 15, height = 10, dpi = 400)
