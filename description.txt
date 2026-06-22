@@ -1,0 +1,37 @@
+Running all three gives you a **complete decomposition** of how aging and exercise affect splicing, because each component answers a distinct biological question:
+  
+  ---
+  
+  **`zprob` - Probability of perfect splicing**
+  - "Does aging/exercise change whether an intron is perfectly spliced at all?"
+- This is the binary decision - in/out of the perfectly spliced pool
+- Directly comparable to your binomial model results
+- Most interpretable for biological audience
+
+---
+  
+  **`conditional` - Degree of retention given imperfect splicing**
+  - "Among introns that are already partially retained, does aging/exercise make retention worse or better?"
+- Isolates the retention process from the splicing decision
+- Would detect subtle gradations that the binomial model completely misses
+- Most sensitive to small changes in the partially retained pool
+
+---
+  
+  **`response` - Overall marginal prediction**
+  - Combines both components into a single retention score
+- Answers "what is the net effect of aging/exercise on retention overall?"
+- Most useful for ranking introns by total effect size
+- Best for volcano plots and reporting top hits
+
+---
+  
+  **The scientific value of having all three:**
+  
+  An intron could show:
+  - **Effect in `zprob` only** ??? aging pushes introns out of perfect splicing but doesn't change how much they're retained when imperfect
+- **Effect in `conditional` only** ??? intron stays imperfectly spliced regardless of age but degree of retention worsens
+- **Effect in both** ??? aging both reduces perfect splicing probability AND worsens retention among imperfect - strongest biological signal
+- **Opposing effects** ??? which would be missed entirely by `response` alone
+
+That third pattern - opposing effects - is the key reason not to rely on `response` alone.

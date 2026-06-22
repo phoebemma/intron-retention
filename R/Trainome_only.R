@@ -90,6 +90,14 @@ all_splice_df <-all_splice_df %>%
   subset(select = c("transcript_ID", intersect)) %>%
   drop_na()
 
+# IDs in metadata not found in splice data
+# missing_from_splice <- setdiff(metadata$seq_sample_id, colnames(all_splice_df))
+# 
+# # IDs in splice data not found in metadata
+# missing_from_meta <- setdiff(colnames(all_splice_df)[-1], metadata$seq_sample_id)
+# 
+# head(missing_from_splice)
+# head(missing_from_meta)
 
 # saveRDS(all_splice_df, "data/Trainome_all_splice_df.RDS")
 # 
@@ -270,6 +278,8 @@ ggsave("Figures/Trainome_Figure_2.png", bg = colors[4], width = 15, height = 10,
 # This model investigates the question, "given an intron,
 # what is the probability of perfect splicing as a function of age and resistance exercise training"
 
+
+
 # derive a matrix that indicates 0 if SE is not 1
 one_inflated_mat <- all_splice_reordered
 
@@ -281,66 +291,101 @@ one_inflated_mat[-1] <- lapply(
 
 
 
-# Intialise argument
-args_binom <- list( formula = y ~ scaled_age + time + sex +
-                      (1 | study) + (1 | participant), family  = binomial)
 
-# containerise using seqwrap_compose
-binom <- seqwrap_compose(data       = one_inflated_mat,
-                         metadata   = metadata,
-                         samplename = "seq_sample_id",
-                         modelfun   = glmmTMB::glmmTMB,
-                         arguments  = args_binom)
-
-# build model
-binom_results <- seqwrap(binom,
-                         return_models = FALSE,
-                         cores = 10)
-
-# saveRDS(binom_results, "data/Trainome_binom_model.RDS")
+binom_container <- seqwrap_compose(
+  data       = one_inflated_mat,
+  metadata   = metadata,
+  samplename = "seq_sample_id",
+  modelfun   = glmmTMB::glmmTMB,
+  arguments  =  alist(
+    formula = y ~ splines::ns(scaled_age, df = 4) + time + sex +
+      (1 | study) + (1 | participant),
+    family  = binomial(link = "logit")
+  )
+)
 
 
-# binom_results <- readRDS("data/Trainome_binom_model.RDS")
+binom_results <- seqwrap(
+  binom_container,
+  return_models = TRUE,
+  cores = 10,
+  # subset = 1:200
+)
+
+saveRDS(binom_results, "data/splined_binom_models.RDS")
+
+
+
 
 # The second model
-# This model accepts as input the full spectrum of SE values. 
-# It investigates the impact of resistance training and aging 
-# on the slightest SE variations of introns.
+# Models the degree of intron retention among introns that are not perfectly spliced.
+# Flip SE so perfect splicing (1) becomes structural zeros for the zi component.
 
-# convert the 1.0 to 0.999. This is becasue beta-model accepts only values between 0 and one
-all_splice_reordered[all_splice_reordered == 1 ] <- 0.999
+zi_mat <- all_splice_reordered
 
+zi_mat[-1] <- 1 - all_splice_reordered[-1]
 
+zi_container <- seqwrap_compose(
+  data       = zi_mat,
+  metadata   = metadata,
+  samplename = "seq_sample_id",
+  modelfun   = glmmTMB::glmmTMB,
+  arguments  = alist(
+    formula   = y ~ splines::ns(scaled_age, df = 4) + time + sex +
+                    (1 | study) + (1 | participant),
+    ziformula = ~ splines::ns(scaled_age, df = 4) + time,
+    family    = glmmTMB::beta_family(link = "logit")
+  )
+)
 
-# initialise the argument. This time we check the interaction of age and time
-args_full <-list(formula = y ~  scaled_age + time + sex + (1|study) +(1|participant), 
-                 family = glmmTMB::beta_family(link = "logit"))
-
-
-
-
-# check the functions and datasets
-container <- seqwrap_compose(data = all_splice_reordered,
-                             metadata = metadata,
-                             samplename = "seq_sample_id",
-                             modelfun = glmmTMB::glmmTMB,
-                             arguments = args_full)
-
-
-# build model
-full_model <- seqwrap(container,
-                      # summary_fun = sum_with_pred,
-                      #eval_fun = eval_mod,
-                      return_models = F,
-                      # subset = 1:150,
-                      cores = 10)
+zi_results <- seqwrap(
+  zi_container,
+  return_models = TRUE,
+  cores = 10
+)
 
 
 
-# saveRDS(full_model, "data/Trainome_full_model.RDS")
-
-#  full_model <- readRDS("data/Trainome_full_model.RDS")
+saveRDS(zi_results, "data/splined_zi_results.RDS")
+# zi_results <- readRDS("data/splined_zi_results.RDS")
  
+zi_container_int <- seqwrap_compose(
+  data       = zi_mat,
+  metadata   = metadata,
+  samplename = "seq_sample_id",
+  modelfun   = glmmTMB::glmmTMB,
+  arguments  = alist(
+    formula   = y ~ splines::ns(scaled_age, df = 4) * time + sex +
+      (1 | study) + (1 | participant),
+    ziformula = ~ splines::ns(scaled_age, df = 4) * time,
+    family    = glmmTMB::beta_family(link = "logit")
+  )
+)
+
+zi_results_int <- seqwrap(
+  zi_container_int,
+  return_models = TRUE,
+  cores = 10
+)
+
+saveRDS(zi_results_int, "data/splined_zi_interaction_results.RDS")
+# a Betabinomial model that investigates interaction
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Load the gene annotation file

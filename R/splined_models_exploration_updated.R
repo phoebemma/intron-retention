@@ -643,3 +643,32 @@ paired_height_test <- t.test(
 
 print(paired_height_test)
 
+
+# 1. Calculate the moving velocity (slope) across continuous age steps for your FDR aging targets
+df_splicing_velocity <- df_predictions %>%
+  # Filter for your FDR-significant aging targets (from your previous filtering step)
+  filter(target %in% strict_fdr_age_only_targets & time == "PreExc") %>%
+  group_by(target) %>%
+  arrange(scaled_age) %>%
+  # Slope = change in splicing efficiency divided by change in age
+  mutate(
+    velocity = (estimate - lag(estimate)) / (scaled_age - lag(scaled_age))
+  ) %>%
+  filter(!is.na(velocity))
+
+# 2. Plot the velocity curve to find the exact global "dip" point
+ggplot(df_splicing_velocity, aes(x = scaled_age, y = velocity)) +
+  # Faint background lines for all introns
+  geom_line(aes(group = target), alpha = 0.01, color = "gray") +
+  # Bold global consensus curve using a GAM smoother
+  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), color = "red", linewidth = 1.5) +
+  # Reference line at 0 (above 0 = increasing, below 0 = decreasing)
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  labs(
+    title = "Splicing Decay Velocity Across the Aging Lifespan",
+    subtitle = "The lowest point on the red curve marks the exact age where the 'dip' is steepest",
+    x = "Scaled Age (0 = Youngest, 1 = Oldest)",
+    y = "Splicing Acceleration/Decay Velocity"
+  ) +
+  theme_minimal()
+
