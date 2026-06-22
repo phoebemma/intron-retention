@@ -11,95 +11,29 @@ library(ggpubr)
 
 
 
-
-
-# Load the binomial model output
-binom_df <- binom_model$summaries %>%
-  dplyr::select(-group) %>%
-  inner_join(intron_length, by = c("target" = "transcript_ID")) %>%
-  filter(term != "(Intercept)", term != "sexmale") %>%
-  drop_na() %>%
-  group_by(term) %>%
-  mutate(
-    adj.p = p.adjust(p.value, method = "fdr"),
-    term = recode(term,
-                  "scaled_age" = "Aging",
-                  "timePostExc" = "Resistance Training"),
-    effect = case_when(estimate > 0 & adj.p <= 0.05 ~ "Improved SE", 
-                       estimate < 0 & adj.p <= 0.05 ~ "Reduced SE" ,
-                       estimate < 0 & adj.p > 0.05 ~ "No effect",
-                       estimate > 0 & adj.p > 0.05 ~ "No effect"),
-    transcript_ID = str_split(target, "_",simplify= T) [,1]) %>%
-  ungroup() %>%
-  mutate(
-    sig = adj.p <= 0.05,
-    neg_log10_fdr = -log10(adj.p)
-  ) %>%
-  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
-  separate(target, into = c(NA, "intron_ID", NA), sep = "_", remove = F) %>%
-  # create a gene and intron label using the gene name and intron number
-  mutate(
-    gene_label = ifelse(
-      is.na(external_gene_name) | external_gene_name == "",
-      ensembl_gene_id,
-      external_gene_name
-    ),
-    gene_intron = paste(gene_label, intron_ID, sep = " : ")) # %>%
-  # arrange(gene_label, estimate) %>%
-  # mutate(gene_intron = factor(gene_intron, levels = unique(gene_intron))) %>%
-  # dplyr::select(intron_ID, term, effect, adj.p, estimate, p.value, intron_length,
-  #               sig, neg_log10_fdr, gene_intron, gene_label, transcript_biotype)
+zi_model <- zi_model$summaries
+zi_df <- zi_pred_resp %>%
+  dplyr::select(target, estimate, p.value)
 
 
 
 
+# From the aging slopes extract a ranking variable
 
-# Load the beta-binomial model output 
+# Loage the average slope estimate per intron
+zi_age_df <- zi_age_slopes %>%
+  mutate(adj.p = p.adjust(p.value, method = "fdr"),
+         neg_log10_fdr = -log10(adj.p),
+         effect = case_when(
+           estimate > 0 & adj.p <= 0.05 ~ "Decreased Splicing Efficiency",
+           estimate < 0 & adj.p <= 0.05 ~ "Improved Splicing Efficiency",
+           TRUE ~ "No effect"),
+         rank_score = -log10(adj.p) * abs(estimate),
+         sig = adj.p <= 0.05) %>% 
+  annotate_introns(gene_annotation , intron_length) 
 
-beta_binom_df <- beta_binom_model$summaries %>%
-  dplyr::select(-group) %>%
-  inner_join(intron_length, by = c("target" = "transcript_ID")) %>%
-  filter(term != "(Intercept)", term != "sexmale") %>%
-  drop_na() %>%
-  group_by(term) %>%
-  mutate(
-    adj.p = p.adjust(p.value, method = "fdr"),
-    term = recode(term,
-                  "scaled_age" = "Aging",
-                  "timePostExc" = "Resistance Training"),
-    effect = case_when(estimate > 0 & adj.p <= 0.05 ~ "Improved SE", 
-                       estimate < 0 & adj.p <= 0.05 ~ "Reduced SE" ,
-                       estimate < 0 & adj.p > 0.05 ~ "No effect",
-                       estimate > 0 & adj.p > 0.05 ~ "No effect"),
-    transcript_ID = str_split(target, "_",simplify= T) [,1]) %>%
-  ungroup() %>%
-  mutate(
-    sig = adj.p <= 0.05,
-    neg_log10_fdr = -log10(adj.p)
-  ) %>%
-  inner_join(gene_annotation, by= c("transcript_ID" = "ensembl_transcript_id_version")) %>%
-  separate(target, into = c(NA, "intron_ID", NA), sep = "_", remove = F) %>%
-  # create a gene and intron label using the gene name and intron number
-  mutate(
-    gene_label = ifelse(
-      is.na(external_gene_name) | external_gene_name == "",
-      ensembl_gene_id,
-      external_gene_name
-    ),
-    gene_intron = paste(gene_label, intron_ID, sep = " : ")
-  ) 
-
-
-
-aging_table <- beta_binom_df %>%
-  filter(term == "Aging") %>%
-  mutate(rank_score = -log10(adj.p) * abs(estimate)) %>% # create a ranking variable
-  arrange(desc(rank_score)) #%>%
-#dplyr::select(gene_intron, effect, estimate, adj.p, gene_label, rank_score)
-
-#  saveRDS(aging_table, "tables/Trainome_aging_table.rds")
-
-summary <- aging_table %>%
+# extract summary statistics for annotating plot
+summary <-zi_age_df %>%
   summarise(
     n_total = n(),
     n_sig = sum(sig),
@@ -108,7 +42,7 @@ summary <- aging_table %>%
     y = max(neg_log10_fdr, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  mutate(
+  mutate(                                                                                                                                                                                                                                                                                                                  
     label = paste0(
       "Ds introns: ",
       n_sig, "/", n_total,
@@ -117,18 +51,76 @@ summary <- aging_table %>%
   )
 
 
+# extract the top 9 introns based on the ranking parameter (in the annotate_introns" function)
+top9_introns <- zi_age_df %>% slice_head(n = 6)
 
- top6_introns <- aging_table %>% slice_head(n = 6)
 
 
-top6_genes <- unique(top6_introns$gene_label)
+volc_aging <- zi_age_df %>%
+  ggplot(aes(x = estimate, y = neg_log10_fdr, colour = effect)) +
+  geom_point(alpha = 0.9, size = 2) +
+  geom_text_repel(
+    data = top9_introns,
+    aes(label = gene_intron),
+    size = 6,
+    max.overlaps = Inf
+  ) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed")+ 
+  scale_color_manual(values = effect_colors) +
+  geom_text(
+    data = summary,
+    aes(x = -Inf, y = Inf, label = label),
+    inherit.aes = FALSE,
+    hjust = -0.1,
+    vjust = 1.0,
+    size = 5,
+    fontface = "italic"
+  ) +
+ # coord_cartesian(xlim = c(-0.02, 0.02))  + # adjust limits to where bulk of points are
+  
+  labs(
+    title = "Differentially Spliced(ds) Introns Due To Aging",
+    x = "Effect size",
+    y = expression(-log[10]("FDR value"), clip = "off")
+  ) +
+  
+  # theme_minimal(base_size = 16) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+    plot.subtitle = element_text(hjust = 0.5, size = 13),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12, face = "bold"), 
+    
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    strip.text = element_text(size = 14, face = "bold"), 
+    axis.text.x = element_text(size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14, face = "bold"),
+    plot.background  = element_rect(fill = "white", colour = NA),
+    panel.background = element_rect(fill = "white", colour = NA)
+  )
+
+
+ggsave("SVG_files/Volcano_plot_aging.svg", plot = volc_aging, width = 14, height = 12)
+
+
+
+
+
+
+
+
+
+
+
+top6_genes <- unique(top9_introns$gene_label)
 
 age_introns_df <- all_splice_df %>%
-  dplyr::filter(transcript_ID %in% top6_introns$target) %>%
+  dplyr::filter(transcript_ID %in% top9_introns$target) %>%
   pivot_longer(names_to = "seq_sample_id",
                values_to = "SE",
                cols = -(transcript_ID) ) %>%
-  inner_join(top6_introns, by = c("transcript_ID" = "target")) %>%
+  inner_join(top9_introns, by = c("transcript_ID" = "target")) %>%
   inner_join(metadata, by = "seq_sample_id")%>% 
   group_by(scaled_age, gene_intron, transcript_ID) %>%
   summarise(mean_SE = mean(SE, na.rm = TRUE), .groups = "drop")
@@ -148,8 +140,8 @@ intron_plots <- lapply(unique(age_introns_df$gene_intron), function(intron) {
     labs(title = intron, x = NULL, y = NULL) +
     theme_minimal() +
     theme(
-      plot.title = element_text(size = 10, face = "bold"),
-      axis.text = element_text(size = 10),
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.text = element_text(size = 14),
       axis.title = element_blank()
     )
 })
@@ -164,23 +156,301 @@ mini_panel <- plot_grid(
 )
 
 
-volcano_plot <- ggplot((beta_binom_df %>%
-                          filter(term == "Aging")), aes(estimate, neg_log10_fdr, colour = effect)) +
-  geom_point(aes(colour = effect), alpha = 0.7, size = 2) +
-  
-  geom_text_repel(
-    data = top6_introns,
-    aes(label = gene_intron),
-    size = 6,
-    max.overlaps = Inf
+
+ggsave("SVG_files/Top_6_aging_introns.svg", plot = mini_panel, width = 14, height = 12)
+
+
+
+
+zi_pred_resp %>%
+  mutate(SE = 1 - estimate) %>%
+  group_by(scaled_age, time) %>%
+  summarise(mean_SE = mean(SE, na.rm = TRUE),
+            se      = sd(SE, na.rm = TRUE) / sqrt(n()),
+            .groups = "drop") %>%
+  ggplot(aes(x = scaled_age, y = mean_SE, colour = time, fill = time)) +
+  geom_ribbon(aes(ymin = mean_SE - se, ymax = mean_SE + se), 
+              alpha = 0.15, colour = NA) +
+  geom_line(linewidth = 0.9) +
+  geom_smooth(method = "lm", se = FALSE, 
+              linetype = "dashed", linewidth = 0.6) +
+  scale_colour_manual(values = c("PreExc" = colors[5], "PostExc" = colors[1])) +
+  scale_fill_manual(values   = c("PreExc" = colors[5], "PostExc" = colors[1])) +
+  labs(
+    title    = "Global splicing efficiency trajectory across age",
+    subtitle = "Solid = spline fit, dashed = linear fit",
+    x        = "Scaled age",
+    y        = "Mean splicing efficiency",
+    colour   = NULL, fill = NULL
   ) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+
+# To classify introns by trajectory shape across four age windows
+# Use the zpredictions to extract the direction of change at different age windows:
+
+trajectory_class <- zi_pred_resp %>%
+  mutate(SE = 1 - estimate) %>%
+  filter(time == "PreExc") %>%
+  group_by(target) %>%
+  summarise(
+    young       = mean(SE[scaled_age >= 0    & scaled_age < 0.25]),
+    young_mid   = mean(SE[scaled_age >= 0.25 & scaled_age < 0.50]),
+    mid_old     = mean(SE[scaled_age >= 0.50 & scaled_age < 0.75]),
+    old         = mean(SE[scaled_age >= 0.75 & scaled_age <= 1.0]),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    # slopes between consecutive groups
+    slope_1 = young_mid - young,      # young to young-middle
+    slope_2 = mid_old   - young_mid,  # young-middle to middle-old
+    slope_3 = old       - mid_old,    # middle-old to old
+    trajectory = case_when(
+      # rises then falls
+      slope_1 > 0 & slope_2 > 0 & slope_3 < 0 ~ "Rise-Rise-Decline",
+      slope_1 > 0 & slope_2 < 0 & slope_3 < 0 ~ "Rise-Decline-Decline",
+      slope_1 < 0 & slope_2 < 0 & slope_3 > 0 ~ "Decline-Decline-Rise",
+      slope_1 < 0 & slope_2 > 0 & slope_3 > 0 ~ "Decline-Rise-Rise",
+      slope_1 > 0 & slope_2 < 0 & slope_3 > 0 ~ "Rise-Decline-Rise",
+      slope_1 < 0 & slope_2 > 0 & slope_3 < 0 ~ "Decline-Rise-Decline",
+      slope_1 > 0 & slope_2 > 0 & slope_3 > 0 ~ "Consistent Improvement",
+      slope_1 < 0 & slope_2 < 0 & slope_3 < 0 ~ "Consistent Decline",
+      TRUE                                      ~ "Flat"
+    )
+  )
+
+# Count introns by trajectory class
+trajectory_class %>%
+  count(trajectory) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = reorder(trajectory, n), y = n, fill = trajectory)) +
+  geom_col() +
+  geom_text(aes(label = n), hjust = -0.2) +
+  coord_flip() +
+  labs(
+    title = "Intron trajectory patterns across four age groups",
+    x     = NULL,
+    y     = "Number of introns"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title      = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "none"
+  )
+
+
+
+# Visualise trajectory per class
+age_labels <- data.frame(
+  scaled_age = c(0.125, 0.375, 0.625, 0.875),
+  label      = c("Young", "Young-Mid", "Mid-Old", "Old"),
+  mean_SE    = Inf
+)
+
+zi_pred_resp %>%
+  mutate(SE = 1 - estimate) %>%
+  filter(time == "PreExc") %>%
+  inner_join(trajectory_class, by = "target") %>%
+  group_by(trajectory, scaled_age) %>%
+  summarise(
+    mean_SE = mean(SE, na.rm = TRUE),
+    se      = sd(SE, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(x = scaled_age, y = mean_SE, colour = trajectory, fill = trajectory)) +
+  geom_ribbon(aes(ymin = mean_SE - se, ymax = mean_SE + se),
+              alpha = 0.1, colour = NA) +
+  geom_line(linewidth = 0.9) +
+  geom_vline(xintercept = c(0.25, 0.50, 0.75),
+             linetype = "dashed", colour = "grey70") +
+  geom_text(data = age_labels, 
+            aes(x = scaled_age, y = mean_SE, label = label),
+            vjust = 1.5, size = 3.5, fontface = "italic",
+            colour = "grey40", inherit.aes = FALSE) +
+  facet_wrap(~ trajectory, scales = "free") +
+  labs(
+    title  = "Mean SE trajectory by intron class across four age groups",
+    x      = "Scaled age",
+    y      = "Mean splicing efficiency",
+    colour = NULL, fill = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title      = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "none",
+    strip.text      = element_text(face = "bold")
+  )
+
+
+
+# Enrichment per trajectory class
+trajectory_go <- trajectory_class %>%
+  inner_join(
+    zi_age_df %>% 
+      dplyr::select(target, external_gene_name) %>% distinct(),
+    by = "target"
+  ) %>%
+  group_by(trajectory) %>%
+  summarise(genes = list(unique(external_gene_name)), .groups = "drop")
+
+# Run GO for each trajectory class
+go_results <- trajectory_go %>%
+  mutate(
+    ego = map(genes, ~ tryCatch(
+      enrichGO(
+        gene          = .x,
+        keyType       = "SYMBOL",
+        universe      = gene_exp_df$gene_name,
+        OrgDb         = org.Hs.eg.db,
+        ont           = "BP",
+        pAdjustMethod = "BH",
+        qvalueCutoff  = 0.05,
+        readable      = TRUE
+      ),
+      error = function(e) NULL
+    ))
+  )
+
+# Plot GO results per class
+go_results %>%
+  filter(!map_lgl(ego, is.null)) %>%
+  mutate(plot = map2(ego, trajectory, ~ dotplot(.x, font.size = 8,
+                                                title = .y))) %>%
+  pull(plot) %>%
+  wrap_plots(ncol = 2)
+
+
+
+
+
+
+
+trajectory_class <- zi_pred_resp %>%
+  mutate(SE = 1 - estimate) %>%
+  filter(time == "PreExc") %>%  # focus on baseline age trajectory
+  group_by(target) %>%
+  summarise(
+    # early age effect (young to middle)
+    early_slope = mean(SE[scaled_age >= 0.25 & scaled_age <= 0.5]) -
+      mean(SE[scaled_age >= 0 & scaled_age < 0.25]),
+    # late age effect (middle to old)
+    late_slope  = mean(SE[scaled_age > 0.5 & scaled_age <= 0.75]) -
+      mean(SE[scaled_age > 0.5 & scaled_age <= 1.0]),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    trajectory = case_when(
+      early_slope > 0  & late_slope < 0  ~ "Rise then Decline",
+      early_slope < 0  & late_slope > 0  ~ "Decline then Rise",
+      early_slope > 0  & late_slope > 0  ~ "Consistent Improvement",
+      early_slope < 0  & late_slope < 0  ~ "Consistent Decline",
+      TRUE                               ~ "Flat"
+    )
+  )
+
+
+
+
+trajectory_class %>%
+  count(trajectory) %>%
+  ggplot(aes(x = trajectory, y = n, fill = trajectory)) +
+  geom_col() +
+  geom_text(aes(label = n), vjust = -0.3) +
+  theme_minimal() +
+  labs(title = "Intron trajectory patterns across age",
+       x = NULL, y = "Number of introns") +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 30, hjust = 1))
+
+
+
+zi_pred_resp %>%
+  mutate(SE = 1 - estimate) %>%
+  filter(time == "PreExc") %>%
+  inner_join(trajectory_class, by = "target") %>%
+  group_by(trajectory, scaled_age) %>%
+  summarise(mean_SE = mean(SE, na.rm = TRUE), .groups = "drop") %>%
+  ggplot(aes(x = scaled_age, y = mean_SE, colour = trajectory)) +
+  geom_line(linewidth = 0.9) +
+  labs(
+    title  = "Mean SE trajectory by intron class",
+    x      = "Scaled age",
+    y      = "Mean splicing efficiency",
+    colour = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+
+
+# Example for "Rise then Decline" introns
+trajectory_go <- trajectory_class %>%
+  inner_join(
+    zi_age_df %>% 
+      dplyr::select(target, external_gene_name) %>% distinct(),
+    by = "target"
+  ) %>%
+  group_by(trajectory) %>%
+  summarise(genes = list(unique(external_gene_name)), .groups = "drop")
+
+# Run GO for each trajectory class
+go_results <- trajectory_go %>%
+  mutate(
+    ego = map(genes, ~ tryCatch(
+      enrichGO(
+        gene          = .x,
+        keyType       = "SYMBOL",
+        universe      = gene_exp_df$gene_name,
+        OrgDb         = org.Hs.eg.db,
+        ont           = "BP",
+        pAdjustMethod = "BH",
+        qvalueCutoff  = 0.05,
+        readable      = TRUE
+      ),
+      error = function(e) NULL
+    ))
+  )
+
+# Plot GO results per class
+go_results %>%
+  filter(!map_lgl(ego, is.null)) %>%
+  mutate(plot = map2(ego, trajectory, ~ dotplot(.x, font.size = 8,
+                                                title = .y))) %>%
+  pull(plot) %>%
+  wrap_plots(ncol = 2)
+
+
+
+# The zprob model that looks at how perfect splicing changes with age
+
+
+
+zprob <- zi_pred_zprob %>%
+  group_by(time) %>%
+  mutate(adj.p = p.adjust(p.value, method = "fdr"),
+         neg_log10_fdr = -log10(adj.p),
+         effect = case_when(
+           estimate > 0 & adj.p <= 0.05 ~ "Decreased Splicing Efficiency",
+           estimate < 0 & adj.p <= 0.05 ~ "Improved Splicing Efficiency",
+           TRUE ~ "No effect"),
+         rank_score = -log10(adj.p) * abs(estimate),
+         sig = adj.p <= 0.05) %>% 
+  annotate_introns(gene_annotation , intron_length) %>%
+  ungroup()
   
   
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
-  
-  scale_color_manual(values = c("Improved SE" =  colors[6], "Reduced SE" = colors[1]),
-                     name = "Effect") +
-  
+zprob %>%
+  ggplot(aes(x = estimate, y = neg_log10_fdr, colour = effect)) +
+  geom_point(alpha = 0.9, size = 2) +
+  # geom_text_repel(
+  #   data = top9_introns,
+  #   aes(label = gene_intron),
+  #   size = 6,
+  #   max.overlaps = Inf
+  # ) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed")+ 
+  scale_color_manual(values = effect_colors) +
   geom_text(
     data = summary,
     aes(x = -Inf, y = Inf, label = label),
@@ -189,145 +459,60 @@ volcano_plot <- ggplot((beta_binom_df %>%
     vjust = 1.0,
     size = 5,
     fontface = "italic"
-  ) +
+  )
   
-  labs(
-    title = "Differentially spliced(ds) introns due to Aging",
-    subtitle = "Beta-binomial model (splicing efficiency coded as 0,1)",
-    x = "Effect size",
-    y = expression(-log[10]("FDR value"), clip = "off")
-  ) +
   
-  # theme_minimal(base_size = 16) +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-    plot.subtitle = element_text(hjust = 0.5, size = 13),
-    legend.title = element_blank(),
-    legend.text = element_text(size = 9, face = "bold"), 
-    
-    axis.title.x = element_text(size = 14, face = "bold"),
-    axis.title.y = element_text(size = 14, face = "bold"),
-    strip.text = element_text(size = 14, face = "bold"), 
-    axis.text.x = element_text(size = 14, face = "bold"),
-    axis.text.y = element_text(size = 14, face = "bold"),
-    plot.background  = element_rect(fill = "white", colour = NA),
-    panel.background = element_rect(fill = "white", colour = NA)
-  )
+  
+  
+zprob <- zprob %>%
+  filter(adj.p <= 0.05)
 
-
-# combine volcano + insets
-
-final_volcano <- ggdraw() +
-  draw_plot(volcano_plot) +
-  draw_plot(
-    mini_panel,
-    x = 0.55,   # adjust horizontally
-    y = 0.45,  # adjust vertically
-    width = 0.38,
-    height = 0.48
-  )
-
-final_volcano
-
-
-
-# functional annotation of genes with introns whose SE are aging-associated
-
-aging_df <- beta_binom_df %>%
-  filter(term == "Aging") %>%
-  dplyr::filter(adj.p <= 0.05)
-# Functional annotation of the genes affected
-ego_aging <- enrichGO(gene =  aging_df$external_gene_name,
-                      keyType = "SYMBOL",
-                      universe = gene_exp_df$gene_name,
-                      OrgDb = org.Hs.eg.db, 
-                      ont = "BP", 
-                      pAdjustMethod = "BH", 
-                      qvalueCutoff = 0.05, 
-                      readable = T)
-
-
-## Output results from GO analysis to a table
-cluster_aging <- data.frame(ego_aging)
-
-go_aging <- dotplot(ego_aging,
-                    showCategory = 5,
-                    font.size = 12, title = "Enriched biological processes in genes containing introns with aging-associated SE") +
-  theme(axis.text = element_text(size = 12, face = "bold"),
-        plot.title = element_text(hjust = 0.5, face = "bold") )
-
-go_aging 
-
-
-
-# plot splicing efficiency by gene expression
-
-
-# First load the gene expression dataset
-
-
-# select the top 6 most age-affected introns
-top6_introns <- aging_table %>% slice_head(n = 6)
-
-top6_genes <- unique(top6_introns$gene_label)
-
-splice_df_long <- all_splice_df %>%
-  pivot_longer(
-    cols = -transcript_ID,
-    names_to = "seq_sample_id",
-    values_to = "SE"
-  )
+length(unique(zprob$target))
 
 
 
 
-age_exp_df <- gene_exp_df %>%
-  filter(gene_name %in% beta_binom_df$external_gene_name) %>%
-  pivot_longer(
-    cols = -gene_name,
-    names_to = "seq_sample_id",
-    values_to = "gene_count"
-  ) %>%
-  inner_join(metadata, by = "seq_sample_id") %>%
-  inner_join(beta_binom_df, by = c("gene_name" = "external_gene_name")) %>%
-  inner_join(splice_df_long, by = c("target" = "transcript_ID", "seq_sample_id"))%>%
-  group_by(gene_name, seq_sample_id) %>%
-  summarise(
-    gene_count = dplyr::first(gene_count),
-    mean_SE = mean(SE, na.rm = TRUE)
-  ) %>%
-  ungroup()
 
 
 
-plot_df <- age_exp_df %>%
-  filter(gene_name %in% top6_genes)
-plot_df$log_expr <- log2(plot_df$gene_count + 1)
 
-cor_plot <- ggplot(plot_df, aes(x = mean_SE, y = log_expr, colour = gene_name) ) +
-  geom_point(alpha = 0.6) +
-  geom_smooth(method = "lm", color = "red") +
-  facet_wrap(~ gene_name, scales = "free") +
-  stat_cor(method = "spearman", size = 5) +
-  theme_minimal() +
+
+
+
+
+
+
+
+  group_by(scaled_age, time) %>%
+  summarise(mean_zprob = mean(estimate, na.rm = TRUE),
+            se         = sd(estimate, na.rm = TRUE) / sqrt(n()),
+            .groups    = "drop") %>%
+  ggplot(aes(x = scaled_age, y = mean_zprob, colour = time, fill = time)) +
+  geom_ribbon(aes(ymin = mean_zprob - se, ymax = mean_zprob + se),
+              alpha = 0.15, colour = NA) +
+  geom_line(linewidth = 0.9) +
+  scale_colour_manual(values = c("PreExc" = colors[5], "PostExc" = colors[1])) +
+  scale_fill_manual(values   = c("PreExc" = colors[5], "PostExc" = colors[1])) +
   labs(
-    x = "Splicing efficiency (SE)",
-    y = NULL,
-    title = "SE vs expression in genes with most aging-associated introns"
-  )+
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-    legend.title = element_blank(),
-    legend.text = element_text(size = 9, face = "bold"), 
-    
-    axis.title.x = element_text(size = 14, face = "bold"),
-    axis.title.y = element_text(size = 14, face = "bold"),
-    strip.text = element_text(size = 14, face = "bold"), 
-    axis.text.x = element_text(size = 14, face = "bold"),
-    axis.text.y = element_text(size = 14, face = "bold"),
-    plot.background  = element_rect(fill = "white", colour = NA),
-    panel.background = element_rect(fill = "white", colour = NA)
-  )
+    title = "Probability of perfect splicing across age",
+    x     = "Scaled age",
+    y     = "P(SE = 1)",
+    colour = NULL, fill = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+
+
+sig_zprob_introns <- zi_pred_zprob %>%
+  group_by(target) %>%
+  mutate(adj.p = p.adjust(p.value, method = "fdr")) %>%
+  filter(adj.p <= 0.05) %>%
+  pull(target) %>%
+  unique()
+
+
+
 
 # 
 # age_exp_df <- age_exp_df %>%
