@@ -95,7 +95,7 @@ full_model <- seqwrap(container,
                       #eval_fun = eval_mod,
                       return_models = F,
                       # subset = 1:150,
-                      cores = 10)
+                      cores = 2)
 
 saveRDS(full_model, "data/Relief_full_model.RDS")
 
@@ -150,7 +150,7 @@ Relief_binom_outputs <- Relief_binom$summaries %>%
 top10_labels <- Relief_binom_outputs %>%
   filter(sig) %>%
   group_by(term) %>%
-  slice_max(abs(estimate), n = 15, with_ties = FALSE) %>%
+  slice_max(abs(estimate), n = 6, with_ties = FALSE) %>%
   ungroup()
 
 

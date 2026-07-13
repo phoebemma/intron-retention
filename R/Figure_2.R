@@ -15,9 +15,9 @@ zi_model <- zi_model$summaries
 zi_df <- zi_pred_resp %>%
   dplyr::select(target, estimate, p.value)
 
+length(unique(zi_model$target))
 
-
-
+unique(zi_age_slopes$time)
 # From the aging slopes extract a ranking variable
 
 # Loage the average slope estimate per intron
@@ -32,27 +32,43 @@ zi_age_df <- zi_age_slopes %>%
          sig = adj.p <= 0.05) %>% 
   annotate_introns(gene_annotation , intron_length) 
 
+
+x <- zi_age_df %>%
+  filter(sig) %>%
+  count(term, effect) %>%
+  filter(n > 1)
+
+table(zi_age_slopes$time)
 # extract summary statistics for annotating plot
-summary <-zi_age_df %>%
+
+summary <- zi_age_df %>%
   summarise(
     n_total = n(),
     n_sig = sum(sig),
+    
+    n_dec = sum(effect == "Improved Splicing Efficiency" & sig),
+    n_inc = sum(effect == "Decreased Splicing Efficiency" & sig),
+    
     perc_sig = 100 * n_sig / n_total,
+    perc_dec = 100 * n_dec / n_total,
+    perc_inc = 100 * n_inc / n_total,
+    
     x = max(estimate, na.rm = TRUE),
     y = max(neg_log10_fdr, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  mutate(                                                                                                                                                                                                                                                                                                                  
+  mutate(
     label = paste0(
-      "Ds introns: ",
-      n_sig, "/", n_total,
-      " (", round(perc_sig, 1), "%)"
+      " Improved SE: ", round(perc_dec, 1), "%\n",
+      "Decreased SE: ", round(perc_inc, 1), "%)"
     )
   )
 
-
 # extract the top 9 introns based on the ranking parameter (in the annotate_introns" function)
-top9_introns <- zi_age_df %>% slice_head(n = 6)
+top9_introns <- zi_age_df %>%
+  group_by(time) %>%
+slice_head(n = 9) %>%
+  ungroup()
 
 
 
@@ -76,7 +92,8 @@ volc_aging <- zi_age_df %>%
     size = 5,
     fontface = "italic"
   ) +
- # coord_cartesian(xlim = c(-0.02, 0.02))  + # adjust limits to where bulk of points are
+  coord_cartesian(xlim = c(-0.02, 0.02))  + # adjust limits to where bulk of points are
+  facet_wrap( ~ time) +
   
   labs(
     title = "Differentially Spliced(ds) Introns Due To Aging",
@@ -101,7 +118,7 @@ volc_aging <- zi_age_df %>%
   )
 
 
-ggsave("SVG_files/Volcano_plot_aging.svg", plot = volc_aging, width = 14, height = 12)
+# ggsave("SVG_files/Volcano_plot_aging.svg", plot = volc_aging, width = 14, height = 12)
 
 
 
@@ -113,7 +130,7 @@ ggsave("SVG_files/Volcano_plot_aging.svg", plot = volc_aging, width = 14, height
 
 
 
-top6_genes <- unique(top9_introns$gene_label)
+top9_genes <- unique(top9_introns$gene_label)
 
 age_introns_df <- all_splice_df %>%
   dplyr::filter(transcript_ID %in% top9_introns$target) %>%
@@ -142,7 +159,14 @@ intron_plots <- lapply(unique(age_introns_df$gene_intron), function(intron) {
     theme(
       plot.title = element_text(size = 14, face = "bold"),
       axis.text = element_text(size = 14),
-      axis.title = element_blank()
+      axis.title = element_blank(),
+      panel.grid = element_blank(), # removes grid lines 
+      
+      panel.border = element_rect( # add a subtle border
+        colour = "grey80",   
+        fill = NA,
+        linewidth = 0.5
+      )
     )
 })
 
@@ -157,18 +181,34 @@ mini_panel <- plot_grid(
 
 
 
-ggsave("SVG_files/Top_6_aging_introns.svg", plot = mini_panel, width = 14, height = 12)
+# ggsave("SVG_files/Top_6_aging_introns.svg", plot = mini_panel, width = 14, height = 12)
+
+# Get the original age range
+age_min <- min(metadata$age, na.rm = TRUE)
+age_max <- max(metadata$age, na.rm = TRUE)
+
+# Convert scaled_age back to real age
+zi_pred_resp <- zi_pred_resp %>%
+  mutate(real_age = scaled_age * (age_max - age_min) + age_min)
 
 
 
 
-zi_pred_resp %>%
+
+ zi_pred_resp <- zi_pred_resp %>%
   mutate(SE = 1 - estimate) %>%
-  group_by(scaled_age, time) %>%
+group_by(time, scaled_age) %>%
+  mutate( adj.p = p.adjust(p.value, method = "fdr")) %>%
+  filter(adj.p <= 0.05) %>%
+  ungroup() %>%
+  group_by(real_age, time) %>%
   summarise(mean_SE = mean(SE, na.rm = TRUE),
             se      = sd(SE, na.rm = TRUE) / sqrt(n()),
             .groups = "drop") %>%
-  ggplot(aes(x = scaled_age, y = mean_SE, colour = time, fill = time)) +
+   ungroup()
+ 
+ zi_pred_resp%>%
+  ggplot(aes(x = real_age, y = mean_SE, colour = time, fill = time)) +
   geom_ribbon(aes(ymin = mean_SE - se, ymax = mean_SE + se), 
               alpha = 0.15, colour = NA) +
   geom_line(linewidth = 0.9) +
@@ -191,9 +231,9 @@ zi_pred_resp %>%
 # Use the zpredictions to extract the direction of change at different age windows:
 
 trajectory_class <- zi_pred_resp %>%
-  mutate(SE = 1 - estimate) %>%
+ # mutate(SE = 1 - estimate) %>%
   filter(time == "PreExc") %>%
-  group_by(target) %>%
+ # group_by(target) %>%
   summarise(
     young       = mean(SE[scaled_age >= 0    & scaled_age < 0.25]),
     young_mid   = mean(SE[scaled_age >= 0.25 & scaled_age < 0.50]),

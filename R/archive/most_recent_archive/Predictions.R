@@ -105,7 +105,8 @@ df_age_slopes <- map_dfr(
         mod,
         variables  = "scaled_age",
         by         = "time",
-        newdata    = datagrid(scaled_age = seq(0, 1, by = 0.25)),
+        newdata    = datagrid(scaled_age = seq(0, 1, by = 0.25),
+                              time = c("PreExc", "PostExc")),
         type       = "response",
         re_formula = NA
       )
