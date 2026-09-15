@@ -238,8 +238,7 @@ repeated_gene_rows <- sig_baseline %>%
 #   ungroup()
 
 
-top_9_labels <- aging_baseline %>%
-  filter(sig) %>%
+top_9_labels <- sig_baseline  %>%
   group_by(component) %>%
   mutate(rank_score = abs(estimate) * -log10(adj.p)) %>% 
   arrange(desc(rank_score), adj.p, desc(abs(estimate))) %>%
@@ -310,7 +309,11 @@ volcano_aging_baseline <- ggplot(aging_baseline,
 
 
 
-
+ds_intron_aging <- sig_baseline %>%
+  #arrange(desc(abs(estimate))) %>%
+  mutate(rank_score = abs(estimate) * -log10(adj.p)) %>% 
+  arrange(desc(rank_score), adj.p, desc(abs(estimate))) %>%
+  slice_head(n = 59) 
 
 
 
@@ -826,4 +829,4 @@ print(plot_traj_relief)
 
 
 
-# Interaction effect of aging
+#Interaction effect of aging

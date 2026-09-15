@@ -1,13 +1,21 @@
-# load the file with the data
-source("R/Load_data_for_visualisation.R")
+---
+title: "Visualisation"
+format: pdf
+editor: source
+---
 
-library(dplyr)
-library(tidyverse)
-library(ggplot2)
-library(patchwork)
-library(ggrepel)
+## Introduction
 
+Using SPLICE-q, intron splicing efficiency was quantified from RNA Sequence data generated from five different resistance exercise training (RT) intervention studies . The study was aimed at investigating if and how aging, and, RT affected intron splicing efficiency in human skeletal muscle. Due to an inability to separate study effects from the effects of aging in the pooled dataset as participants in majority of the studies had distinct age distributions, this study employed a two-step complementary approach; a primary analysis using the RELIEF data which has young and old participants, and a secondary analysis using all 5 studies where the trajectory of differentially spliced introns from the primary analysis will be mapped.
 
+### Basic data visualization
+
+#### Figure 2
+
+```{r}
+#| echo: false
+# load the file that contains all the data
+source(here::here("R/Load_data_for_visualisation.R"))
 
 # plot a distribution of the participants in each study
 
@@ -21,6 +29,7 @@ meta_unique <- metadata %>%
                         "copd" = "COPD",
                         "ct" = "ContraTRAIN",
                         "vol" = "VOLUME"))
+
 
 # create counts per study
 # Aim is to add number of participants  in image
@@ -52,8 +61,6 @@ max_count <- ggplot_build(
 )$data[[1]]$count %>% max()
 
 
-
-
 # Plot the distribution of all participants in one image
 all <- ggplot(meta_unique, aes(x = age, fill = sex)) +
   geom_histogram(position = position_dodge(width = 5),
@@ -74,11 +81,11 @@ all <- ggplot(meta_unique, aes(x = age, fill = sex)) +
     inherit.aes = F,
     hjust = 0.001,
     vjust = 0.01,
-    size = 4,
+    size = 2,
     fontface= "bold.italic"
   )+
   # facet_wrap(~ study, ncol = 2) +
-  theme_minimal(base_size = 16, base_family = "Arial") +
+  theme_minimal(base_size = 10) +
   labs(
     title = "Age distribution of all participants",
     x = "Age",
@@ -88,16 +95,15 @@ all <- ggplot(meta_unique, aes(x = age, fill = sex)) +
     plot.title = element_text(hjust = 0.5, face = "bold"),
     strip.text = element_text(face= "bold"),
     legend.title = element_blank(),
-    legend.text = element_text(size = 16, face = "bold"), 
-    axis.text.y = element_text(size = 16, face= "bold"),
-    axis.text.x = element_text(size = 16, face= "bold"),
-    axis.title = element_text(size = 16, face= "bold")
+    legend.text = element_text(size = 10, face = "bold"), 
+    axis.text.y = element_text(size = 10, face= "bold"),
+    axis.text.x = element_text(size = 10, face= "bold"),
+    axis.title = element_text(size = 10, face= "bold")
   )
 
 
-# ggsave("SVG_files/all_participants.svg", plot = all, width = 14, height = 12)
 
-
+## Make the per study plot
 
 by_study <- ggplot(meta_unique, aes(x = age, fill = sex)) +
   geom_histogram(position = "dodge",
@@ -119,10 +125,10 @@ by_study <- ggplot(meta_unique, aes(x = age, fill = sex)) +
     inherit.aes = F,
     hjust = 0.1,
     vjust = 1.5,
-    size = 4,
+    size = 2,
     fontface= "bold.italic"
   )+
-  theme_minimal(base_size = 14, base_family = "Arial") +
+  theme_minimal(base_size = 10) +
   labs(
     title = " Distribution of Participants across all 5 studies",
     x = "Age",
@@ -133,21 +139,18 @@ by_study <- ggplot(meta_unique, aes(x = age, fill = sex)) +
     plot.title = element_text(hjust = 0.5, face = "bold"),
     strip.text = element_text(face= "bold"),
      legend.title = element_blank(),
-     legend.text = element_text(size = 12, face = "bold"), 
+     legend.text = element_text(size = 10, face = "bold"), 
    # legend.position = "none",
-    axis.text.y = element_text(size = 16, face= "bold"),
-    axis.text.x = element_text(size = 16, face= "bold"),
-    axis.title = element_text(size = 16, face= "bold"),
+    axis.text.y = element_text(size = 10, face= "bold"),
+    axis.text.x = element_text(size = 10, face= "bold"),
+    axis.title = element_text(size = 10, face= "bold"),
    legend.position = "none"
   )
 
 
-# ggsave("SVG_files/participants_by_study.svg", plot = by_study, width = 14, height = 12)
 
 
-
-
-
+# Plot the distribution of splicing efficiency across all introns
 
 
 
@@ -223,7 +226,7 @@ introns_distribution <-   ggplot(dist_df,
   ) +
   
   scale_x_discrete(breaks = seq(0, 1, by = 0.1)) +
-  theme_minimal(base_size = 16, base_family = "Arial") +
+  theme_minimal(base_size = 10) +
   labs(
     x = "Splicing Efficiency (SE)",
     y = "Percentage",
@@ -233,11 +236,11 @@ introns_distribution <-   ggplot(dist_df,
     plot.title = element_text(hjust = 0.5, face = "bold"),
     strip.text = element_blank(), # removes facet titles
     legend.title = element_blank(),
-    legend.text = element_text(size = 16, face = "bold"), 
-    axis.text.y = element_text(size = 16, face= "bold"),
+    legend.text = element_text(size = 10, face = "bold"), 
+    axis.text.y = element_text(size = 10, face= "bold"),
    # axis.text.y = element_blank(),  remove y axis title
-    axis.text.x = element_text(angle = 90, size = 16, face= "bold"),
-    axis.title = element_text(size = 16, face= "bold"),
+    axis.text.x = element_text(angle = 90, size = 10, face= "bold"),
+    axis.title = element_text(size = 10, face= "bold"),
    axis.title.y = element_blank(),
     panel.spacing.y = unit(2, "lines"),
     panel.grid = element_blank(), # removes grid lines 
@@ -249,10 +252,8 @@ introns_distribution <-   ggplot(dist_df,
     ))
 
 
-# ggsave("SVG_files/distribution_SE.svg", plot = introns_distribution, width = 16, height = 15)
 
-
-
+## The RELIEF data
 
 
 
@@ -348,7 +349,7 @@ relief_distribution <-   ggplot(dist_df_relief,
   ) +
   
   scale_x_discrete(breaks = seq(0, 1, by = 0.1)) +
-  theme_minimal(base_size = 16, base_family = "Arial") +
+  theme_minimal(base_size = 10) +
   labs(
     x = "Splicing Efficiency (SE)",
     y = "Percentage",
@@ -358,10 +359,10 @@ relief_distribution <-   ggplot(dist_df_relief,
     plot.title = element_text(hjust = 0.5, face = "bold"),
     strip.text = element_blank(), # removes facet titles
     legend.title = element_blank(),
-    legend.text = element_text(size = 16, face = "bold"), 
-    axis.text.y = element_text(size = 16, face= "bold"),
-    axis.text.x = element_text(angle = 90, size = 16, face= "bold"),
-    axis.title = element_text(size = 16, face= "bold"),
+    legend.text = element_text(size = 10, face = "bold"), 
+    axis.text.y = element_text(size = 10, face= "bold"),
+    axis.text.x = element_text(angle = 90, size = 10, face= "bold"),
+    axis.title = element_text(size = 10, face= "bold"),
     panel.spacing.y = unit(2, "lines"),
     panel.grid = element_blank(), # removes grid lines 
 
@@ -370,16 +371,10 @@ relief_distribution <-   ggplot(dist_df_relief,
    fill = NA,
    linewidth = 0.5
    )
-)
-print(relief_distribution)
-
-# ggsave("SVG_files/distribution_Relief_SE.svg", plot = relief_distribution, width = 16, height = 15)
+) 
 
 
 
-
-
-# Load the bubble image
 bubble_img <- png::readPNG("Figures/Bubble_chart.PNG")
 image_grob <- grid::rasterGrob(bubble_img, interpolate = TRUE)
 
@@ -482,13 +477,17 @@ ego_ones <- enrichGO(gene =  unique(one_introns$external_gene_name),
 ## Output results from GO analysis to a table
 cluster_ones <- data.frame(ego_ones)
 
+
+
+
+
 go_ones <- dotplot(ego_ones,
                    showCategory = 6,
                    font.size = 8, title = "Enriched biological processes in genes containing introns perfectly spliced acrosss all samples") +
-  theme(axis.text = element_text(size = 16), axis.text.y = element_text(size = 16), axis.title.x = element_text(size = 16),
-        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        legend.text = element_text(size = 16, face = "bold"),
-        legend.title = element_text(size = 16, face = "bold"))
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5, size = 10, face = "bold"),
+        legend.text = element_text(size = 10, face = "bold"),
+        legend.title = element_text(size = 10, face = "bold"))
 
 # ggsave("SVG_files/gene_ontology_ones.svg", plot = go_ones, width = 16, height = 15)
 
@@ -524,13 +523,16 @@ ego_ones_relief <- enrichGO(gene =  unique(one_introns_relief$external_gene_name
 ## Output results from GO analysis to a table
 cluster_ones_relief <- data.frame(ego_ones_relief)
 
+
+
+
 go_ones_relief <- dotplot(ego_ones_relief,
                           showCategory = 6,
-                          font.size = 16, title = "Enriched biological processes in genes containing introns perfectly spliced in Relief samples") +
-  theme(axis.text = element_text(size = 16), axis.text.y = element_text(size = 16), axis.title.x = element_text(size = 16),
-        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        legend.text = element_text(size = 16, face = "bold"),
-        legend.title = element_text(size = 16, face = "bold") )
+                          font.size = 10, title = "Enriched biological processes in genes containing introns perfectly spliced in Relief samples") +
+  theme(axis.text = element_text(size = 10), axis.text.y = element_text(size = 10), axis.title.x = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5, size = 10, face = "bold"),
+        legend.text = element_text(size = 10, face = "bold"),
+        legend.title = element_text(size = 10, face = "bold") )
 
 #ggsave("SVG_files/gene_ontology_ones_RELIEF.svg", plot = go_ones_relief, width = 16, height = 15)
 
@@ -544,9 +546,208 @@ Figure_1 +
   plot_annotation(tag_levels = "A") &
   #plot_layout(widths = c(1.1, 1))
   theme(
-    plot.tag = element_text(size = 14, face = "bold")
+    plot.tag = element_text(size = 10, face = "bold")
     ,
     plot.tag.position = c(0.08, 0.98)
   )
 
- ggsave("Figures/Trainome_Figure_1_.png", bg = colors[4], width = 40, height = 25, dpi = 400)
+```
+
+## Figure 2 
+
+Visualising the association between aging and intron splicing efficiency in the primary analysis, and the trajectories of topmost differentially spliced introns in the secondary analysis
+
+```{r}
+#| echo: false
+
+# The marginal effects predictions were built into the summary function and thus
+# Extracting the data will follow the traditional seqwrap method
+Relief_results <- seqwrap_summarise(Relief_model)
+
+Relief_results <- Relief_results$summaries
+
+
+
+# Only extracts the contrasts of interest
+contrasts_of_interest <- c("train_young", "train_old", 
+                           "age_effect_pre", "age_effect_post", 
+                           "train_old_young")
+
+relief_contrasts <- Relief_results %>%
+  filter(hypothesis %in% contrasts_of_interest) %>%
+  group_by( hypothesis, component) %>%
+  mutate(adj.p = p.adjust(p.value, method = "fdr"),
+         # recode the components and hypothesis for easy understanding
+         component = recode(component, 
+                                   "response"    = "Overall retention",
+                                   "zprob"       = "Probability of Perfect splicing",
+                                   "conditional" = "Degree of retention"),
+         hypothesis = recode(hypothesis, "train_young"     = "Exercise effect among young participants",
+                                        "train_old"       = "Exercise effect among older participants",
+                                        "age_effect_pre"  = "Age effect at baseline",
+                                        "age_effect_post" = "Age effect postexercise",
+                                        "train_old_young" = "Interaction effect of training and aging")) %>%
+  ungroup() %>%
+  mutate(
+    sig           = adj.p <= 0.05,
+    sig_ci        = conf.low > 0 | conf.high < 0,
+    neg_log10_fdr = -log10(adj.p),
+    rank_score    = -log10(adj.p) * abs(estimate),
+    effect        = case_when(
+      conf.high < 0 & sig ~ "Improved SE",
+      conf.low  > 0 & sig ~ "Reduced SE",
+      TRUE             ~ "No effect"
+    )
+  ) %>%
+  annotate_introns(gene_annotation, intron_length, flip = TRUE) 
+
+
+# Which introns were differentially spliced among the aged at baseline
+aging_baseline <- relief_contrasts %>%
+  filter(hypothesis ==  "Age effect at baseline") %>%
+  filter(component != "Overall retention")
+
+
+
+top_9_labels <- aging_baseline %>%
+  filter(sig) %>%
+  group_by(component) %>%
+  mutate(rank_score = abs(estimate) * -log10(adj.p)) %>% 
+  arrange(desc(rank_score), adj.p, desc(abs(estimate))) %>%
+  slice_max(rank_score, n = 9, with_ties = FALSE) %>%
+  ungroup()
+
+# Count summary per facet
+facet_sum <- aging_baseline %>%
+  group_by( component) %>%
+  summarise(
+    n_total  = n(),
+    n_sig    = sum(sig),
+    perc_sig = round(100 * n_sig / n_total, 1),
+    x        = Inf,
+    y        = Inf,
+    label    = paste0("ds: ", n_sig, "/", n_total,
+                      " (", perc_sig, "%)"),
+    .groups  = "drop"
+  )
+
+volcano_aging_baseline <- ggplot(aging_baseline,
+       aes(estimate, neg_log10_fdr, colour = effect)) +
+  geom_point(alpha = 0.6, size = 2.5) +
+  geom_text_repel(
+    data        = top_9_labels,
+    aes(label   = gene_intron),
+    size        = 4,
+    max.overlaps = Inf
+  ) +
+  geom_text(
+    data         = facet_sum,
+    aes(x = x, y = y, label = label),
+    inherit.aes  = FALSE,
+    hjust        = 2.9,
+    vjust        = 2.9,
+    size         = 4,
+    fontface     = "bold"
+  ) +
+  geom_hline(yintercept = -log10(0.05),
+             linetype = "dashed", colour = "grey50") +
+  geom_vline(xintercept = 0,
+             linetype = "dashed", colour = "grey50") +
+  scale_colour_manual(values = effect_colors) +
+  scale_y_continuous(limits = c(0, 16)) +  # adjust 20 to a sensible cap
+  coord_cartesian(clip = "off")+
+  facet_wrap(~ component, scales = "free") +
+  labs(
+    title    = "Introns affected by aging at baseline",
+      subtitle = "Top 9 differentially spliced introns annotated",
+    x        = "Effect size (SE scale)",
+    y        = expression(-log[10](FDR)),
+    colour   = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 10),
+    strip.text = element_text(face= "bold", size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12, face = "bold"), 
+    # legend.position = "none",
+    axis.text.y = element_text(size = 12, face= "bold"),
+    axis.text.x = element_text(size = 12, face= "bold"),
+    axis.title = element_text(size = 12, face= "bold")
+  )
+
+
+
+
+# extract the trajecories of the top 12
+
+
+ds_intron_aging <- sig_baseline %>%
+  #arrange(desc(abs(estimate))) %>%
+  mutate(rank_score = abs(estimate) * -log10(adj.p)) %>% 
+  arrange(desc(rank_score), adj.p, desc(abs(estimate))) %>%
+  slice_head(n = 59) # this is the number at which 12 common introns were in both primary and secondary
+
+
+
+aged_intersect <- zi_predictions %>%
+  filter(target %in% ds_intron_aging$target) %>% # extract top 9
+  mutate(
+    SE       = 1 - estimate,
+    CI_low   = 1 - conf.high,
+    CI_high  = 1 - conf.low,
+    real_age = scaled_age * (age_max - age_min) + age_min
+  ) %>%
+  left_join(
+    (zi_age_slopes_fdr  %>%
+       dplyr::select(target, gene_intron) %>% distinct()),
+    by = "target"
+  ) %>%
+  filter(time == "PreExc")
+
+length(unique(aged_intersect$gene_intron))
+
+traj_aged <- aged_intersect %>%
+  ggplot(aes(x = real_age, y = SE, colour =  gene_intron)) +
+  geom_ribbon(aes(ymin = CI_low, ymax = CI_high),
+              alpha = 0.15, colour = NA) +
+  geom_line(linewidth = 0.9) +
+  facet_wrap(~ gene_intron, scales = "free_y", ncol = 3) +
+  labs(
+    title    = "Age-related trajectory of the top 12 ds introns reflected in secondary analysis",
+    x        = "Age (years)",
+    y        = "Splicing efficiency",
+    colour   = NULL, fill = NULL
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    plot.title      = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle   = element_text(hjust = 0.5),
+    strip.text      = element_text(face = "bold", size = 14)
+    
+    
+  )
+
+volcano_aging_baseline + traj_aged +  plot_annotation(tag_levels = 'A')
+
+
+# ggsave("Figures/Figure_2.png",  width = 26, height = 15)
+```
+
+The distribution of splicing efficiency values across all introns
+
+```{r}
+#| echo: false
+
+
+```
+
+### The RELIEF data
+
+```{r}
+#| echo: false
+
+
+
+```
