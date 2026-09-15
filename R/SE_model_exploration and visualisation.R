@@ -110,13 +110,13 @@ ggplot(relief_contrasts,
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
     plot.subtitle = element_text(hjust = 0.5, size = 13),
-    strip.text = element_text(face= "bold"),
+    strip.text = element_text(face= "bold", size = 13),
     legend.title = element_blank(),
-    legend.text = element_text(size = 16, face = "bold"), 
+    legend.text = element_text(size = 12, face = "bold"), 
     # legend.position = "none",
-    axis.text.y = element_text(size = 16, face= "bold"),
-    axis.text.x = element_text(size = 16, face= "bold"),
-    axis.title = element_text(size = 16, face= "bold")
+    axis.text.y = element_text(size = 12, face= "bold"),
+    axis.text.x = element_text(size = 12, face= "bold"),
+    axis.title = element_text(size = 12, face= "bold")
   )
 
 # subset and plot for each component
@@ -205,15 +205,45 @@ zi_conditional
 
 # Which introns were differentially spliced among the aged at baseline
 aging_baseline <- relief_contrasts %>%
-  filter(hypothesis ==  "age_effect_pre")
+  filter(hypothesis ==  "Age effect at baseline") %>%
+  filter(component != "Overall retention")
+
+
+
+sig_baseline <- aging_baseline %>%
+  filter(sig)
+length(unique(sig_baseline$gene_label))
+
+table(sig_baseline$gene_label)
+
+# how many genes contained more than 1 intron
+
+repeated_genes <- sig_baseline %>%
+  count(gene_label) %>%
+  filter(n > 1) %>%
+  pull(gene_label)
+
+
+
+repeated_gene_rows <- sig_baseline %>%
+  filter(gene_label %in% repeated_genes)
 
 # Filyter the top nine for annotation 
+
+# 
+# top_9_labels <- aging_baseline %>%
+#   filter(sig) %>%
+#   group_by( component) %>%
+#   slice_max(abs(estimate), n = 9) %>%
+#   ungroup()
 
 
 top_9_labels <- aging_baseline %>%
   filter(sig) %>%
-  group_by( component) %>%
-  slice_max(abs(estimate), n = 9) %>%
+  group_by(component) %>%
+  mutate(rank_score = abs(estimate) * -log10(adj.p)) %>% 
+  arrange(desc(rank_score), adj.p, desc(abs(estimate))) %>%
+  slice_max(rank_score, n = 9, with_ties = FALSE) %>%
   ungroup()
 
 # Count summary per facet
@@ -230,13 +260,13 @@ facet_sum <- aging_baseline %>%
     .groups  = "drop"
   )
 
-ggplot(aging_baseline,
+volcano_aging_baseline <- ggplot(aging_baseline,
        aes(estimate, neg_log10_fdr, colour = effect)) +
   geom_point(alpha = 0.6, size = 2.5) +
   geom_text_repel(
     data        = top_9_labels,
     aes(label   = gene_intron),
-    size        = 5,
+    size        = 4,
     max.overlaps = Inf
   ) +
   geom_text(
@@ -253,49 +283,152 @@ ggplot(aging_baseline,
   geom_vline(xintercept = 0,
              linetype = "dashed", colour = "grey50") +
   scale_colour_manual(values = effect_colors) +
+  scale_y_continuous(limits = c(0, 16)) +  # adjust 20 to a sensible cap
+  coord_cartesian(clip = "off")+
   facet_wrap(~ component, scales = "free") +
   labs(
-    title    = "interaction between of aging at baseline",
-    #  subtitle = "Top 9 differentially spliced introns annotated",
+    title    = "Introns affected by aging at baseline",
+      subtitle = "Top 9 differentially spliced introns annotated",
     x        = "Effect size (SE scale)",
     y        = expression(-log[10](FDR)),
     colour   = NULL
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
-    plot.subtitle = element_text(hjust = 0.5, size = 13),
-    strip.text = element_text(face= "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 10),
+    strip.text = element_text(face= "bold", size = 12),
     legend.title = element_blank(),
-    legend.text = element_text(size = 16, face = "bold"), 
+    legend.text = element_text(size = 12, face = "bold"), 
     # legend.position = "none",
-    axis.text.y = element_text(size = 16, face= "bold"),
-    axis.text.x = element_text(size = 16, face= "bold"),
-    axis.title = element_text(size = 16, face= "bold")
+    axis.text.y = element_text(size = 12, face= "bold"),
+    axis.text.x = element_text(size = 12, face= "bold"),
+    axis.title = element_text(size = 12, face= "bold")
   )
 
+#ggsave("Figures/volc_baseline.png",  width = 26, height = 10)
 
 
+
+
+
+
+
+aged_intersect <- zi_predictions %>%
+  filter(target %in% ds_intron_aging$target) %>% # extract top 9
+  mutate(
+    SE       = 1 - estimate,
+    CI_low   = 1 - conf.high,
+    CI_high  = 1 - conf.low,
+    real_age = scaled_age * (age_max - age_min) + age_min
+  ) %>%
+  left_join(
+    (zi_age_slopes_fdr  %>%
+       dplyr::select(target, gene_intron) %>% distinct()),
+    by = "target"
+  ) %>%
+  filter(time == "PreExc")
+
+length(unique(aged_intersect$gene_intron))
+
+traj_aged <- aged_intersect %>%
+  ggplot(aes(x = real_age, y = SE, colour =  gene_intron)) +
+  geom_ribbon(aes(ymin = CI_low, ymax = CI_high),
+              alpha = 0.15, colour = NA) +
+  geom_line(linewidth = 0.9) +
+  facet_wrap(~ gene_intron, scales = "free_y", ncol = 3) +
+  labs(
+    title    = "Age-related trajectory of the top 12 ds introns reflected in secondary analysis",
+    x        = "Age (years)",
+    y        = "Splicing efficiency",
+    colour   = NULL, fill = NULL
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    plot.title      = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle   = element_text(hjust = 0.5),
+    strip.text      = element_text(face = "bold", size = 14)
+  )
+
+#ggsave("Figures/trajectories_of_12.png",  width = 26, height = 15)
+
+
+
+
+volcano_aging_baseline + traj_aged +  plot_annotation(tag_levels = 'A')
+
+ggsave("Figures/Figure_2.png",  width = 26, height = 15)
+
+
+
+
+
+## EXPLORING THE EFFECT OF EXERCISE TRAINING
+
+# explore effects of exercise among the old and young
 Training_old <- relief_contrasts %>%
-  filter(hypothesis == "train_old") 
-# create dataframe that doesnt contain the response copmponent
-
-# Training_old_no_resp <- Training_old %>%
-#   filter(component == "Degree of retention")
+  filter(hypothesis == "Exercise effect among older participants"| hypothesis == "Exercise effect among young participants") %>%
+  filter(component != "Overall retention")
 
 
 
+# How many introns were significantly ds
+sig_train_old <- Training_old %>%
+  filter(hypothesis == "Exercise effect among older participants") %>%
+  filter(sig)
+length(unique(sig_train_old$gene_label))
 
+table(sig_train_old$effect)
+
+
+sig_train_young <- Training_old %>%
+  filter(hypothesis == "Exercise effect among young participants") %>%
+  filter(sig)
+
+
+table(sig_train_young$effect)
+
+
+duplicated_rows <- sig_train_old %>%
+  group_by(gene_label) %>%
+  filter(n() > 1) %>%
+  ungroup()
+table(duplicated_rows$gene_label)
+length(unique(duplicated_rows$gene_label))
+
+
+common_gene_introns <- intersect(sig_train_old$gene_intron, sig_train_young$gene_intron)
+# Full rows from the "old" data frame, restricted to overlapping gene_introns
+overlap_old <- sig_train_old %>%
+  filter(gene_intron %in% common_gene_introns)
+
+# Same for "young"
+overlap_young <- sig_train_young %>%
+  filter(gene_intron %in% common_gene_introns)
+
+
+
+overlap_comparison <- sig_train_old %>%
+  inner_join(sig_train_young, by = "gene_intron", suffix = c("_old", "_young")) %>%
+  dplyr::select(gene_intron, estimate_old, estimate_young, adj.p_old, adj.p_young) %>%
+  mutate(
+    estimate_diff = estimate_old - estimate_young,
+    same_direction = sign(estimate_old) == sign(estimate_young)
+  )
+table(overlap_comparison$same_direction)
 
 top_9_labels_train <- Training_old %>%
   filter(sig) %>%
-  group_by( component) %>%
-  slice_max(abs(estimate), n = 9) %>%
+  group_by(hypothesis) %>%
+  mutate(rank_score = abs(estimate) * -log10(adj.p)) %>% 
+  arrange(desc(rank_score), adj.p, desc(abs(estimate))) %>%
+  slice_max(rank_score, n = 9, with_ties = FALSE) %>%
   ungroup()
+
 
 # Count summary per facet
 facet_sum <- Training_old   %>%
-  group_by( component) %>%
+  group_by( hypothesis) %>%
   summarise(
     n_total  = n(),
     n_sig    = sum(sig),
@@ -331,7 +464,7 @@ ggplot(Training_old ,
   geom_vline(xintercept = 0,
              linetype = "dashed", colour = "grey50") +
   scale_colour_manual(values = effect_colors) +
-  facet_wrap(~ component, scales = "free") +
+  facet_wrap(~ hypothesis, scales = "free") +
   labs(
     title    = "Effect of exercise in aged participants",
     #  subtitle = "Top 9 differentially spliced introns annotated",
@@ -343,14 +476,20 @@ ggplot(Training_old ,
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
     plot.subtitle = element_text(hjust = 0.5, size = 13),
-    strip.text = element_text(face= "bold"),
+    strip.text = element_text(face= "bold", size = 13),
     legend.title = element_blank(),
-    legend.text = element_text(size = 16, face = "bold"), 
+    legend.text = element_text(size = 13, face = "bold"), 
     # legend.position = "none",
-    axis.text.y = element_text(size = 16, face= "bold"),
-    axis.text.x = element_text(size = 16, face= "bold"),
-    axis.title = element_text(size = 16, face= "bold")
+    axis.text.y = element_text(size = 13, face= "bold"),
+    axis.text.x = element_text(size = 13, face= "bold"),
+    axis.title = element_text(size = 13, face= "bold")
   )
+
+
+
+
+
+
 
 # In the Relief data, exercise did not alter the probability of perfect splicing
 
@@ -576,25 +715,6 @@ plot_exercise_traj_sig <- zi_time_effects_fdr %>%
 print(plot_exercise_traj_sig)
 
 
-#  Overlap between PreExc and PostExc age-significant introns 
-sig_preexc <- zi_age_slopes_fdr %>%
-  filter(time == "PreExc", sig) %>%
-  pull(target) %>% unique()
-
-sig_postexc <- zi_age_slopes_fdr %>%
-  filter(time == "PostExc", sig) %>%
-  pull(target) %>% unique()
-
-plot_venn_age <- ggVennDiagram(
-  list(PreExc = sig_preexc, PostExc = sig_postexc)
-) +
-  labs(title = "Age-associated introns: rest vs post-exercise") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-
-print(plot_venn_age)
-# ggsave("Figures/venn_age_prepost_v2.svg", plot_venn_age,
-#         width = 8, height = 6)
-
 
 # Trajectory plots for top aging-associated introns 
 top_aging_targets <- zi_age_slopes_fdr %>%
@@ -645,7 +765,20 @@ print(plot_traj_top_aging)
 # training effect in he young 
 
 Training_young <- relief_contrasts %>%
-  filter(hypothesis == "train_young") 
+  filter(hypothesis == "Exercise effect among young participants") %>%
+  filter(component != "Overall retention")
+
+
+
+# How many introns were significantly ds
+sig_train_young <-Training_young %>%
+  filter(sig)
+
+table(sig_train_young$effect)
+
+
+# HOW MANY IN YOUNG Participants
+
 
 # Trajectory plots for top introns in ReLiEf 
   Relief_sig_age_baseline <- Training_young%>%
@@ -689,3 +822,8 @@ plot_traj_relief <- zi_predictions %>%
   )
 
 print(plot_traj_relief)
+
+
+
+
+# Interaction effect of aging

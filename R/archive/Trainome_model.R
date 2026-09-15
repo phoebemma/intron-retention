@@ -182,12 +182,14 @@ zi_main_container <- seqwrap_compose(
 zi_main_results <- seqwrap(
   zi_main_container,
   return_models = TRUE,
-  cores         = 10
+  cores         = 10,
+  subset = 1:100
 )
 
 # saveRDS(zi_main_results, "data/zi_main_results.RDS")
 # zi_main_results <- readRDS("data/zi_main_results.RDS")
 
+x<- seqwrap_summarise(zi_main_results)
 
 # 
 # MODEL 2 ZI-BETA INTERACTION (AGE x TIME)

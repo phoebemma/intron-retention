@@ -7,6 +7,8 @@ library(ggplot2)
 library(patchwork)
 library(ggrepel)
 
+
+
 # plot a distribution of the participants in each study
 
 # In the metadata, most participants contributed two samples
@@ -387,7 +389,6 @@ image_plot <- wrap_elements(image_grob)
 
 
 # explore the introns completely retained, or perfectly spliced across all samples
-
 
 long_splice <- all_splice_df %>% 
   pivot_longer(names_to = "seq_sample_id",

@@ -11,6 +11,7 @@ library(tidyverse)
 library(seqwrap)
 library(reliefdata)
 library(marginaleffects)
+library(scales)
 
 
 
@@ -37,7 +38,7 @@ Relief_full_splice <- readRDS("data/Relief_splicing_data.RDS")  %>%
 splice_reordered <- Relief_full_splice[, c("transcript_ID",Relief_full_meta$seq_sample_id)] 
 
 # Check if everything matches except the transcript_id
-match(colnames(splice_reordered), Relief_meta$seq_sample_id)
+match(colnames(splice_reordered), Relief_full_meta$seq_sample_id)
 
 
 # Build model using zero-inflated beta-binomial since 57% of data are 1s
@@ -98,7 +99,7 @@ sum_fun_relief <- function(m) {
 #
 zi_relief_container <- seqwrap_compose(
   data        = zi_splice_df,
-  metadata    = Relief_meta,
+  metadata    = Relief_full_meta,
   samplename  = "seq_sample_id",
   modelfun    = glmmTMB::glmmTMB,
   arguments   = alist(
@@ -117,7 +118,7 @@ zi_relief_results <- seqwrap(
 
 
 
-saveRDS(zi_relief_results, "data/Relief_zi_model.RDS") 
+saveRDS(zi_relief_results, "data/Relief_zi_model_2.RDS") 
 
 
 
@@ -242,7 +243,7 @@ zi_main_results <- seqwrap(
   cores         = 10
 )
 
-saveRDS(zi_main_results, "data/zi_main_results.RDS")
+saveRDS(zi_main_results, "data/zi_main_results_2.RDS")
 # zi_main_results <- readRDS("data/zi_main_results.RDS")
 
 
@@ -287,7 +288,7 @@ zi_predictions <- map_dfr(
 )
 
 
-saveRDS(zi_predictions,  "data/zi_predictions.RDS")
+saveRDS(zi_predictions,  "data/zi_predictions_2.RDS")
 
 
 #  Probability of perfect splicing (zi component) 
@@ -318,7 +319,7 @@ zi_zprob <- map_dfr(
   .id = "target"
 )
 
-saveRDS(zi_zprob, "data/zi_zprob.RDS")
+saveRDS(zi_zprob, "data/zi_zprob_2.RDS")
 
 #  Degree of retention among partially retained introns (beta component)
 zi_conditional <- map_dfr(
@@ -349,7 +350,7 @@ zi_conditional <- map_dfr(
 )
 
 
-saveRDS(zi_conditional,  "data/zi_conditional.RDS")
+saveRDS(zi_conditional,  "data/zi_conditional_2.RDS")
 
 # Age slopes at 0.10 increments, separately per timepoint 
 zi_age_slopes <- map_dfr(
@@ -373,7 +374,7 @@ zi_age_slopes <- map_dfr(
   .id = "target"
 )
 
-saveRDS(zi_age_slopes,   "data/zi_age_slopes.RDS")
+saveRDS(zi_age_slopes,   "data/zi_age_slopes_2.RDS")
 
 #  Exercise effect (PostExc - PreExc) at each age anchor 
 zi_time_effects <- map_dfr(
@@ -397,7 +398,7 @@ zi_time_effects <- map_dfr(
 )
 
 
-saveRDS(zi_time_effects, "data/zi_time_effects.RDS")
+saveRDS(zi_time_effects, "data/zi_time_effects_2.RDS")
 
 
 # 

@@ -1,6 +1,6 @@
 relief_contrasts_df <- relief_contrasts %>%
   filter(component != "Overall retention")
-unique(relief_contrasts_df$hypothesis)
+unique(relief_contrasts_df$component)
 
 baseline_age_effect <- relief_contrasts_df %>%
   filter(hypothesis == "Age effect at baseline") %>%
@@ -13,7 +13,7 @@ table(baseline_age_effect$effect)
 ggplot(baseline_age_effect , aes(x = estimate, y = reorder(gene_intron, estimate), color = effect)) +
   geom_point(size = 3) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  #facet_wrap(~ hypothesis, scales = "free") +
+  facet_wrap(~ hypothesis, scales = "free") +
   scale_color_manual(values = c("Improved SE" = colors[6],
                                 "Reduced SE" = colors[1]),
                      name = "Effect") +
@@ -155,10 +155,10 @@ ggplot(post_age_effect , aes(x = estimate, y = reorder(gene_intron, estimate), c
                      name = "Effect") +
   labs(
     x = "Effect size",
-    y = NULL,
     title = "Introns with age-related splicing efficiency at postexercise"
   ) +
   theme_minimal(base_size = 14) +
+    y = NULL,
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
     plot.subtitle = element_text(hjust = 0.5, size = 13),

@@ -89,36 +89,36 @@ age_min <- min(metadata$age, na.rm = TRUE)
 age_max <- max(metadata$age, na.rm = TRUE)
 
 # Load the gene annotation file
-gene_annotation <- readRDS("data/ensembl_gene_annotation.RDS")
-
-
-#  load the gene expression dataset
-gene_exp_df <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS") 
-
-
+# gene_annotation <- readRDS("data/ensembl_gene_annotation.RDS")
+# 
+# 
+# #  load the gene expression dataset
+# gene_exp_df <- readRDS("data_new/gene_counts/batch_corrected_genecounts.RDS") 
+# 
+# 
 
 
 # Relief Model
-Relief_model <- readRDS("data/Relief_zi_model.RDS")
+Relief_model <- readRDS("data/Relief_zi_model_2.RDS")
 
 
 # Predictions on the full data
 #  Predicted SE trajectories (response scale) 
- zi_predictions <- readRDS("data/zi_predictions.RDS")
+ zi_predictions <- readRDS("data/zi_predictions_2.RDS")
  
  
  #  Probability of perfect splicing (zi component)  
- zi_zprob <- readRDS("data/zi_zprob.RDS")
+ zi_zprob <- readRDS("data/zi_zprob_2.RDS")
  
  
  #  Degree of retention among partially retained introns (beta component)
- zi_conditional <-   readRDS("data/zi_conditional.RDS")
+ zi_conditional <-   readRDS("data/zi_conditional_2.RDS")
  
  
  
  # Age slopes at 0.10 increments, separately per timepoint 
  
- zi_age_slopes <-   readRDS("data/zi_age_slopes.RDS")
+ zi_age_slopes <-   readRDS("data/zi_age_slopes_2.RDS")
  
  # Age slopes FDR within each timepoint ---
  zi_age_slopes_fdr <- zi_age_slopes %>%
@@ -139,7 +139,7 @@ Relief_model <- readRDS("data/Relief_zi_model.RDS")
    annotate_introns(gene_annotation, intron_length, flip = TRUE)
  
  #  Exercise effect (PostExc - PreExc) at each age anchor 
- zi_time_effects <- readRDS("data/zi_time_effects.RDS")
+ zi_time_effects <- readRDS("data/zi_time_effects_2.RDS")
  
  
  # Exercise effects  FDR within each age anchor 
@@ -186,7 +186,7 @@ Relief_model <- readRDS("data/Relief_zi_model.RDS")
                              "response"    = "Overall retention",
                              "zprob"       = "Probability of Perfect splicing",
                              "conditional" = "Degree of retention"),
-          hypothesis = recode(hypothesis, "train_young"     = "Exercise effect among young participants",
+          hypothesis = recode(hypothesis, "train_young"    = "Exercise effect among young participants",
                               "train_old"       = "Exercise effect among older participants",
                               "age_effect_pre"  = "Age effect at baseline",
                               "age_effect_post" = "Age effect postexercise",

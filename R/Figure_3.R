@@ -130,12 +130,14 @@ baseline_age_volcano <- ggplot(baseline_age_effect,
 # We plot for every ds intron
 ds_intron_aging <- baseline_age_effect %>%
   filter(sig) %>%
-  arrange(desc(abs(estimate))) %>%
-  slice_head(n = 22) #%>%
+  #arrange(desc(abs(estimate))) %>%
+  mutate(rank_score = abs(estimate) * -log10(adj.p)) %>% 
+  arrange(desc(rank_score), adj.p, desc(abs(estimate))) %>%
+  slice_head(n = 74) #%>%
 #pull(target)
 #
 
-x <- zi_predictions %>%
+aged_intersect <- zi_predictions %>%
   filter(target %in% ds_intron_aging$target) %>% # extract top 9
   mutate(
     SE       = 1 - estimate,
@@ -150,14 +152,16 @@ x <- zi_predictions %>%
   ) %>%
   filter(time == "PreExc")
 
-x %>%
+length(unique(aged_intersect$gene_intron))
+
+aged_intersect %>%
   ggplot(aes(x = real_age, y = SE, colour =  gene_intron)) +
   geom_ribbon(aes(ymin = CI_low, ymax = CI_high),
               alpha = 0.15, colour = NA) +
   geom_line(linewidth = 0.9) +
   facet_wrap(~ gene_intron, scales = "free_y", ncol = 3) +
   labs(
-    title    = "Age-related trajectory of some ds introns relected in secondary analysis",
+    title    = "Age-related trajectory of the top 12 ds introns reflected in secondary analysis",
     x        = "Age (years)",
     y        = "Splicing efficiency",
     colour   = NULL, fill = NULL
@@ -169,10 +173,10 @@ x %>%
     strip.text      = element_text(face = "bold", size = 14)
   )
 
-
+ggsave("Figures/trajectories_of_12.png",  width = 26, height = 15)
 
 # Unique introns
-introns <- unique(x$gene_intron)
+introns <- unique(aged_intersect$gene_intron)
 
 # Okabe-Ito palette
 okabe_ito <- c(
@@ -193,7 +197,7 @@ cols <- setNames(okabe_ito[seq_along(introns)], introns)
 # Generate one plot per intron
 age_trajectory_plots <- lapply(introns, function(intron) {
   
-  pdat <- x %>%
+  pdat <- aged_intersect %>%
     filter(gene_intron == intron)
   
   ggplot(pdat, aes(x = real_age, y = SE)) +
@@ -263,22 +267,216 @@ RT_final_volcano <- ggdraw() +
 RT_final_volcano
 
 
-df <- baseline_age_effect %>%
+# extract the introns differetially spliced in the baseline model
+sig_baseline <- baseline_age_effect %>%
   filter(sig)
 
 # Functional annotation of the genes affected
-ego_RT <- enrichGO(gene =  df$external_gene_name,
-                   keyType = "SYMBOL",
-                   universe = gene_exp_df$gene_name,
-                   OrgDb = org.Hs.eg.db, 
-                   ont = "BP", 
-                   pAdjustMethod = "BH", 
-                   qvalueCutoff = 0.05, 
-                   readable = T)
+# ego_RT <- enrichGO(gene =  unique(top_interaction_introns$external_gene_name),
+#                    keyType = "SYMBOL",
+#                    universe = gene_exp_df$gene_name,
+#                    OrgDb = org.Hs.eg.db,
+#                    ont = "BP",
+#                    pAdjustMethod = "BH",
+#                    qvalueCutoff = 0.05,
+#                    readable = T)
+# 
+# 
+# ## Output results from GO analysis to a table
+# cluster_RT <- data.frame(ego_RT)
+
+# A volcano plot of all the ds introns in the primary analysis present in the secondary analysis
+
+aged_intersect_df  <- zi_predictions %>%
+  filter(target %in% sig_baseline$target) %>% # extract top 9
+  mutate(
+    SE       = 1 - estimate,
+    CI_low   = 1 - conf.high,
+    CI_high  = 1 - conf.low,
+    real_age = scaled_age * (age_max - age_min) + age_min
+  ) %>%
+  left_join(
+    (zi_age_slopes_fdr  %>%
+       dplyr::select(target, gene_intron) %>% distinct()),
+    by = "target"
+  ) %>%
+  filter(time == "PreExc")
+
+aged_intersect_df %>%
+  ggplot(aes(x = real_age, y = SE, colour =  gene_intron)) +
+  geom_ribbon(aes(ymin = CI_low, ymax = CI_high),
+              alpha = 0.15, colour = NA) +
+  geom_line(linewidth = 0.9) +
+  facet_wrap(~ gene_intron, scales = "free_y", ncol = 3) +
+  labs(
+    title    = "Age-related trajectory of the ds introns reflected in secondary analysis",
+    x        = "Age (years)",
+    y        = "Splicing efficiency",
+    colour   = NULL, fill = NULL
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    plot.title      = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle   = element_text(hjust = 0.5),
+    strip.text      = element_text(face = "bold", size = 14)
+  )
 
 
-## Output results from GO analysis to a table
-cluster_RT <- data.frame(ego_RT)
+range(sig_baseline$intron_length)
+# Plot a distribution of the introns length of introns affected by aging
+sig_baseline %>%
+  ggplot(aes(x = intron_length, colour = effect)) +
+  geom_histogram(fill = "steelblue", color = "white") +
+  facet_wrap(~ effect) +
+  labs(
+    title = "Distribution of Intron Lengths in introns with age-related splicing efficiency",
+    x = "Intron Length",
+    y = "Number of Introns"
+  ) +
+ # scale_x_continuous(limits = c(70, 30000)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+
+
+
+
+
+# check interaction effect between aging and RT
+
+interaction_effect <- relief_contrasts %>%
+  filter(hypothesis == "Interaction effect of training and aging") #%>%
+#filter(sig)
+
+# Top labels per facet
+top_interaction_introns <- interaction_effect %>%
+  filter(sig) %>%
+  slice_max(abs(estimate), n = 9, with_ties = FALSE)
+
+
+
+
+
+
+# Count summary per facet
+facet_summary_interaction <- interaction_effect %>%
+  summarise(
+    n_total  = n(),
+    n_sig    = sum(sig),
+    perc_sig = round(100 * n_sig / n_total, 1),
+    x        = Inf,
+    y        = Inf,
+    label    = paste0("ds: ", n_sig, "/", n_total,
+                      " (", perc_sig, "%)")
+  )
+
+interaction_volcano <- ggplot(interaction_effect,
+                               aes(estimate, neg_log10_fdr, colour = effect)) +
+  geom_point(alpha = 0.6, size = 3) +
+  geom_text_repel(
+    data        = top_interaction_introns,
+    aes(label   = gene_intron),
+    size        = 4,
+    max.overlaps = Inf
+  ) +
+  geom_text(
+      data         = facet_summary_interaction,
+    aes(x = -Inf, y = Inf, label = label),
+    inherit.aes  = FALSE,
+    hjust        = -0.5,
+    vjust        = 1.0,
+    size         = 5,
+    fontface     = "bold"
+  ) +
+  coord_cartesian(ylim = c(0, 8))+
+  geom_hline(yintercept = -log10(0.05),
+             linetype = "dashed", colour = "grey50") +
+  geom_vline(xintercept = 0,
+             linetype = "dashed", colour = "grey50") +
+  scale_colour_manual(values = effect_colors) +
+  labs(
+    title    = "Introns affected by the interaction between age and resistance training",
+    x        = "Effect size",
+    y        = expression(-log[10](FDR)),
+    colour   = NULL
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    # plot.subtitle = element_text(hjust = 0.5, size = 13),
+    strip.text = element_text(face= "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12), 
+    # legend.position = ,
+    axis.text.y = element_text(size = 16, face= "bold"),
+    axis.text.x = element_text(size = 16, face= "bold"),
+    axis.title = element_text(size = 16, face= "bold"),
+    panel.grid = element_blank(), 
+  )
+
+
+
+sig_interaction <- interaction_effect %>%
+  filter(sig)
+
+
+# which introns are affected by aging and by its inteaction with RT
+shared_introns <- intersect(sig_interaction$gene_intron, sig_baseline$gene_intron)
+
+# Becuase not all top ds introns in the primary model are present in the secondary
+# We plot for every ds intron
+ds_intron_interaction <- interaction_effect %>%
+  filter(sig) # %>%
+  # arrange(desc(abs(estimate))) %>%
+  # slice_head(n = 22) #%>%
+#pull(target)
+
+
+
+intersect_intersect <- zi_predictions %>%
+  filter(target %in% ds_intron_interaction$target) %>% # extract top 9
+  mutate(
+    SE       = 1 - estimate,
+    CI_low   = 1 - conf.high,
+    CI_high  = 1 - conf.low,
+    real_age = scaled_age * (age_max - age_min) + age_min
+  ) %>%
+  left_join(
+    (zi_age_slopes_fdr  %>%
+       dplyr::select(target, gene_intron) %>% distinct()),
+    by = "target"
+  ) #%>%
+ # filter(time == "PreExc")
+
+intersect_intersect %>%
+  ggplot(aes(x = real_age, y = SE, colour =  gene_intron)) +
+  geom_ribbon(aes(ymin = CI_low, ymax = CI_high),
+              alpha = 0.15, colour = NA) +
+  geom_line(linewidth = 0.9) +
+  facet_wrap(gene_intron ~ time, scales = "free") +
+  labs(
+    title    = "some introns affected by the interaction of aging and exercise",
+    x        = "Age (years)",
+    y        = "Splicing efficiency",
+    colour   = NULL, fill = NULL
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    plot.title      = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle   = element_text(hjust = 0.5),
+    strip.text      = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12), 
+    # legend.position = ,
+    axis.text.y = element_text(size = 16, face= "bold"),
+    axis.text.x = element_text(size = 16, face= "bold"),
+    axis.title = element_text(size = 16, face= "bold"),
+    panel.grid = element_blank()
+  )
+
+#ggsave("Figures/interaction.png",  width = 26, height = 15)
+
+#ggsave("SVG_files/interaction_trajectories.svg",  width = 16, height = 15)
 
 # go_RT <- dotplot(ego_RT,
 #                  showCategory= 5,
@@ -334,9 +532,7 @@ facet_summary_training <- Training_effects %>%
     .groups  = "drop"
   )
 
-# Training_effects_plot <- 
-
-ggplot(Training_effects,
+Training_effects_plot <-  ggplot(Training_effects,
        aes(estimate, neg_log10_fdr, colour = effect)) +
   geom_point(alpha = 0.6, size = 3) +
   geom_text_repel(
@@ -378,7 +574,7 @@ ggplot(Training_effects,
     axis.text.y = element_text(size = 16, face= "bold"),
     axis.text.x = element_text(size = 16, face= "bold"),
     axis.title = element_text(size = 16, face= "bold"),
-    panel.grid = element_blank(), 
+    panel.grid = element_blank() 
   )
 
 
@@ -399,3 +595,71 @@ ego_training <- enrichGO(gene =  train_sig$external_gene_name,
 ## Output results from GO analysis to a table
 cluster_train <- data.frame(ego_training)
 
+# extract that of the young
+young_sig <- train_sig %>%
+  filter(hypothesis == "Exercise effect among young participants" )
+
+
+young_plot <- ggplot(young_sig , aes(x = estimate, y = reorder(gene_intron, estimate), color = effect)) +
+  geom_point(size = 3) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  #facet_wrap(~ hypothesis, scales = "free") +
+  scale_color_manual(values = c("Improved SE" = colors[6],
+                                "Reduced SE" = colors[1]),
+                     name = "Effect") +
+  labs(
+    x = "Effect size",
+    y = NULL,
+    title = "Introns with training associated splicing efficiency among young participants"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 13),
+    strip.text = element_text(face= "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14, face = "bold"), 
+     legend.position = "none",
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_text(size = 14, face= "bold"),
+    axis.title = element_text(size = 14, face= "bold")
+  )
+
+
+
+old_sig <- train_sig %>%
+  filter(hypothesis == "Exercise effect among older participants" )
+
+
+old_plot <- ggplot(old_sig , aes(x = estimate, y = reorder(gene_intron, estimate), color = effect)) +
+  geom_point(size = 3) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+ # coord_cartesian(xlim = c(-0.2, 0.2))+
+  scale_color_manual(values = c("Improved SE" = colors[6],
+                                "Reduced SE" = colors[1]),
+                     name = "Effect") +
+  labs(
+    x = "Effect size",
+    y = NULL,
+    title = "Introns with training associated splicing efficiency among older participants"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 13),
+    strip.text = element_text(face= "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14, face = "bold"), 
+    # legend.position = "none",
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_text(size = 14, face= "bold"),
+    axis.title = element_text(size = 14, face= "bold")
+  )
+
+x <- Training_effects_plot / (young_plot + old_plot) +
+  plot_annotation(tag_levels = "A")
+
+ ggsave("Figures/training_effect_fig3.png", plot = x, width = 25, height = 25)
+# ggsave("Figures/training_effect.png", width = 25, height = 15)
+# # 
+# ggsave("SVG_files/training_effect_in_old_vs_young.svg",  width = 20, height = 15)
