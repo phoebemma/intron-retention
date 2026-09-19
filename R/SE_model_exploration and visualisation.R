@@ -272,8 +272,8 @@ volcano_aging_baseline <- ggplot(aging_baseline,
     data         = facet_sum,
     aes(x = x, y = y, label = label),
     inherit.aes  = FALSE,
-    hjust        = 2.9,
-    vjust        = 2.9,
+    hjust        = 1.9,
+    vjust        = 4.2,
     size         = 4,
     fontface     = "bold"
   ) +
@@ -305,7 +305,7 @@ volcano_aging_baseline <- ggplot(aging_baseline,
     axis.title = element_text(size = 12, face= "bold")
   )
 
-#ggsave("Figures/volc_baseline.png",  width = 26, height = 10)
+# ggsave("Figures/volc_baseline.png",  width = 26, height = 10, dpi = 600)
 
 
 
@@ -360,7 +360,7 @@ traj_aged <- aged_intersect %>%
 
 volcano_aging_baseline + traj_aged +  plot_annotation(tag_levels = 'A')
 
-ggsave("Figures/Figure_2.png",  width = 26, height = 15)
+# ggsave("Figures/Figure_2.png",  width = 26, height = 15, dpi = 600)
 
 
 

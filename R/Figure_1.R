@@ -467,7 +467,7 @@ one_introns <- all_splice_df %>%
   )
 
 
-
+# Gene ontology analysis of genes containing introns fully spliced
 
 ego_ones <- enrichGO(gene =  unique(one_introns$external_gene_name),
                      keyType = "SYMBOL",
@@ -549,4 +549,6 @@ Figure_1 +
     plot.tag.position = c(0.08, 0.98)
   )
 
- ggsave("Figures/Trainome_Figure_1_.png", bg = colors[4], width = 40, height = 25, dpi = 400)
+# ggsave("Figures/Trainome_Figure_1_.png", bg = colors[4], width = 40, height = 25, dpi = 600)
+
+ 

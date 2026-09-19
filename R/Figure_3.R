@@ -44,9 +44,9 @@ plot_global_trajectory <- zi_predictions %>%
     legend.title = element_blank(),
     legend.text = element_text(size = 12), 
     # legend.position = ,
-    axis.text.y = element_text(size = 16, face= "bold"),
-    axis.text.x = element_text(size = 16, face= "bold"),
-    axis.title = element_text(size = 16, face= "bold"),
+    axis.text.y = element_text(size = 12, face= "bold"),
+    axis.text.x = element_text(size = 12, face= "bold"),
+    axis.title = element_text(size = 12, face= "bold"),
     panel.grid = element_blank(), 
   )
 
